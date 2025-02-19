@@ -29,7 +29,16 @@ func main() {
 
 	router := chi.NewRouter()
 
-	db := database.NewDatabase("mongodb://root:pass@localhost:27017/chatney", "chatney")
+	mongoConnectionUri := os.Getenv("MONGO_CONNECTION_URI")
+	if mongoConnectionUri == "" {
+		panic("Mongo connection URI not set ")
+	}
+	mongoDatabase := os.Getenv("MONGO_DB_NAME")
+	if mongoDatabase == "" {
+		panic("Mongo Db name not set ")
+	}
+
+	db := database.NewDatabase(mongoConnectionUri+"/"+mongoDatabase, mongoDatabase)
 
 	userRootAggr := &user.UserRootAggregate{
 		UserRepo: &models.UserRepo{Collection: db.Client.Collection("users")},
