@@ -7,5 +7,7 @@ Open-source Chat Api
 2. Start dev server `env-cmd -f .env.test wgo run server.go`
 
 ## Playground
-1. GraphQl Playground hosted on localhost:8080, but I recommend using Altair Chrome Extension.
+1. GraphQl Playground hosted on `localhost:8080`, but I recommend using Altair Chrome Extension.
 2. Test Minio bucket browser - `localhost:9001`. User: `minioadmin`, pass: `miniopass`.
+3. Mongo database Admin dashboard - `localhost:8081`
+4. Mongo Connection URI `mongodb://root:pass@mongo:27017/chatney`
