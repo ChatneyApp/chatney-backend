@@ -1,4 +1,4 @@
-package database
+package application
 
 import (
 	"log"
@@ -11,12 +11,12 @@ type DB struct {
 	Client *mongo.Database
 }
 
-func NewDatabase(connectionUri string, dbName string) DB {
-	client, err := mongo.Connect(options.Client().ApplyURI(connectionUri))
+func NewDatabase(config *EnvConfig) DB {
+	client, err := mongo.Connect(options.Client().ApplyURI(config.MongoConnectionUri + "/" + config.MongoDbName))
 
 	if err != nil {
-		log.Fatal("Set your proper 'MONGODB_URI' environment variable.", err.Error())
+		log.Fatal("Error connecting to DB.", err.Error())
 	}
 
-	return DB{Client: client.Database(dbName)}
+	return DB{Client: client.Database(config.MongoDbName)}
 }

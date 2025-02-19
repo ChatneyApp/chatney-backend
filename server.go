@@ -8,7 +8,6 @@ import (
 	"chatney-backend/src/domains/user/models"
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
@@ -19,26 +18,20 @@ import (
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
-const defaultPort = "8080"
-
 func main() {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = defaultPort
+	config, err := database.LoadEnvConfig()
+	if err != nil {
+		panic("Error loading env var" + err.Error())
 	}
+
+	bucket := database.NewBucketConnection(config)
+	// Adding file example
+	res := bucket.PutFile("gqlgen.yml", "gqlgen.yml", "text/plain")
+	println(res.Key+" size ", res.Size)
 
 	router := chi.NewRouter()
 
-	mongoConnectionUri := os.Getenv("MONGO_CONNECTION_URI")
-	if mongoConnectionUri == "" {
-		panic("Mongo connection URI not set ")
-	}
-	mongoDatabase := os.Getenv("MONGO_DB_NAME")
-	if mongoDatabase == "" {
-		panic("Mongo Db name not set ")
-	}
-
-	db := database.NewDatabase(mongoConnectionUri+"/"+mongoDatabase, mongoDatabase)
+	db := database.NewDatabase(config)
 
 	userRootAggr := &user.UserRootAggregate{
 		UserRepo: &models.UserRepo{Collection: db.Client.Collection("users")},
@@ -62,8 +55,8 @@ func main() {
 	router.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	router.Handle("/query", srv)
 
-	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
-	err := http.ListenAndServe(":8080", router)
+	log.Printf("connect to http://localhost:%s/ for GraphQL playground", config.ApiPort)
+	err = http.ListenAndServe(":8080", router)
 	if err != nil {
 		panic(err)
 	}
