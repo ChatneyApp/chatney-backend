@@ -7,17 +7,29 @@ package graph
 import (
 	"chatney-backend/graph/model"
 	"context"
-	"fmt"
 )
 
 // CreateTodo is the resolver for the createTodo field.
 func (r *mutationResolver) CreateTodo(ctx context.Context, input model.NewTodo) (*model.Todo, error) {
-	panic(fmt.Errorf("not implemented: CreateTodo - createTodo"))
+	println("rendering logs with print ln")
+	return &model.Todo{
+		ID:   "234324sdg3w",
+		Text: "sdfsdfsd",
+		Done: true,
+	}, nil
 }
 
 // Todos is the resolver for the todos field.
 func (r *queryResolver) Todos(ctx context.Context) ([]*model.Todo, error) {
-	panic(fmt.Errorf("not implemented: Todos - todos"))
+	println("create todos failed")
+	return []*model.Todo{
+		{
+			ID:   "234324sdg3w",
+			Text: "sdfsdfsd",
+			Done: true,
+			User: &model.User{ID: "sdfsdf", Name: "sdfsdfsdf"},
+		},
+	}, nil
 }
 
 // Mutation returns MutationResolver implementation.

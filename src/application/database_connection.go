@@ -8,15 +8,15 @@ import (
 )
 
 type DB struct {
-	db *mongo.Database
+	Client *mongo.Database
 }
 
-func NewDatabase(connectionUri string, dbName string) *DB {
+func NewDatabase(connectionUri string, dbName string) DB {
 	client, err := mongo.Connect(options.Client().ApplyURI(connectionUri))
 
 	if err != nil {
 		log.Fatal("Set your proper 'MONGODB_URI' environment variable.", err.Error())
 	}
 
-	return &DB{db: client.Database(dbName)}
+	return DB{Client: client.Database(dbName)}
 }

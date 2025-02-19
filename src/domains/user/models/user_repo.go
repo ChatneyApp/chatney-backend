@@ -3,7 +3,7 @@ package models
 import "go.mongodb.org/mongo-driver/v2/mongo"
 
 type UserRepo struct {
-	db *mongo.Collection
+	Collection *mongo.Collection
 }
 
 func (repo *UserRepo) SaveUser(user User) error {

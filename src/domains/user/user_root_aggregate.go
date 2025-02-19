@@ -3,7 +3,7 @@ package user
 import "chatney-backend/src/domains/user/models"
 
 type UserRootAggregate struct {
-	userRepo *models.UserRepo
+	UserRepo *models.UserRepo
 }
 
 func (root *UserRootAggregate) NewUser(user models.User) (*models.User, error) {
