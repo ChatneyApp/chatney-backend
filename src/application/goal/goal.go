@@ -71,15 +71,15 @@ func (g *GoAL) GetAbilityBuilder() AbilityBuilder {
 	return AbilityBuilder{}
 }
 
-func (g *GoAL) FinalizeAbility(builder AbilityBuilder) Ability {
-	return Ability{abilities: builder.Abilities}
+func (g *GoAL) FinalizeAbility(builder AbilityBuilder) Actor {
+	return Actor{abilities: builder.Abilities}
 }
 
-type Ability struct {
+type Actor struct {
 	abilities map[AbilityRule]bool
 }
 
-func (a *Ability) Can(action ActionType, subject string, params *map[string]any) (bool, error) {
+func (a *Actor) Can(action ActionType, subject string, params *map[string]any) (bool, error) {
 	ability, err := makeAbilityRule(action, subject, params)
 	if err != nil {
 		return false, err
@@ -105,7 +105,7 @@ func Gtet() {
 	builder.can(ActionTypes.Delete, "Channel", nil)
 	builder.can(ActionTypes.Create, "Channel", nil)
 
-	var abil = g.FinalizeAbility(builder)
+	var actor = g.FinalizeAbility(builder)
 
-	println(abil.Can(ActionTypes.Read, "Channel", nil))
+	println(actor.Can(ActionTypes.Read, "Channel", nil))
 }
