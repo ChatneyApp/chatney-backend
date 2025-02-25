@@ -16,6 +16,8 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/go-chi/chi"
 	"github.com/vektah/gqlparser/v2/ast"
+
+	"github.com/rs/cors"
 )
 
 func main() {
@@ -30,6 +32,12 @@ func main() {
 	println(res.Key+" size ", res.Size)
 
 	router := chi.NewRouter()
+	router.Use(cors.New(cors.Options{
+		AllowedOrigins:   []string{"*"},
+		AllowCredentials: true,
+		Debug:            true,
+		AllowedHeaders:   []string{"auth", "content-type"},
+	}).Handler)
 
 	db := database.NewDatabase(config)
 
