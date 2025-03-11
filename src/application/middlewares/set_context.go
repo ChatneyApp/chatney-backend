@@ -22,7 +22,8 @@ var CtxUserKey = CtxUserKeyType{name: "user"}
 func SetUseAndContext(userRootAggr *user.UserRootAggregate) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			userId := r.Header.Get("auth")
+			//userId := r.Header.Get("auth")
+			userId := "3463434"
 
 			println(userId, "auth header in context")
 

@@ -2,6 +2,12 @@
 
 package model
 
+type CreateRoleDto struct {
+	Name        string           `json:"Name"`
+	Permissions []*string        `json:"Permissions"`
+	Settings    *RoleSettingsDto `json:"Settings"`
+}
+
 type Mutation struct {
 }
 
@@ -11,6 +17,21 @@ type NewTodo struct {
 }
 
 type Query struct {
+}
+
+type Role struct {
+	ID          string    `json:"Id"`
+	Name        string    `json:"Name"`
+	Permissions []string  `json:"Permissions"`
+	Settings    *Settings `json:"Settings"`
+}
+
+type RoleSettingsDto struct {
+	Base bool `json:"base"`
+}
+
+type Settings struct {
+	Base bool `json:"base"`
 }
 
 type Todo struct {

@@ -15,7 +15,7 @@ type ChannelTypeRepo struct {
 
 // CreateChannelType - inserts a new ChannelType into the database
 func (repo *ChannelTypeRepo) CreateChannelType(channelType ChannelType) (*ChannelType, error) {
-	channelType.ID = primitive.NewObjectID() // Generate new ObjectID
+	channelType.Id = primitive.NewObjectID() // Generate new ObjectID
 
 	_, err := repo.db.InsertOne(context.TODO(), channelType)
 	if err != nil {

@@ -25,7 +25,7 @@ type channel struct {
 }
 
 type User struct {
-	ID         primitive.ObjectID   `bson:"_id,omitempty"`
+	Id         primitive.ObjectID   `bson:"_id,omitempty"`
 	Name       string               `bson:"name,omitempty"`
 	Status     userStatus           `bson:"status,omitempty"`
 	Email      string               `bson:"email,omitempty"`

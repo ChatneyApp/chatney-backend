@@ -11,3 +11,10 @@ Open-source Chat Api
 2. Test Minio bucket browser - `localhost:9001`. User: `minioadmin`, pass: `miniopass`.
 3. Mongo database Admin dashboard - `localhost:8081`
 4. Mongo Connection URI `mongodb://root:pass@mongo:27017/chatney`
+
+## Development
+
+Generate endpoints from GraphQL
+```sh
+go run github.com/99designs/gqlgen generate
+```

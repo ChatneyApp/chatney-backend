@@ -14,7 +14,7 @@ type ChannelGroupRepo struct {
 }
 
 func (root *ChannelGroupRepo) CreateChannelGroup(group ChannelGroup) (*ChannelGroup, error) {
-	group.ID = primitive.NewObjectID()
+	group.Id = primitive.NewObjectID()
 
 	_, err := root.db.InsertOne(context.TODO(), group)
 	if err != nil {

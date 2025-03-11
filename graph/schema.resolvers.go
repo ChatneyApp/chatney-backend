@@ -7,7 +7,21 @@ package graph
 import (
 	"chatney-backend/graph/model"
 	"context"
+	"encoding/json"
+	"fmt"
 )
+
+// CreateRole is the resolver for the createRole field.
+func (r *mutationResolver) CreateRole(ctx context.Context, roleData model.CreateRoleDto) (*model.Role, error) {
+	jsonData, err := json.Marshal(roleData)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return nil, err
+	}
+
+	fmt.Println(string(jsonData)) // {"name":"Alice","age":25,"email":"alice@example.com"}
+	return &model.Role{ID: "sfsdfds", Name: "sdfdsfds", Permissions: []string{"trrtret"}, Settings: &model.Settings{Base: true}}, nil
+}
 
 // CreateTodo is the resolver for the createTodo field.
 func (r *mutationResolver) CreateTodo(ctx context.Context, input model.NewTodo) (*model.Todo, error) {
