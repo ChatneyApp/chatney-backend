@@ -50,7 +50,7 @@ func (repo *RoleRepo) UpdateRole(roleID bson.ObjectID, updatedRole Role) (*Role,
 	update := bson.M{
 		"$set": bson.M{
 			"name":        updatedRole.Name,
-			"type":        updatedRole.Type,
+			"settings":    updatedRole.Settings,
 			"permissions": updatedRole.Permissions,
 		},
 	}

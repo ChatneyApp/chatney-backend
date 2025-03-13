@@ -4,7 +4,14 @@ package model
 
 type CreateRoleDto struct {
 	Name        string           `json:"Name"`
-	Permissions []*string        `json:"Permissions"`
+	Permissions []string         `json:"Permissions"`
+	Settings    *RoleSettingsDto `json:"Settings"`
+}
+
+type EditRoleDto struct {
+	ID          string           `json:"Id"`
+	Name        string           `json:"Name"`
+	Permissions []*string        `json:"Permissions,omitempty"`
 	Settings    *RoleSettingsDto `json:"Settings"`
 }
 
@@ -31,7 +38,7 @@ type Query struct {
 type Role struct {
 	ID          string    `json:"Id"`
 	Name        string    `json:"Name"`
-	Permissions []string  `json:"Permissions"`
+	Permissions []string  `json:"Permissions,omitempty"`
 	Settings    *Settings `json:"Settings"`
 }
 

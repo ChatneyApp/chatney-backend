@@ -13,7 +13,20 @@ import (
 
 // CreateRole is the resolver for the createRole field.
 func (r *mutationResolver) CreateRole(ctx context.Context, roleData model.CreateRoleDto) (*model.Role, error) {
+	// application.RoleRootAggregate.CreateNewRole(models.Role{
+	// 	Name: roleData.Name,
+	// 	Settings: models.RoleSettings{
+	// 		Base: roleData.Settings.Base,
+	// 	},
+	// 	Permissions: roleData.Permissions,
+	// })
+
 	return nil, nil
+}
+
+// EditRole is the resolver for the editRole field.
+func (r *mutationResolver) EditRole(ctx context.Context, roleData model.EditRoleDto) (*model.Role, error) {
+	panic(fmt.Errorf("not implemented: EditRole - editRole"))
 }
 
 // CreateTodo is the resolver for the createTodo field.

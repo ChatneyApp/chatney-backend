@@ -45,20 +45,20 @@ type Role {
   # Replace later to UUID
   Id: String!
   Name: String!
-  Permissions: [String!]!
+  Permissions: [String!]
   Settings: Settings!
 }
 
 input CreateRoleDTO {
 	Name:    String!
-	Permissions: [String]!
+	Permissions: [String!]!
 	Settings: RoleSettingsDTO!
 }
 
 input EditRoleDTO {
   Id: String!
 	Name:    String!
-	Permissions: [String]!
+	Permissions: [String]
 	Settings: RoleSettingsDTO!
 }
 

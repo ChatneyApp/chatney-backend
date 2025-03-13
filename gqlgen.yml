@@ -81,7 +81,7 @@ resolver:
 # struct_fields_always_pointers: true
 
 # Optional: turn off to make resolvers return values instead of pointers for structs
-# resolvers_always_return_pointers: true
+# resolvers_always_return_pointers: false
 
 # Optional: turn on to return pointers instead of values in unmarshalInput
 # return_pointers_in_unmarshalinput: false
