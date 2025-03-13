@@ -14,8 +14,18 @@ type User {
   name: String!
 }
 
+type PermissionsGroup {
+  label: String!
+  list: [String!]!
+}
+
+type PermissionsListReturn {
+  groups: [PermissionsGroup!]!
+}
+
 type Query {
   todos: [Todo!]!
+  getPermissionsList: PermissionsListReturn!
 }
 
 input NewTodo {

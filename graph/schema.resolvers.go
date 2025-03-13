@@ -6,43 +6,36 @@ package graph
 
 import (
 	"chatney-backend/graph/model"
+	"chatney-backend/src/domains/permissions"
 	"context"
-	"encoding/json"
 	"fmt"
 )
 
 // CreateRole is the resolver for the createRole field.
 func (r *mutationResolver) CreateRole(ctx context.Context, roleData model.CreateRoleDto) (*model.Role, error) {
-	jsonData, err := json.Marshal(roleData)
-	if err != nil {
-		fmt.Println("Error:", err)
-		return nil, err
-	}
-
-	fmt.Println(string(jsonData)) // {"name":"Alice","age":25,"email":"alice@example.com"}
-	return &model.Role{ID: "sfsdfds", Name: "sdfdsfds", Permissions: []string{"trrtret"}, Settings: &model.Settings{Base: true}}, nil
+	panic(fmt.Errorf("not implemented: CreateRole - createRole"))
 }
 
 // CreateTodo is the resolver for the createTodo field.
 func (r *mutationResolver) CreateTodo(ctx context.Context, input model.NewTodo) (*model.Todo, error) {
-	println("rendering logs with print ln")
-	return &model.Todo{
-		ID:   "234324sdg3w",
-		Text: "sdfsdfsd",
-		Done: true,
-	}, nil
+	panic(fmt.Errorf("not implemented: CreateTodo - createTodo"))
 }
 
 // Todos is the resolver for the todos field.
 func (r *queryResolver) Todos(ctx context.Context) ([]*model.Todo, error) {
-	println("create todos failed")
-	return []*model.Todo{
-		{
-			ID:   "234324sdg3w",
-			Text: "sdfsdfsd",
-			Done: true,
-			User: &model.User{ID: "sdfsdf", Name: "sdfsdfsdf"},
-		},
+	panic(fmt.Errorf("not implemented: Todos - todos"))
+}
+
+// GetPermissionsList is the resolver for the getPermissionsList field.
+func (r *queryResolver) GetPermissionsList(ctx context.Context) (*model.PermissionsListReturn, error) {
+	permissionsGroups, err := permissions.PermissionsGroups.GetPermissionsList()
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.PermissionsListReturn{
+		Groups: []*model.PermissionsGroup{permissionsGroups},
 	}, nil
 }
 

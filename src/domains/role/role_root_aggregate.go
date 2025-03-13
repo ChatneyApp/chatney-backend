@@ -1,13 +1,8 @@
 package channel
 
 import (
-	"chatney-backend/src/domains/channel"
 	"chatney-backend/src/domains/channel/models"
 )
-
-type PermissionsGroups struct {
-	channel *channel.ChannelPermissionsGroup
-}
 
 type RoleRootAggregate struct {
 	channelRepo      *models.ChannelRepo

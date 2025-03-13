@@ -16,6 +16,15 @@ type NewTodo struct {
 	UserID string `json:"userId"`
 }
 
+type PermissionsGroup struct {
+	Label string   `json:"label"`
+	List  []string `json:"list"`
+}
+
+type PermissionsListReturn struct {
+	Groups []*PermissionsGroup `json:"groups"`
+}
+
 type Query struct {
 }
 
