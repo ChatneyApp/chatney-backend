@@ -35,7 +35,7 @@ func (r *queryResolver) GetPermissionsList(ctx context.Context) (*model.Permissi
 	}
 
 	return &model.PermissionsListReturn{
-		Groups: []*model.PermissionsGroup{permissionsGroups},
+		Groups: permissionsGroups,
 	}, nil
 }
 
