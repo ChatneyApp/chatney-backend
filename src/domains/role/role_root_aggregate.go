@@ -1,19 +1,28 @@
-package channel
+package role
 
 import (
-	"chatney-backend/src/domains/channel/models"
+	"chatney-backend/src/domains/role/models"
 )
 
-type RoleRootAggregate struct {
-	channelRepo      *models.ChannelRepo
-	channelGroupRepo *models.ChannelGroupRepo
-	channelTypeRepo  *models.ChannelTypeRepo
+type RoleRootAggregateStruct struct {
+	RoleRepo *models.RoleRepo
 }
 
-func (root *RoleRootAggregate) NewChannel(user models.Channel) (*models.Channel, error) {
-	return nil, nil
+func (root *RoleRootAggregateStruct) CreateNewRole(role models.Role) (*models.Role, error) {
+	newRole, err := root.RoleRepo.CreateRole(role)
+	if err != nil {
+		return nil, err
+	}
+
+	return newRole, nil
 }
 
-func (root *RoleRootAggregate) GetChannelByID(id int) (*models.Channel, error) {
-	return nil, nil
+func (root *RoleRootAggregateStruct) UpdateRole(role models.Role) (*models.Role, error) {
+	newRole, err := root.RoleRepo.UpdateRole(role.Id, role)
+	if err != nil {
+		return nil, err
+	}
+
+	return newRole, nil
+
 }

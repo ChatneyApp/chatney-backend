@@ -13,7 +13,7 @@ import (
 
 // CreateRole is the resolver for the createRole field.
 func (r *mutationResolver) CreateRole(ctx context.Context, roleData model.CreateRoleDto) (*model.Role, error) {
-	panic(fmt.Errorf("not implemented: CreateRole - createRole"))
+	return nil, nil
 }
 
 // CreateTodo is the resolver for the createTodo field.

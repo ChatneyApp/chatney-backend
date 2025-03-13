@@ -1,10 +1,10 @@
 package models
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import "go.mongodb.org/mongo-driver/v2/bson"
 
 type ChannelType struct {
-	Id    primitive.ObjectID   `bson:"_id,omitempty"`
-	Label string               `bson:"label,omitempty"`
-	Key   string               `bson:"key,omitempty"`
-	Roles []primitive.ObjectID `bson:"roles,omitempty"`
+	Id    bson.ObjectID   `bson:"_id,omitempty"`
+	Label string          `bson:"label,omitempty"`
+	Key   string          `bson:"key,omitempty"`
+	Roles []bson.ObjectID `bson:"roles,omitempty"`
 }

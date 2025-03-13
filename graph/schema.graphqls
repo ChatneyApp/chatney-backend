@@ -55,7 +55,15 @@ input CreateRoleDTO {
 	Settings: RoleSettingsDTO!
 }
 
+input EditRoleDTO {
+  Id: String!
+	Name:    String!
+	Permissions: [String]!
+	Settings: RoleSettingsDTO!
+}
+
 type Mutation {
   createRole(RoleData: CreateRoleDTO!): Role!
+  editRole(RoleData: EditRoleDTO!): Role!
   createTodo(input: NewTodo!): Todo!
 }

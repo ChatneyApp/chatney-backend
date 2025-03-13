@@ -6,9 +6,9 @@ require (
 	github.com/99designs/gqlgen v0.17.66
 	github.com/go-chi/chi v1.5.5
 	github.com/minio/minio-go/v7 v7.0.86
+	github.com/rs/cors v1.11.1
 	github.com/vektah/gqlparser/v2 v2.5.22
-	go.mongodb.org/mongo-driver v1.17.2
-	go.mongodb.org/mongo-driver/v2 v2.0.0
+	go.mongodb.org/mongo-driver/v2 v2.1.0
 )
 
 require (
@@ -27,7 +27,6 @@ require (
 	github.com/minio/crc64nvme v1.0.0 // indirect
 	github.com/minio/md5-simd v1.1.2 // indirect
 	github.com/montanaflynn/stats v0.7.1 // indirect
-	github.com/rs/cors v1.11.1 // indirect
 	github.com/rs/xid v1.6.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sosodev/duration v1.3.1 // indirect

@@ -4,8 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
@@ -14,7 +13,7 @@ type ChannelGroupRepo struct {
 }
 
 func (root *ChannelGroupRepo) CreateChannelGroup(group ChannelGroup) (*ChannelGroup, error) {
-	group.Id = primitive.NewObjectID()
+	group.Id = bson.NewObjectID()
 
 	_, err := root.db.InsertOne(context.TODO(), group)
 	if err != nil {
@@ -24,7 +23,7 @@ func (root *ChannelGroupRepo) CreateChannelGroup(group ChannelGroup) (*ChannelGr
 	return &group, nil
 }
 
-func (root *ChannelGroupRepo) DeleteChannelGroup(groupID primitive.ObjectID) error {
+func (root *ChannelGroupRepo) DeleteChannelGroup(groupID bson.ObjectID) error {
 	result, err := root.db.DeleteOne(context.TODO(), bson.M{"_id": groupID})
 	if err != nil {
 		return err
@@ -35,7 +34,7 @@ func (root *ChannelGroupRepo) DeleteChannelGroup(groupID primitive.ObjectID) err
 	return nil
 }
 
-func (root *ChannelGroupRepo) UpdateChannelGroupInfo(groupID primitive.ObjectID, updates bson.M) (*ChannelGroup, error) {
+func (root *ChannelGroupRepo) UpdateChannelGroupInfo(groupID bson.ObjectID, updates bson.M) (*ChannelGroup, error) {
 	filter := bson.M{"_id": groupID}
 	update := bson.M{"$set": updates}
 
@@ -53,7 +52,7 @@ func (root *ChannelGroupRepo) UpdateChannelGroupInfo(groupID primitive.ObjectID,
 	return &updatedGroup, nil
 }
 
-func (root *ChannelGroupRepo) PutChannelIntoChannelGroup(groupID, channelID primitive.ObjectID) error {
+func (root *ChannelGroupRepo) PutChannelIntoChannelGroup(groupID, channelID bson.ObjectID) error {
 	filter := bson.M{"_id": groupID}
 	update := bson.M{"$addToSet": bson.M{"channels": channelID}} // `$addToSet` prevents duplication
 
@@ -61,7 +60,7 @@ func (root *ChannelGroupRepo) PutChannelIntoChannelGroup(groupID, channelID prim
 	return err
 }
 
-func (repo *ChannelGroupRepo) FindByID(channelGroupID primitive.ObjectID) (*Channel, error) {
+func (repo *ChannelGroupRepo) FindByID(channelGroupID bson.ObjectID) (*Channel, error) {
 	var channel Channel
 	filter := bson.M{"_id": channelGroupID}
 

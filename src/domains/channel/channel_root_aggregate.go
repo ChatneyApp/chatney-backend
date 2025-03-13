@@ -4,8 +4,8 @@ import (
 	"chatney-backend/src/domains/channel/models"
 	"errors"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
 type ChannelRootAggregate struct {
@@ -32,7 +32,7 @@ func (root *ChannelRootAggregate) CreateChannelGroup(chanelGroup models.ChannelG
 	return chanGroup, nil
 }
 
-func (root *ChannelRootAggregate) DeleteChannelGroup(channelGroupId primitive.ObjectID) (bool, error) {
+func (root *ChannelRootAggregate) DeleteChannelGroup(channelGroupId bson.ObjectID) (bool, error) {
 	err := root.channelGroupRepo.DeleteChannelGroup(channelGroupId)
 	if err != nil {
 		return false, err
@@ -44,7 +44,7 @@ func (root *ChannelRootAggregate) UpdateChannelGroupInfo(user models.ChannelGrou
 	return nil, nil
 }
 
-func (root *ChannelRootAggregate) validatePutChannelIntoGroup(channelId primitive.ObjectID, groupId primitive.ObjectID) error {
+func (root *ChannelRootAggregate) validatePutChannelIntoGroup(channelId bson.ObjectID, groupId bson.ObjectID) error {
 	// Fetch the channel
 	channel, err := root.channelRepo.FindByID(channelId)
 	if err != nil {
@@ -71,7 +71,7 @@ func (root *ChannelRootAggregate) validatePutChannelIntoGroup(channelId primitiv
 	return nil
 }
 
-func (root *ChannelRootAggregate) PutChannelIntoChannelGroup(channelId primitive.ObjectID, groupId primitive.ObjectID) (bool, error) {
+func (root *ChannelRootAggregate) PutChannelIntoChannelGroup(channelId bson.ObjectID, groupId bson.ObjectID) (bool, error) {
 	err := root.validatePutChannelIntoGroup(channelId, groupId)
 	if err != nil {
 		return false, err

@@ -4,8 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
@@ -15,7 +14,7 @@ type ChannelTypeRepo struct {
 
 // CreateChannelType - inserts a new ChannelType into the database
 func (repo *ChannelTypeRepo) CreateChannelType(channelType ChannelType) (*ChannelType, error) {
-	channelType.Id = primitive.NewObjectID() // Generate new ObjectID
+	channelType.Id = bson.NewObjectID() // Generate new ObjectID
 
 	_, err := repo.db.InsertOne(context.TODO(), channelType)
 	if err != nil {
@@ -26,7 +25,7 @@ func (repo *ChannelTypeRepo) CreateChannelType(channelType ChannelType) (*Channe
 }
 
 // DeleteChannelType - deletes a ChannelType by ID
-func (repo *ChannelTypeRepo) DeleteChannelType(channelTypeID primitive.ObjectID) error {
+func (repo *ChannelTypeRepo) DeleteChannelType(channelTypeID bson.ObjectID) error {
 	result, err := repo.db.DeleteOne(context.TODO(), bson.M{"_id": channelTypeID})
 	if err != nil {
 		return err
@@ -38,7 +37,7 @@ func (repo *ChannelTypeRepo) DeleteChannelType(channelTypeID primitive.ObjectID)
 }
 
 // UpdateChannelType - updates a ChannelType by ID with given updates
-func (repo *ChannelTypeRepo) UpdateChannelType(channelTypeID primitive.ObjectID, updates bson.M) (*ChannelType, error) {
+func (repo *ChannelTypeRepo) UpdateChannelType(channelTypeID bson.ObjectID, updates bson.M) (*ChannelType, error) {
 	filter := bson.M{"_id": channelTypeID}
 	update := bson.M{"$set": updates}
 
@@ -57,7 +56,7 @@ func (repo *ChannelTypeRepo) UpdateChannelType(channelTypeID primitive.ObjectID,
 }
 
 // AddRoleToChannelType - adds a role to the roles array
-func (repo *ChannelTypeRepo) AddRoleToChannelType(channelTypeID, roleID primitive.ObjectID) error {
+func (repo *ChannelTypeRepo) AddRoleToChannelType(channelTypeID, roleID bson.ObjectID) error {
 	filter := bson.M{"_id": channelTypeID}
 	update := bson.M{"$addToSet": bson.M{"roles": roleID}} // Prevents duplicates
 
@@ -66,7 +65,7 @@ func (repo *ChannelTypeRepo) AddRoleToChannelType(channelTypeID, roleID primitiv
 }
 
 // RemoveRoleFromChannelType - removes a role from the roles array
-func (repo *ChannelTypeRepo) RemoveRoleFromChannelType(channelTypeID, roleID primitive.ObjectID) error {
+func (repo *ChannelTypeRepo) RemoveRoleFromChannelType(channelTypeID, roleID bson.ObjectID) error {
 	filter := bson.M{"_id": channelTypeID}
 	update := bson.M{"$pull": bson.M{"roles": roleID}} // Removes the role
 
@@ -74,7 +73,7 @@ func (repo *ChannelTypeRepo) RemoveRoleFromChannelType(channelTypeID, roleID pri
 	return err
 }
 
-func (repo *ChannelTypeRepo) FindByID(channelTypeID primitive.ObjectID) (*Channel, error) {
+func (repo *ChannelTypeRepo) FindByID(channelTypeID bson.ObjectID) (*Channel, error) {
 	var channel Channel
 	filter := bson.M{"_id": channelTypeID}
 
