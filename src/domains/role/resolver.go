@@ -18,13 +18,31 @@ type RoleQueryResolvers struct {
 	RootAggregate *RoleRootAggregateStruct
 }
 
+func (r *RoleQueryResolvers) GetRolesList(ctx context.Context) ([]*graphql_models.Role, error) {
+	roles, err := r.RootAggregate.getAllRoles(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var out []*graphql_models.Role
+	for _, group := range roles {
+		out = append(out, RoleToDTO(group))
+	}
+
+	return out, nil
+}
+
+func (r *RoleMutationsResolvers) DeleteRole(ctx context.Context, roleId *string) (bool, error) {
+	return r.RootAggregate.deleteRole(*roleId)
+}
+
 // CreateRole is the resolver for the createRole field.
 func (r *RoleMutationsResolvers) CreateRole(ctx context.Context, roleData graphql_models.CreateRoleDto) (*graphql_models.Role, error) {
 	permKeyList := make([]models.PermissionKey, len(roleData.Permissions))
 	for i, s := range roleData.Permissions {
 		permKeyList[i] = models.PermissionKey(s)
 	}
-	updatedRole, err := r.RootAggregate.CreateNewRole(&models.Role{
+	newRole, err := r.RootAggregate.CreateNewRole(&models.Role{
 		Id:          uuid.NewString(),
 		Name:        roleData.Name,
 		Settings:    (*models.RoleSettings)(roleData.Settings),
@@ -34,17 +52,7 @@ func (r *RoleMutationsResolvers) CreateRole(ctx context.Context, roleData graphq
 		return nil, err
 	}
 
-	permStringList := make([]string, len(updatedRole.Permissions))
-	for i, s := range roleData.Permissions {
-		permStringList[i] = string(s)
-	}
-
-	return &graphql_models.Role{
-		ID:          updatedRole.Id,
-		Name:        updatedRole.Name,
-		Permissions: permStringList,
-		Settings:    (*graphql_models.RoleSettings)(updatedRole.Settings),
-	}, nil
+	return RoleToDTO(newRole), nil
 }
 
 // EditRole is the resolver for the editRole field.
@@ -63,17 +71,7 @@ func (r *RoleMutationsResolvers) EditRole(ctx context.Context, roleData graphql_
 		return nil, err
 	}
 
-	permStringList := make([]string, len(updatedRole.Permissions))
-	for i, s := range roleData.Permissions {
-		permStringList[i] = string(s)
-	}
-
-	return &graphql_models.Role{
-		ID:          updatedRole.Id,
-		Name:        updatedRole.Name,
-		Permissions: permStringList,
-		Settings:    (*graphql_models.RoleSettings)(updatedRole.Settings),
-	}, nil
+	return RoleToDTO(updatedRole), nil
 }
 
 func GetMutationResolvers(DB *mongo.Database) RoleMutationsResolvers {

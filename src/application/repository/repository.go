@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"log"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -24,18 +23,12 @@ func (r *BaseRepo[T]) Create(ctx context.Context, entity *T) (*T, error) {
 
 	resId := res.InsertedID
 
-	var insertedGroup T
-	err = r.Collection.FindOne(context.TODO(), bson.M{"_id": resId}).Decode(&insertedGroup)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return &insertedGroup, nil
+	return r.GetByID(ctx, resId.(string))
 }
 
 func (r *BaseRepo[T]) GetByID(ctx context.Context, id string) (*T, error) {
 	var entity T
-	err := r.Collection.FindOne(ctx, bson.M{"Id": id}).Decode(&entity)
+	err := r.Collection.FindOne(ctx, bson.M{"_id": id}).Decode(&entity)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +36,7 @@ func (r *BaseRepo[T]) GetByID(ctx context.Context, id string) (*T, error) {
 }
 
 func (r *BaseRepo[T]) Update(ctx context.Context, id string, update T) (*T, error) {
-	_, err := r.Collection.UpdateOne(ctx, bson.M{"Id": id}, bson.M{"$set": update})
+	_, err := r.Collection.UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$set": update})
 	if err != nil {
 		return nil, err
 	}
@@ -52,11 +45,11 @@ func (r *BaseRepo[T]) Update(ctx context.Context, id string, update T) (*T, erro
 }
 
 func (r *BaseRepo[T]) Delete(ctx context.Context, id string) (*mongo.DeleteResult, error) {
-	return r.Collection.DeleteOne(ctx, bson.M{"Id": id})
+	return r.Collection.DeleteOne(ctx, bson.M{"_id": id})
 }
 
-func (r *BaseRepo[T]) GetAll(ctx context.Context, filter bson.M) ([]T, error) {
-	var entities []T
+func (r *BaseRepo[T]) GetAll(ctx context.Context, filter bson.M) ([]*T, error) {
+	var entities []*T
 	cursor, err := r.Collection.Find(ctx, filter)
 	if err != nil {
 		return nil, err

@@ -59,6 +59,7 @@ type ComplexityRoot struct {
 		CreateChannelGroup func(childComplexity int, input graphql_models.CreateChannelGroupInput) int
 		CreateRole         func(childComplexity int, roleData graphql_models.CreateRoleDto) int
 		DeleteChannelGroup func(childComplexity int, uuid string) int
+		DeleteRole         func(childComplexity int, roleID *string) int
 		EditRole           func(childComplexity int, roleData graphql_models.EditRoleDto) int
 		UpdateChannelGroup func(childComplexity int, input graphql_models.UpdateChannelGroupInput) int
 	}
@@ -75,6 +76,7 @@ type ComplexityRoot struct {
 	Query struct {
 		GetChannelGroup    func(childComplexity int, uuid string) int
 		GetPermissionsList func(childComplexity int) int
+		GetRolesList       func(childComplexity int) int
 		ListChannelGroups  func(childComplexity int, workspaceID string) int
 	}
 
@@ -93,11 +95,13 @@ type ComplexityRoot struct {
 type MutationResolver interface {
 	CreateRole(ctx context.Context, roleData graphql_models.CreateRoleDto) (*graphql_models.Role, error)
 	EditRole(ctx context.Context, roleData graphql_models.EditRoleDto) (*graphql_models.Role, error)
+	DeleteRole(ctx context.Context, roleID *string) (bool, error)
 	CreateChannelGroup(ctx context.Context, input graphql_models.CreateChannelGroupInput) (*graphql_models.ChannelGroup, error)
 	UpdateChannelGroup(ctx context.Context, input graphql_models.UpdateChannelGroupInput) (*graphql_models.ChannelGroup, error)
 	DeleteChannelGroup(ctx context.Context, uuid string) (bool, error)
 }
 type QueryResolver interface {
+	GetRolesList(ctx context.Context) ([]*graphql_models.Role, error)
 	GetPermissionsList(ctx context.Context) (*graphql_models.PermissionsListReturn, error)
 	GetChannelGroup(ctx context.Context, uuid string) (*graphql_models.ChannelGroup, error)
 	ListChannelGroups(ctx context.Context, workspaceID string) ([]*graphql_models.ChannelGroup, error)
@@ -193,6 +197,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.DeleteChannelGroup(childComplexity, args["UUID"].(string)), true
 
+	case "Mutation.deleteRole":
+		if e.complexity.Mutation.DeleteRole == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteRole_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteRole(childComplexity, args["roleId"].(*string)), true
+
 	case "Mutation.editRole":
 		if e.complexity.Mutation.EditRole == nil {
 			break
@@ -256,6 +272,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.GetPermissionsList(childComplexity), true
+
+	case "Query.getRolesList":
+		if e.complexity.Query.GetRolesList == nil {
+			break
+		}
+
+		return e.complexity.Query.GetRolesList(childComplexity), true
 
 	case "Query.listChannelGroups":
 		if e.complexity.Query.ListChannelGroups == nil {
@@ -561,6 +584,29 @@ func (ec *executionContext) field_Mutation_deleteChannelGroup_argsUUID(
 	}
 
 	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteRole_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_deleteRole_argsRoleID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["roleId"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_deleteRole_argsRoleID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (*string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("roleId"))
+	if tmp, ok := rawArgs["roleId"]; ok {
+		return ec.unmarshalOString2ᚖstring(ctx, tmp)
+	}
+
+	var zeroVal *string
 	return zeroVal, nil
 }
 
@@ -1129,6 +1175,61 @@ func (ec *executionContext) fieldContext_Mutation_editRole(ctx context.Context, 
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_deleteRole(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deleteRole(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteRole(rctx, fc.Args["roleId"].(*string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteRole(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteRole_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_createChannelGroup(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_createChannelGroup(ctx, field)
 	if err != nil {
@@ -1451,6 +1552,60 @@ func (ec *executionContext) fieldContext_PermissionsListReturn_groups(_ context.
 				return ec.fieldContext_PermissionsGroup_list(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PermissionsGroup", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_getRolesList(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getRolesList(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetRolesList(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*graphql_models.Role)
+	fc.Result = res
+	return ec.marshalNRole2ᚕᚖchatneyᚑbackendᚋgraphᚋmodelᚐRoleᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_getRolesList(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "Id":
+				return ec.fieldContext_Role_Id(ctx, field)
+			case "Name":
+				return ec.fieldContext_Role_Name(ctx, field)
+			case "Permissions":
+				return ec.fieldContext_Role_Permissions(ctx, field)
+			case "Settings":
+				return ec.fieldContext_Role_Settings(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Role", field.Name)
 		},
 	}
 	return fc, nil
@@ -4250,6 +4405,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "deleteRole":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteRole(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "createChannelGroup":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createChannelGroup(ctx, field)
@@ -4396,6 +4558,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Query")
+		case "getRolesList":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getRolesList(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "getPermissionsList":
 			field := field
 
@@ -5135,6 +5319,50 @@ func (ec *executionContext) marshalNPermissionsListReturn2ᚖchatneyᚑbackend�
 
 func (ec *executionContext) marshalNRole2chatneyᚑbackendᚋgraphᚋmodelᚐRole(ctx context.Context, sel ast.SelectionSet, v graphql_models.Role) graphql.Marshaler {
 	return ec._Role(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNRole2ᚕᚖchatneyᚑbackendᚋgraphᚋmodelᚐRoleᚄ(ctx context.Context, sel ast.SelectionSet, v []*graphql_models.Role) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNRole2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐRole(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalNRole2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐRole(ctx context.Context, sel ast.SelectionSet, v *graphql_models.Role) graphql.Marshaler {

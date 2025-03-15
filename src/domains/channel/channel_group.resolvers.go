@@ -34,7 +34,7 @@ func (r *ChannelQueryResolvers) ListChannelGroups(ctx context.Context, workspace
 
 	out := make([]*graphql_models.ChannelGroup, len(groups))
 	for _, group := range groups {
-		out = append(out, channelGroupToDTO(group))
+		out = append(out, channelGroupToDTO(*group))
 	}
 
 	return out, nil
