@@ -11,7 +11,6 @@ const (
 	readWorkspace   models.PermissionKey = "workspace.readWorkspace"
 )
 
-// Слайс со всеми возможными значениями PermissionKey
 var WorkspacePermissions = []models.PermissionKey{
 	createWorkspace,
 	deleteWorkspace,
