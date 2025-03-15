@@ -22,16 +22,15 @@ func (r *BaseRepo[T]) Create(ctx context.Context, entity *T) (*T, error) {
 		return nil, err
 	}
 
-	insertedID := res.InsertedID.(string)
+	resId := res.InsertedID
 
-	var insertedGroup *T
-
-	err = r.Collection.FindOne(context.TODO(), bson.M{"_id": insertedID}).Decode(&insertedGroup)
+	var insertedGroup T
+	err = r.Collection.FindOne(context.TODO(), bson.M{"_id": resId}).Decode(&insertedGroup)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return insertedGroup, nil
+	return &insertedGroup, nil
 }
 
 func (r *BaseRepo[T]) GetByID(ctx context.Context, id string) (*T, error) {
