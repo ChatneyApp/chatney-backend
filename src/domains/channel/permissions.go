@@ -4,16 +4,18 @@ import (
 	"chatney-backend/src/domains/role/models"
 )
 
-type ChannelPermissionsGroup struct {
-	DeleteMessage models.PermissionKey
-	EditMessage   models.PermissionKey
-	CreateMessage models.PermissionKey
-	ReadMessage   models.PermissionKey
-}
+const (
+	DeleteMessage models.PermissionKey = "channel.deleteMessage"
+	EditMessage   models.PermissionKey = "channel.editMessage"
+	CreateMessage models.PermissionKey = "channel.createMessage"
+	ReadMessage   models.PermissionKey = "channel.readMessage"
+	DeleteChannel models.PermissionKey = "channel.deleteChannel"
+	EditChannel   models.PermissionKey = "channel.editChannel"
+	CreateChannel models.PermissionKey = "channel.createChannel"
+	ReadChannel   models.PermissionKey = "channel.readChannel"
+)
 
-var ChannelPermissions = ChannelPermissionsGroup{
-	DeleteMessage: "channel.deleteMessage",
-	EditMessage:   "channel.editMessage",
-	CreateMessage: "channel.createMessage",
-	ReadMessage:   "channel.readMessage",
+var ChannelPermissions = []models.PermissionKey{
+	DeleteMessage, EditMessage, CreateMessage, ReadMessage,
+	DeleteChannel, EditChannel, CreateChannel, ReadChannel,
 }

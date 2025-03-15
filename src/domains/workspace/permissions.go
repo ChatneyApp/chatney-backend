@@ -1,25 +1,20 @@
 package workspace
 
 import (
-	graphql_models "chatney-backend/graph/model"
-	"chatney-backend/src/domains/channel"
+	"chatney-backend/src/domains/role/models"
 )
 
-type PermissionsGroupsStruct struct {
-	channel *channel.ChannelPermissionsGroup
-}
+const (
+	CreateWorkspace models.PermissionKey = "workspace.createWorkspace"
+	DeleteWorkspace models.PermissionKey = "workspace.deleteWorkspace"
+	UpdateWorkspace models.PermissionKey = "workspace.updateWorkspace"
+	ReadWorkspace   models.PermissionKey = "workspace.readWorkspace"
+)
 
-func (pg *PermissionsGroupsStruct) GetPermissionsList() (*graphql_models.PermissionsGroup, error) {
-	var output = graphql_models.PermissionsGroup{
-		Label: "Workspace permissions",
-		List: []string{
-			"workspace.createWorkspace",
-			"workspace.editWorkspace",
-			"workspace.deleteWorkspace",
-			"workspace.readWorkspace",
-		},
-	}
-	return &output, nil
+// Слайс со всеми возможными значениями PermissionKey
+var WorkspacePermissions = []models.PermissionKey{
+	CreateWorkspace,
+	DeleteWorkspace,
+	UpdateWorkspace,
+	ReadWorkspace,
 }
-
-var PermissionsGroups = PermissionsGroupsStruct{channel: &channel.ChannelPermissions}

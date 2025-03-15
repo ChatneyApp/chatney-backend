@@ -61,7 +61,7 @@ func (r *RoleMutationsResolvers) EditRole(ctx context.Context, roleData graphql_
 
 	permissionsOut := make([]string, len(role.Permissions))
 	for i, p := range role.Permissions {
-		permissionsOut[i] = string(p) // converting string into PermissionKey type
+		permissionsOut[i] = string(p) // converting PermissionKey type into string
 	}
 
 	return &graphql_models.Role{
