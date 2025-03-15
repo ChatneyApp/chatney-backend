@@ -3,12 +3,12 @@ package user
 import "chatney-backend/src/domains/role/models"
 
 const (
-	DeleteUser models.PermissionKey = "user.deleteUser"
-	EditUser   models.PermissionKey = "user.editUser"
-	CreateUser models.PermissionKey = "user.createUser"
-	ReadUser   models.PermissionKey = "user.readUser"
+	deleteUser models.PermissionKey = "user.deleteUser"
+	editUser   models.PermissionKey = "user.editUser"
+	createUser models.PermissionKey = "user.createUser"
+	readUser   models.PermissionKey = "user.readUser"
 )
 
 var UserPermissions = []models.PermissionKey{
-	DeleteUser, EditUser, CreateUser, ReadUser,
+	deleteUser, editUser, createUser, readUser,
 }
