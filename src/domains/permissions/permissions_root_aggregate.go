@@ -1,7 +1,7 @@
 package permissions
 
 import (
-	"chatney-backend/graph/model"
+	graphql_models "chatney-backend/graph/model"
 	"chatney-backend/src/domains/channel"
 )
 
@@ -9,8 +9,8 @@ type PermissionsGroupsStruct struct {
 	channel *channel.ChannelPermissionsGroup
 }
 
-func (pg *PermissionsGroupsStruct) GetPermissionsList() ([]*model.PermissionsGroup, error) {
-	var channel = model.PermissionsGroup{
+func (pg *PermissionsGroupsStruct) GetPermissionsList() ([]*graphql_models.PermissionsGroup, error) {
+	var channel = graphql_models.PermissionsGroup{
 		Label: "Channel permissions",
 		List: []string{
 			"channel.deleteMessage",
@@ -19,7 +19,7 @@ func (pg *PermissionsGroupsStruct) GetPermissionsList() ([]*model.PermissionsGro
 			"channel.readMessage",
 		},
 	}
-	var workspace = model.PermissionsGroup{
+	var workspace = graphql_models.PermissionsGroup{
 		Label: "Workspace permissions",
 		List: []string{
 			"workspace.deleteWorkspace",
@@ -28,7 +28,7 @@ func (pg *PermissionsGroupsStruct) GetPermissionsList() ([]*model.PermissionsGro
 			"workspace.readWorkspace",
 		},
 	}
-	return []*model.PermissionsGroup{
+	return []*graphql_models.PermissionsGroup{
 		&workspace,
 		&channel,
 	}, nil

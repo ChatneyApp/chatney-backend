@@ -4,6 +4,7 @@ import (
 	"chatney-backend/graph"
 	database "chatney-backend/src/application"
 	"chatney-backend/src/application/middlewares"
+	"chatney-backend/src/application/resolver"
 	"chatney-backend/src/domains/user"
 	"chatney-backend/src/domains/user/models"
 	"log"
@@ -47,7 +48,9 @@ func main() {
 
 	router.Use(middlewares.SetUseAndContext(userRootAggr))
 
-	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{}}))
+	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: &resolver.Resolver{
+		DB: db.Client,
+	}}))
 
 	srv.AddTransport(transport.Options{})
 	srv.AddTransport(transport.GET{})

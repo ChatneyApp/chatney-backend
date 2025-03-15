@@ -4,7 +4,7 @@ package graph
 
 import (
 	"bytes"
-	"chatney-backend/graph/model"
+	graphql_models "chatney-backend/graph/model"
 	"context"
 	"errors"
 	"fmt"
@@ -47,8 +47,8 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Mutation struct {
-		CreateRole func(childComplexity int, roleData model.CreateRoleDto) int
-		EditRole   func(childComplexity int, roleData model.EditRoleDto) int
+		CreateRole func(childComplexity int, roleData graphql_models.CreateRoleDto) int
+		EditRole   func(childComplexity int, roleData graphql_models.EditRoleDto) int
 	}
 
 	PermissionsGroup struct {
@@ -77,11 +77,11 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
-	CreateRole(ctx context.Context, roleData model.CreateRoleDto) (*model.Role, error)
-	EditRole(ctx context.Context, roleData model.EditRoleDto) (*model.Role, error)
+	CreateRole(ctx context.Context, roleData graphql_models.CreateRoleDto) (*graphql_models.Role, error)
+	EditRole(ctx context.Context, roleData graphql_models.EditRoleDto) (*graphql_models.Role, error)
 }
 type QueryResolver interface {
-	GetPermissionsList(ctx context.Context) (*model.PermissionsListReturn, error)
+	GetPermissionsList(ctx context.Context) (*graphql_models.PermissionsListReturn, error)
 }
 
 type executableSchema struct {
@@ -113,7 +113,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateRole(childComplexity, args["RoleData"].(model.CreateRoleDto)), true
+		return e.complexity.Mutation.CreateRole(childComplexity, args["RoleData"].(graphql_models.CreateRoleDto)), true
 
 	case "Mutation.editRole":
 		if e.complexity.Mutation.EditRole == nil {
@@ -125,7 +125,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.EditRole(childComplexity, args["RoleData"].(model.EditRoleDto)), true
+		return e.complexity.Mutation.EditRole(childComplexity, args["RoleData"].(graphql_models.EditRoleDto)), true
 
 	case "PermissionsGroup.label":
 		if e.complexity.PermissionsGroup.Label == nil {
@@ -367,13 +367,13 @@ func (ec *executionContext) field_Mutation_createRole_args(ctx context.Context, 
 func (ec *executionContext) field_Mutation_createRole_argsRoleData(
 	ctx context.Context,
 	rawArgs map[string]any,
-) (model.CreateRoleDto, error) {
+) (graphql_models.CreateRoleDto, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("RoleData"))
 	if tmp, ok := rawArgs["RoleData"]; ok {
 		return ec.unmarshalNCreateRoleDTO2chatneyᚑbackendᚋgraphᚋmodelᚐCreateRoleDto(ctx, tmp)
 	}
 
-	var zeroVal model.CreateRoleDto
+	var zeroVal graphql_models.CreateRoleDto
 	return zeroVal, nil
 }
 
@@ -390,13 +390,13 @@ func (ec *executionContext) field_Mutation_editRole_args(ctx context.Context, ra
 func (ec *executionContext) field_Mutation_editRole_argsRoleData(
 	ctx context.Context,
 	rawArgs map[string]any,
-) (model.EditRoleDto, error) {
+) (graphql_models.EditRoleDto, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("RoleData"))
 	if tmp, ok := rawArgs["RoleData"]; ok {
 		return ec.unmarshalNEditRoleDTO2chatneyᚑbackendᚋgraphᚋmodelᚐEditRoleDto(ctx, tmp)
 	}
 
-	var zeroVal model.EditRoleDto
+	var zeroVal graphql_models.EditRoleDto
 	return zeroVal, nil
 }
 
@@ -537,7 +537,7 @@ func (ec *executionContext) _Mutation_createRole(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateRole(rctx, fc.Args["RoleData"].(model.CreateRoleDto))
+		return ec.resolvers.Mutation().CreateRole(rctx, fc.Args["RoleData"].(graphql_models.CreateRoleDto))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -549,7 +549,7 @@ func (ec *executionContext) _Mutation_createRole(ctx context.Context, field grap
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Role)
+	res := resTmp.(*graphql_models.Role)
 	fc.Result = res
 	return ec.marshalNRole2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐRole(ctx, field.Selections, res)
 }
@@ -602,7 +602,7 @@ func (ec *executionContext) _Mutation_editRole(ctx context.Context, field graphq
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().EditRole(rctx, fc.Args["RoleData"].(model.EditRoleDto))
+		return ec.resolvers.Mutation().EditRole(rctx, fc.Args["RoleData"].(graphql_models.EditRoleDto))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -614,7 +614,7 @@ func (ec *executionContext) _Mutation_editRole(ctx context.Context, field graphq
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Role)
+	res := resTmp.(*graphql_models.Role)
 	fc.Result = res
 	return ec.marshalNRole2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐRole(ctx, field.Selections, res)
 }
@@ -653,7 +653,7 @@ func (ec *executionContext) fieldContext_Mutation_editRole(ctx context.Context, 
 	return fc, nil
 }
 
-func (ec *executionContext) _PermissionsGroup_label(ctx context.Context, field graphql.CollectedField, obj *model.PermissionsGroup) (ret graphql.Marshaler) {
+func (ec *executionContext) _PermissionsGroup_label(ctx context.Context, field graphql.CollectedField, obj *graphql_models.PermissionsGroup) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PermissionsGroup_label(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -697,7 +697,7 @@ func (ec *executionContext) fieldContext_PermissionsGroup_label(_ context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _PermissionsGroup_list(ctx context.Context, field graphql.CollectedField, obj *model.PermissionsGroup) (ret graphql.Marshaler) {
+func (ec *executionContext) _PermissionsGroup_list(ctx context.Context, field graphql.CollectedField, obj *graphql_models.PermissionsGroup) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PermissionsGroup_list(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -741,7 +741,7 @@ func (ec *executionContext) fieldContext_PermissionsGroup_list(_ context.Context
 	return fc, nil
 }
 
-func (ec *executionContext) _PermissionsListReturn_groups(ctx context.Context, field graphql.CollectedField, obj *model.PermissionsListReturn) (ret graphql.Marshaler) {
+func (ec *executionContext) _PermissionsListReturn_groups(ctx context.Context, field graphql.CollectedField, obj *graphql_models.PermissionsListReturn) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PermissionsListReturn_groups(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -767,7 +767,7 @@ func (ec *executionContext) _PermissionsListReturn_groups(ctx context.Context, f
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.PermissionsGroup)
+	res := resTmp.([]*graphql_models.PermissionsGroup)
 	fc.Result = res
 	return ec.marshalNPermissionsGroup2ᚕᚖchatneyᚑbackendᚋgraphᚋmodelᚐPermissionsGroupᚄ(ctx, field.Selections, res)
 }
@@ -817,7 +817,7 @@ func (ec *executionContext) _Query_getPermissionsList(ctx context.Context, field
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.PermissionsListReturn)
+	res := resTmp.(*graphql_models.PermissionsListReturn)
 	fc.Result = res
 	return ec.marshalNPermissionsListReturn2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐPermissionsListReturn(ctx, field.Selections, res)
 }
@@ -970,7 +970,7 @@ func (ec *executionContext) fieldContext_Query___schema(_ context.Context, field
 	return fc, nil
 }
 
-func (ec *executionContext) _Role_Id(ctx context.Context, field graphql.CollectedField, obj *model.Role) (ret graphql.Marshaler) {
+func (ec *executionContext) _Role_Id(ctx context.Context, field graphql.CollectedField, obj *graphql_models.Role) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Role_Id(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -1014,7 +1014,7 @@ func (ec *executionContext) fieldContext_Role_Id(_ context.Context, field graphq
 	return fc, nil
 }
 
-func (ec *executionContext) _Role_Name(ctx context.Context, field graphql.CollectedField, obj *model.Role) (ret graphql.Marshaler) {
+func (ec *executionContext) _Role_Name(ctx context.Context, field graphql.CollectedField, obj *graphql_models.Role) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Role_Name(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -1058,7 +1058,7 @@ func (ec *executionContext) fieldContext_Role_Name(_ context.Context, field grap
 	return fc, nil
 }
 
-func (ec *executionContext) _Role_Permissions(ctx context.Context, field graphql.CollectedField, obj *model.Role) (ret graphql.Marshaler) {
+func (ec *executionContext) _Role_Permissions(ctx context.Context, field graphql.CollectedField, obj *graphql_models.Role) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Role_Permissions(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -1099,7 +1099,7 @@ func (ec *executionContext) fieldContext_Role_Permissions(_ context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _Role_Settings(ctx context.Context, field graphql.CollectedField, obj *model.Role) (ret graphql.Marshaler) {
+func (ec *executionContext) _Role_Settings(ctx context.Context, field graphql.CollectedField, obj *graphql_models.Role) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Role_Settings(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -1125,7 +1125,7 @@ func (ec *executionContext) _Role_Settings(ctx context.Context, field graphql.Co
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.RoleSettings)
+	res := resTmp.(*graphql_models.RoleSettings)
 	fc.Result = res
 	return ec.marshalNRoleSettings2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐRoleSettings(ctx, field.Selections, res)
 }
@@ -1147,7 +1147,7 @@ func (ec *executionContext) fieldContext_Role_Settings(_ context.Context, field 
 	return fc, nil
 }
 
-func (ec *executionContext) _RoleSettings_base(ctx context.Context, field graphql.CollectedField, obj *model.RoleSettings) (ret graphql.Marshaler) {
+func (ec *executionContext) _RoleSettings_base(ctx context.Context, field graphql.CollectedField, obj *graphql_models.RoleSettings) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_RoleSettings_base(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -3142,8 +3142,8 @@ func (ec *executionContext) fieldContext___Type_isOneOf(_ context.Context, field
 
 // region    **************************** input.gotpl *****************************
 
-func (ec *executionContext) unmarshalInputCreateRoleDTO(ctx context.Context, obj any) (model.CreateRoleDto, error) {
-	var it model.CreateRoleDto
+func (ec *executionContext) unmarshalInputCreateRoleDTO(ctx context.Context, obj any) (graphql_models.CreateRoleDto, error) {
+	var it graphql_models.CreateRoleDto
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -3183,8 +3183,8 @@ func (ec *executionContext) unmarshalInputCreateRoleDTO(ctx context.Context, obj
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputEditRoleDTO(ctx context.Context, obj any) (model.EditRoleDto, error) {
-	var it model.EditRoleDto
+func (ec *executionContext) unmarshalInputEditRoleDTO(ctx context.Context, obj any) (graphql_models.EditRoleDto, error) {
+	var it graphql_models.EditRoleDto
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -3231,8 +3231,8 @@ func (ec *executionContext) unmarshalInputEditRoleDTO(ctx context.Context, obj a
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputRoleSettingsDTO(ctx context.Context, obj any) (model.RoleSettingsDto, error) {
-	var it model.RoleSettingsDto
+func (ec *executionContext) unmarshalInputRoleSettingsDTO(ctx context.Context, obj any) (graphql_models.RoleSettingsDto, error) {
+	var it graphql_models.RoleSettingsDto
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -3324,7 +3324,7 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 var permissionsGroupImplementors = []string{"PermissionsGroup"}
 
-func (ec *executionContext) _PermissionsGroup(ctx context.Context, sel ast.SelectionSet, obj *model.PermissionsGroup) graphql.Marshaler {
+func (ec *executionContext) _PermissionsGroup(ctx context.Context, sel ast.SelectionSet, obj *graphql_models.PermissionsGroup) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, permissionsGroupImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -3368,7 +3368,7 @@ func (ec *executionContext) _PermissionsGroup(ctx context.Context, sel ast.Selec
 
 var permissionsListReturnImplementors = []string{"PermissionsListReturn"}
 
-func (ec *executionContext) _PermissionsListReturn(ctx context.Context, sel ast.SelectionSet, obj *model.PermissionsListReturn) graphql.Marshaler {
+func (ec *executionContext) _PermissionsListReturn(ctx context.Context, sel ast.SelectionSet, obj *graphql_models.PermissionsListReturn) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, permissionsListReturnImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -3479,7 +3479,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 
 var roleImplementors = []string{"Role"}
 
-func (ec *executionContext) _Role(ctx context.Context, sel ast.SelectionSet, obj *model.Role) graphql.Marshaler {
+func (ec *executionContext) _Role(ctx context.Context, sel ast.SelectionSet, obj *graphql_models.Role) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, roleImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -3530,7 +3530,7 @@ func (ec *executionContext) _Role(ctx context.Context, sel ast.SelectionSet, obj
 
 var roleSettingsImplementors = []string{"RoleSettings"}
 
-func (ec *executionContext) _RoleSettings(ctx context.Context, sel ast.SelectionSet, obj *model.RoleSettings) graphql.Marshaler {
+func (ec *executionContext) _RoleSettings(ctx context.Context, sel ast.SelectionSet, obj *graphql_models.RoleSettings) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, roleSettingsImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -3917,17 +3917,17 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) unmarshalNCreateRoleDTO2chatneyᚑbackendᚋgraphᚋmodelᚐCreateRoleDto(ctx context.Context, v any) (model.CreateRoleDto, error) {
+func (ec *executionContext) unmarshalNCreateRoleDTO2chatneyᚑbackendᚋgraphᚋmodelᚐCreateRoleDto(ctx context.Context, v any) (graphql_models.CreateRoleDto, error) {
 	res, err := ec.unmarshalInputCreateRoleDTO(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNEditRoleDTO2chatneyᚑbackendᚋgraphᚋmodelᚐEditRoleDto(ctx context.Context, v any) (model.EditRoleDto, error) {
+func (ec *executionContext) unmarshalNEditRoleDTO2chatneyᚑbackendᚋgraphᚋmodelᚐEditRoleDto(ctx context.Context, v any) (graphql_models.EditRoleDto, error) {
 	res, err := ec.unmarshalInputEditRoleDTO(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNPermissionsGroup2ᚕᚖchatneyᚑbackendᚋgraphᚋmodelᚐPermissionsGroupᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.PermissionsGroup) graphql.Marshaler {
+func (ec *executionContext) marshalNPermissionsGroup2ᚕᚖchatneyᚑbackendᚋgraphᚋmodelᚐPermissionsGroupᚄ(ctx context.Context, sel ast.SelectionSet, v []*graphql_models.PermissionsGroup) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -3971,7 +3971,7 @@ func (ec *executionContext) marshalNPermissionsGroup2ᚕᚖchatneyᚑbackendᚋg
 	return ret
 }
 
-func (ec *executionContext) marshalNPermissionsGroup2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐPermissionsGroup(ctx context.Context, sel ast.SelectionSet, v *model.PermissionsGroup) graphql.Marshaler {
+func (ec *executionContext) marshalNPermissionsGroup2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐPermissionsGroup(ctx context.Context, sel ast.SelectionSet, v *graphql_models.PermissionsGroup) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -3981,11 +3981,11 @@ func (ec *executionContext) marshalNPermissionsGroup2ᚖchatneyᚑbackendᚋgrap
 	return ec._PermissionsGroup(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNPermissionsListReturn2chatneyᚑbackendᚋgraphᚋmodelᚐPermissionsListReturn(ctx context.Context, sel ast.SelectionSet, v model.PermissionsListReturn) graphql.Marshaler {
+func (ec *executionContext) marshalNPermissionsListReturn2chatneyᚑbackendᚋgraphᚋmodelᚐPermissionsListReturn(ctx context.Context, sel ast.SelectionSet, v graphql_models.PermissionsListReturn) graphql.Marshaler {
 	return ec._PermissionsListReturn(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNPermissionsListReturn2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐPermissionsListReturn(ctx context.Context, sel ast.SelectionSet, v *model.PermissionsListReturn) graphql.Marshaler {
+func (ec *executionContext) marshalNPermissionsListReturn2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐPermissionsListReturn(ctx context.Context, sel ast.SelectionSet, v *graphql_models.PermissionsListReturn) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -3995,11 +3995,11 @@ func (ec *executionContext) marshalNPermissionsListReturn2ᚖchatneyᚑbackend�
 	return ec._PermissionsListReturn(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNRole2chatneyᚑbackendᚋgraphᚋmodelᚐRole(ctx context.Context, sel ast.SelectionSet, v model.Role) graphql.Marshaler {
+func (ec *executionContext) marshalNRole2chatneyᚑbackendᚋgraphᚋmodelᚐRole(ctx context.Context, sel ast.SelectionSet, v graphql_models.Role) graphql.Marshaler {
 	return ec._Role(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNRole2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐRole(ctx context.Context, sel ast.SelectionSet, v *model.Role) graphql.Marshaler {
+func (ec *executionContext) marshalNRole2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐRole(ctx context.Context, sel ast.SelectionSet, v *graphql_models.Role) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -4009,7 +4009,7 @@ func (ec *executionContext) marshalNRole2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐ
 	return ec._Role(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNRoleSettings2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐRoleSettings(ctx context.Context, sel ast.SelectionSet, v *model.RoleSettings) graphql.Marshaler {
+func (ec *executionContext) marshalNRoleSettings2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐRoleSettings(ctx context.Context, sel ast.SelectionSet, v *graphql_models.RoleSettings) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -4019,7 +4019,7 @@ func (ec *executionContext) marshalNRoleSettings2ᚖchatneyᚑbackendᚋgraphᚋ
 	return ec._RoleSettings(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNRoleSettingsDTO2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐRoleSettingsDto(ctx context.Context, v any) (*model.RoleSettingsDto, error) {
+func (ec *executionContext) unmarshalNRoleSettingsDTO2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐRoleSettingsDto(ctx context.Context, v any) (*graphql_models.RoleSettingsDto, error) {
 	res, err := ec.unmarshalInputRoleSettingsDTO(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }

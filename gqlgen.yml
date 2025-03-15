@@ -28,22 +28,22 @@ exec:
 # Where should any generated models go?
 model:
   filename: graph/model/models_gen.go
-  package: model
+  package: graphql_models
 
   # Optional: Pass in a path to a new gotpl template to use for generating the models
   # model_template: [your/path/model.gotpl]
 
 # Where should the resolver implementations go?
-resolver:
-  package: resolvers
-  layout: follow-schema # Only other option is "single-file."
+# resolver:
+#   package: resolvers
+#   layout: follow-schema # Only other option is "single-file."
 
-  # Only for single-file layout:
-  # filename: graph/resolver.go
+#   # Only for single-file layout:
+#   # filename: graph/resolver.go
 
-  # Only for follow-schema layout:
-  dir: graph/resolvers
-  filename_template: "{name}.resolver.go"
+#   # Only for follow-schema layout:
+#   dir: graph/resolvers
+#   filename_template: "{name}.resolver.go"
 
   # Optional: turn on to not generate template comments above resolvers
   # omit_template_comment: false

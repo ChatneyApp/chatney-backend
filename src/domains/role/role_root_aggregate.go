@@ -24,5 +24,4 @@ func (root *RoleRootAggregateStruct) UpdateRole(role models.Role) (*models.Role,
 	}
 
 	return newRole, nil
-
 }
