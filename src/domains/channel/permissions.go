@@ -9,6 +9,7 @@ const (
 	EditMessage   models.PermissionKey = "channel.editMessage"
 	CreateMessage models.PermissionKey = "channel.createMessage"
 	ReadMessage   models.PermissionKey = "channel.readMessage"
+
 	DeleteChannel models.PermissionKey = "channel.deleteChannel"
 	EditChannel   models.PermissionKey = "channel.editChannel"
 	CreateChannel models.PermissionKey = "channel.createChannel"
