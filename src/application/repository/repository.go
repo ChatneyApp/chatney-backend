@@ -1,8 +1,9 @@
-package repostiory
+package repository
 
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
@@ -21,10 +22,10 @@ func (r *BaseRepo[T]) Create(ctx context.Context, entity *T) (*T, error) {
 		return nil, err
 	}
 
-	return r.GetByID(ctx, res.InsertedID.(bson.ObjectID))
+	return r.GetByID(ctx, res.InsertedID.(uuid.UUID))
 }
 
-func (r *BaseRepo[T]) GetByID(ctx context.Context, id bson.ObjectID) (*T, error) {
+func (r *BaseRepo[T]) GetByID(ctx context.Context, id uuid.UUID) (*T, error) {
 	var entity T
 	err := r.Collection.FindOne(ctx, bson.M{"_id": id}).Decode(&entity)
 	if err != nil {
@@ -33,11 +34,16 @@ func (r *BaseRepo[T]) GetByID(ctx context.Context, id bson.ObjectID) (*T, error)
 	return &entity, nil
 }
 
-func (r *BaseRepo[T]) Update(ctx context.Context, id bson.ObjectID, update bson.M) (*mongo.UpdateResult, error) {
-	return r.Collection.UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$set": update})
+func (r *BaseRepo[T]) Update(ctx context.Context, id uuid.UUID, update T) (*T, error) {
+	_, err := r.Collection.UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$set": update})
+	if err != nil {
+		return nil, err
+	}
+
+	return r.GetByID(ctx, id)
 }
 
-func (r *BaseRepo[T]) Delete(ctx context.Context, id bson.ObjectID) (*mongo.DeleteResult, error) {
+func (r *BaseRepo[T]) Delete(ctx context.Context, id uuid.UUID) (*mongo.DeleteResult, error) {
 	return r.Collection.DeleteOne(ctx, bson.M{"_id": id})
 }
 

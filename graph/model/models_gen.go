@@ -2,6 +2,10 @@
 
 package graphql_models
 
+import (
+	"github.com/google/uuid"
+)
+
 type CreateRoleDto struct {
 	Name        string           `json:"Name"`
 	Permissions []string         `json:"Permissions"`
@@ -9,7 +13,7 @@ type CreateRoleDto struct {
 }
 
 type EditRoleDto struct {
-	ID          string           `json:"Id"`
+	ID          uuid.UUID        `json:"Id"`
 	Name        string           `json:"Name"`
 	Permissions []string         `json:"Permissions,omitempty"`
 	Settings    *RoleSettingsDto `json:"Settings"`
@@ -31,16 +35,16 @@ type Query struct {
 }
 
 type Role struct {
-	ID          string        `json:"Id"`
+	ID          uuid.UUID     `json:"Id"`
 	Name        string        `json:"Name"`
 	Permissions []string      `json:"Permissions,omitempty"`
 	Settings    *RoleSettings `json:"Settings"`
 }
 
 type RoleSettings struct {
-	Base bool `json:"base"`
+	Base bool `json:"Base"`
 }
 
 type RoleSettingsDto struct {
-	Base bool `json:"base"`
+	Base bool `json:"Base"`
 }

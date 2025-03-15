@@ -5,7 +5,8 @@ import (
 	"chatney-backend/src/domains/user/models"
 	"context"
 	"net/http"
-	"strconv"
+
+	"github.com/google/uuid"
 )
 
 type Ctx struct {
@@ -27,13 +28,7 @@ func SetUseAndContext(userRootAggr *user.UserRootAggregate) func(http.Handler) h
 
 			println(userId, "auth header in context")
 
-			userIdInt, err := strconv.Atoi(userId)
-			if err != nil {
-				println(err.Error())
-				return
-			}
-
-			user, err := userRootAggr.GetUserByID(userIdInt)
+			user, err := userRootAggr.GetUserByID(uuid.UUID{})
 			if err != nil {
 				println(err.Error())
 

@@ -1,17 +1,18 @@
 package models
 
 import (
-	repostiory "chatney-backend/src/application/repository"
+	"chatney-backend/src/application/repository"
 	"context"
 
+	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 type ChannelGroupRepo struct {
-	*repostiory.BaseRepo[ChannelGroup]
+	*repository.BaseRepo[ChannelGroup]
 }
 
-func (root *ChannelGroupRepo) PutChannelIntoChannelGroup(groupID, channelID bson.ObjectID) error {
+func (root *ChannelGroupRepo) PutChannelIntoChannelGroup(groupID, channelID uuid.UUID) error {
 	filter := bson.M{"_id": groupID}
 	update := bson.M{"$addToSet": bson.M{"channels": channelID}} // `$addToSet` prevents duplication
 

@@ -1,6 +1,8 @@
 package models
 
-import "go.mongodb.org/mongo-driver/v2/bson"
+import (
+	"github.com/google/uuid"
+)
 
 type PermissionKey string
 
@@ -9,8 +11,8 @@ type RoleSettings struct {
 }
 
 type Role struct {
-	Id          bson.ObjectID   `bson:"_id,omitempty"`
+	Id          uuid.UUID       `bson:"_id,omitempty"`
 	Name        string          `bson:"name,omitempty"`
-	Settings    RoleSettings    `bson:"settings,omitempty"`
+	Settings    *RoleSettings   `bson:"settings,omitempty"`
 	Permissions []PermissionKey `bson:"permissions,omitempty"`
 }

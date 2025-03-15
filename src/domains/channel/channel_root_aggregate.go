@@ -5,7 +5,7 @@ import (
 	"context"
 	"errors"
 
-	"go.mongodb.org/mongo-driver/v2/bson"
+	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
@@ -28,7 +28,7 @@ func (root *ChannelRootAggregate) CreateChannelGroup(channelGroup models.Channel
 	return root.channelGroupRepo.Create(context.TODO(), &channelGroup)
 }
 
-func (root *ChannelRootAggregate) DeleteChannelGroup(channelGroupId bson.ObjectID) (bool, error) {
+func (root *ChannelRootAggregate) DeleteChannelGroup(channelGroupId uuid.UUID) (bool, error) {
 	_, err := root.channelGroupRepo.Delete(context.TODO(), channelGroupId)
 	if err != nil {
 		return false, err
@@ -40,7 +40,7 @@ func (root *ChannelRootAggregate) UpdateChannelGroupInfo(user models.ChannelGrou
 	return nil, nil
 }
 
-func (root *ChannelRootAggregate) validatePutChannelIntoGroup(channelId bson.ObjectID, groupId bson.ObjectID) error {
+func (root *ChannelRootAggregate) validatePutChannelIntoGroup(channelId uuid.UUID, groupId uuid.UUID) error {
 	// Fetch the channel
 	channel, err := root.channelRepo.GetByID(context.TODO(), channelId)
 	if err != nil {
@@ -67,7 +67,7 @@ func (root *ChannelRootAggregate) validatePutChannelIntoGroup(channelId bson.Obj
 	return nil
 }
 
-func (root *ChannelRootAggregate) PutChannelIntoChannelGroup(channelId bson.ObjectID, groupId bson.ObjectID) (bool, error) {
+func (root *ChannelRootAggregate) PutChannelIntoChannelGroup(channelId uuid.UUID, groupId uuid.UUID) (bool, error) {
 	err := root.validatePutChannelIntoGroup(channelId, groupId)
 	if err != nil {
 		return false, err

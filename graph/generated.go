@@ -6,6 +6,7 @@ import (
 	"bytes"
 	graphql_models "chatney-backend/graph/model"
 	"context"
+	"embed"
 	"errors"
 	"fmt"
 	"strconv"
@@ -14,6 +15,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
+	"github.com/google/uuid"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -183,7 +185,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Role.Settings(childComplexity), true
 
-	case "RoleSettings.base":
+	case "RoleSettings.Base":
 		if e.complexity.RoleSettings.Base == nil {
 			break
 		}
@@ -297,7 +299,19 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 	return introspection.WrapTypeFromDef(ec.Schema(), ec.Schema().Types[name]), nil
 }
 
+//go:embed "schema.graphqls"
+var sourcesFS embed.FS
+
+func sourceData(filename string) string {
+	data, err := sourcesFS.ReadFile(filename)
+	if err != nil {
+		panic(fmt.Sprintf("codegen problem: %s not available", filename))
+	}
+	return string(data)
+}
+
 var sources = []*ast.Source{
+	{Name: "schema.graphqls", Input: sourceData("schema.graphqls"), BuiltIn: false},
 	{Name: "../src/domains/permissions/permissions.graphqls", Input: `# GraphQL schema example
 #
 # https://gqlgen.com/getting-started/
@@ -316,15 +330,15 @@ type Query {
 }
 `, BuiltIn: false},
 	{Name: "../src/domains/role/role.graphqls", Input: `input RoleSettingsDTO {
-  base: Boolean!
+  Base: Boolean!
 }
 
 type RoleSettings {
-  base: Boolean!
+  Base: Boolean!
 }
 
 type Role {
-  Id: String!
+  Id: UUID!
   Name: String!
   Permissions: [String!]
   Settings: RoleSettings!
@@ -337,7 +351,7 @@ input CreateRoleDTO {
 }
 
 input EditRoleDTO {
-  Id: String!
+  Id: UUID!
 	Name:    String!
 	Permissions: [String!]
 	Settings: RoleSettingsDTO!
@@ -996,9 +1010,9 @@ func (ec *executionContext) _Role_Id(ctx context.Context, field graphql.Collecte
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(uuid.UUID)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Role_Id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1008,7 +1022,7 @@ func (ec *executionContext) fieldContext_Role_Id(_ context.Context, field graphq
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			return nil, errors.New("field of type UUID does not have child fields")
 		},
 	}
 	return fc, nil
@@ -1138,8 +1152,8 @@ func (ec *executionContext) fieldContext_Role_Settings(_ context.Context, field 
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "base":
-				return ec.fieldContext_RoleSettings_base(ctx, field)
+			case "Base":
+				return ec.fieldContext_RoleSettings_Base(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type RoleSettings", field.Name)
 		},
@@ -1147,8 +1161,8 @@ func (ec *executionContext) fieldContext_Role_Settings(_ context.Context, field 
 	return fc, nil
 }
 
-func (ec *executionContext) _RoleSettings_base(ctx context.Context, field graphql.CollectedField, obj *graphql_models.RoleSettings) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_RoleSettings_base(ctx, field)
+func (ec *executionContext) _RoleSettings_Base(ctx context.Context, field graphql.CollectedField, obj *graphql_models.RoleSettings) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_RoleSettings_Base(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1178,7 +1192,7 @@ func (ec *executionContext) _RoleSettings_base(ctx context.Context, field graphq
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_RoleSettings_base(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_RoleSettings_Base(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "RoleSettings",
 		Field:      field,
@@ -3199,7 +3213,7 @@ func (ec *executionContext) unmarshalInputEditRoleDTO(ctx context.Context, obj a
 		switch k {
 		case "Id":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Id"))
-			data, err := ec.unmarshalNString2string(ctx, v)
+			data, err := ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3238,15 +3252,15 @@ func (ec *executionContext) unmarshalInputRoleSettingsDTO(ctx context.Context, o
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"base"}
+	fieldsInOrder := [...]string{"Base"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "base":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("base"))
+		case "Base":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Base"))
 			data, err := ec.unmarshalNBoolean2bool(ctx, v)
 			if err != nil {
 				return it, err
@@ -3539,8 +3553,8 @@ func (ec *executionContext) _RoleSettings(ctx context.Context, sel ast.Selection
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("RoleSettings")
-		case "base":
-			out.Values[i] = ec._RoleSettings_base(ctx, field, obj)
+		case "Base":
+			out.Values[i] = ec._RoleSettings_Base(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -4069,6 +4083,21 @@ func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel
 	}
 
 	return ret
+}
+
+func (ec *executionContext) unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx context.Context, v any) (uuid.UUID, error) {
+	res, err := graphql.UnmarshalUUID(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx context.Context, sel ast.SelectionSet, v uuid.UUID) graphql.Marshaler {
+	res := graphql.MarshalUUID(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {

@@ -5,6 +5,7 @@ go 1.23.5
 require (
 	github.com/99designs/gqlgen v0.17.66
 	github.com/go-chi/chi v1.5.5
+	github.com/google/uuid v1.6.0
 	github.com/minio/minio-go/v7 v7.0.86
 	github.com/rs/cors v1.11.1
 	github.com/vektah/gqlparser/v2 v2.5.22
@@ -19,7 +20,6 @@ require (
 	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/klauspost/compress v1.17.11 // indirect

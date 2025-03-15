@@ -2,6 +2,7 @@ package role
 
 import (
 	graphql_models "chatney-backend/graph/model"
+	repostiory "chatney-backend/src/application/repository"
 	"chatney-backend/src/domains/role/models"
 	"context"
 
@@ -18,70 +19,77 @@ type RoleQueryResolvers struct {
 
 // CreateRole is the resolver for the createRole field.
 func (r *RoleMutationsResolvers) CreateRole(ctx context.Context, roleData graphql_models.CreateRoleDto) (*graphql_models.Role, error) {
-	permissions := make([]models.PermissionKey, len(roleData.Permissions))
-	for i, p := range roleData.Permissions {
-		permissions[i] = models.PermissionKey(p) // converting string into PermissionKey type
+	permKeyList := make([]models.PermissionKey, len(roleData.Permissions))
+	for i, s := range roleData.Permissions {
+		permKeyList[i] = models.PermissionKey(s)
+	}
+	updatedRole, err := r.RootAggregate.CreateNewRole(&models.Role{
+		Name:        roleData.Name,
+		Settings:    (*models.RoleSettings)(roleData.Settings),
+		Permissions: permKeyList,
+	})
+	if err != nil {
+		return nil, err
 	}
 
-	role, err := r.RootAggregate.CreateNewRole(models.Role{
-		Name: roleData.Name,
-		Settings: models.RoleSettings{
-			Base: roleData.Settings.Base,
-		},
-		Permissions: permissions,
-	})
-
-	permissionsOut := make([]string, len(role.Permissions))
-	for i, p := range role.Permissions {
-		permissionsOut[i] = string(p) // converting string into PermissionKey type
+	permStringList := make([]string, len(updatedRole.Permissions))
+	for i, s := range roleData.Permissions {
+		permStringList[i] = string(s)
 	}
 
 	return &graphql_models.Role{
-		ID:          role.Id.String(),
-		Name:        role.Name,
-		Permissions: permissionsOut,
-		Settings:    (*graphql_models.RoleSettings)(&role.Settings),
-	}, err
+		ID:          updatedRole.Id,
+		Name:        updatedRole.Name,
+		Permissions: permStringList,
+		Settings:    (*graphql_models.RoleSettings)(updatedRole.Settings),
+	}, nil
 }
 
 // EditRole is the resolver for the editRole field.
 func (r *RoleMutationsResolvers) EditRole(ctx context.Context, roleData graphql_models.EditRoleDto) (*graphql_models.Role, error) {
-	permissions := make([]models.PermissionKey, len(roleData.Permissions))
-	for i, p := range roleData.Permissions {
-		permissions[i] = models.PermissionKey(p) // converting string into PermissionKey type
+	permKeyList := make([]models.PermissionKey, len(roleData.Permissions))
+	for i, s := range roleData.Permissions {
+		permKeyList[i] = models.PermissionKey(s)
+	}
+	updatedRole, err := r.RootAggregate.UpdateRole(models.Role{
+		Id:          roleData.ID,
+		Name:        roleData.Name,
+		Settings:    (*models.RoleSettings)(roleData.Settings),
+		Permissions: permKeyList,
+	})
+	if err != nil {
+		return nil, err
 	}
 
-	role, err := r.RootAggregate.CreateNewRole(models.Role{
-		Name: roleData.Name,
-		Settings: models.RoleSettings{
-			Base: roleData.Settings.Base,
-		},
-		Permissions: permissions,
-	})
-
-	permissionsOut := make([]string, len(role.Permissions))
-	for i, p := range role.Permissions {
-		permissionsOut[i] = string(p) // converting PermissionKey type into string
+	permStringList := make([]string, len(updatedRole.Permissions))
+	for i, s := range roleData.Permissions {
+		permStringList[i] = string(s)
 	}
 
 	return &graphql_models.Role{
-		ID:          role.Id.String(),
-		Name:        role.Name,
-		Permissions: permissionsOut,
-		Settings:    (*graphql_models.RoleSettings)(&role.Settings),
-	}, err
+		ID:          updatedRole.Id,
+		Name:        updatedRole.Name,
+		Permissions: permStringList,
+		Settings:    (*graphql_models.RoleSettings)(updatedRole.Settings),
+	}, nil
 }
 
 func GetMutationResolvers(DB *mongo.Database) RoleMutationsResolvers {
 	return RoleMutationsResolvers{
 		RootAggregate: &RoleRootAggregateStruct{
-			RoleRepo: &models.RoleRepo{Collection: DB.Collection("roles")}},
-	}
+			roleRepo: &models.RoleRepo{
+				BaseRepo: &repostiory.BaseRepo[models.Role]{
+					Collection: DB.Collection("roles"),
+				}},
+		}}
 }
 
 func GetQueryResolvers(DB *mongo.Database) RoleQueryResolvers {
 	return RoleQueryResolvers{
 		RootAggregate: &RoleRootAggregateStruct{
-			RoleRepo: &models.RoleRepo{Collection: DB.Collection("roles")}},
-	}
+			roleRepo: &models.RoleRepo{
+				BaseRepo: &repostiory.BaseRepo[models.Role]{
+					Collection: DB.Collection("roles"),
+				}},
+		}}
 }

@@ -1,11 +1,11 @@
 package models
 
-import "go.mongodb.org/mongo-driver/v2/bson"
+import "github.com/google/uuid"
 
 type ChannelGroup struct {
-	Id        bson.ObjectID   `bson:"_id,omitempty"`
-	Name      string          `bson:"name,omitempty"`
-	Channels  []bson.ObjectID `bson:"channels,omitempty"`
-	Order     int             `bson:"order,omitempty"`
-	Workspace bson.ObjectID   `bson:"workspace,omitempty"`
+	Id        uuid.UUID   `bson:"_id,omitempty"`
+	Name      string      `bson:"name,omitempty"`
+	Channels  []uuid.UUID `bson:"channels,omitempty"`
+	Order     int         `bson:"order,omitempty"`
+	Workspace uuid.UUID   `bson:"workspace,omitempty"`
 }
