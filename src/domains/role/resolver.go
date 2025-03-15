@@ -74,22 +74,23 @@ func (r *RoleMutationsResolvers) EditRole(ctx context.Context, roleData graphql_
 	return RoleToDTO(updatedRole), nil
 }
 
+func getRootAggregate(DB *mongo.Database) *RoleRootAggregateStruct {
+	return &RoleRootAggregateStruct{
+		roleRepo: &models.RoleRepo{
+			BaseRepo: &repostiory.BaseRepo[models.Role]{
+				Collection: DB.Collection("roles"),
+			}},
+	}
+}
+
 func GetMutationResolvers(DB *mongo.Database) RoleMutationsResolvers {
 	return RoleMutationsResolvers{
-		RootAggregate: &RoleRootAggregateStruct{
-			roleRepo: &models.RoleRepo{
-				BaseRepo: &repostiory.BaseRepo[models.Role]{
-					Collection: DB.Collection("roles"),
-				}},
-		}}
+		RootAggregate: getRootAggregate(DB),
+	}
 }
 
 func GetQueryResolvers(DB *mongo.Database) RoleQueryResolvers {
 	return RoleQueryResolvers{
-		RootAggregate: &RoleRootAggregateStruct{
-			roleRepo: &models.RoleRepo{
-				BaseRepo: &repostiory.BaseRepo[models.Role]{
-					Collection: DB.Collection("roles"),
-				}},
-		}}
+		RootAggregate: getRootAggregate(DB),
+	}
 }
