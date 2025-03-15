@@ -2,6 +2,7 @@ package channel
 
 import (
 	"chatney-backend/src/domains/channel/models"
+	"context"
 	"errors"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -23,17 +24,12 @@ func (root *ChannelRootAggregate) GetChannelByID(id int) (*models.Channel, error
 }
 
 /** Channel Group */
-func (root *ChannelRootAggregate) CreateChannelGroup(chanelGroup models.ChannelGroup) (*models.ChannelGroup, error) {
-	chanGroup, err := root.channelGroupRepo.CreateChannelGroup(chanelGroup)
-	if err != nil {
-		return nil, err
-	}
-
-	return chanGroup, nil
+func (root *ChannelRootAggregate) CreateChannelGroup(channelGroup models.ChannelGroup) (*models.ChannelGroup, error) {
+	return root.channelGroupRepo.Create(context.TODO(), &channelGroup)
 }
 
 func (root *ChannelRootAggregate) DeleteChannelGroup(channelGroupId bson.ObjectID) (bool, error) {
-	err := root.channelGroupRepo.DeleteChannelGroup(channelGroupId)
+	_, err := root.channelGroupRepo.Delete(context.TODO(), channelGroupId)
 	if err != nil {
 		return false, err
 	}
@@ -46,7 +42,7 @@ func (root *ChannelRootAggregate) UpdateChannelGroupInfo(user models.ChannelGrou
 
 func (root *ChannelRootAggregate) validatePutChannelIntoGroup(channelId bson.ObjectID, groupId bson.ObjectID) error {
 	// Fetch the channel
-	channel, err := root.channelRepo.FindByID(channelId)
+	channel, err := root.channelRepo.GetByID(context.TODO(), channelId)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return errors.New("channel not found")
@@ -55,7 +51,7 @@ func (root *ChannelRootAggregate) validatePutChannelIntoGroup(channelId bson.Obj
 	}
 
 	// Fetch the channel group
-	group, err := root.channelGroupRepo.FindByID(groupId)
+	group, err := root.channelGroupRepo.GetByID(context.TODO(), groupId)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return errors.New("channel group not found")

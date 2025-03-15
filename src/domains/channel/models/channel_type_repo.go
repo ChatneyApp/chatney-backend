@@ -1,6 +1,7 @@
 package models
 
 import (
+	repostiory "chatney-backend/src/application/repository"
 	"context"
 	"errors"
 
@@ -9,50 +10,7 @@ import (
 )
 
 type ChannelTypeRepo struct {
-	db *mongo.Collection
-}
-
-// CreateChannelType - inserts a new ChannelType into the database
-func (repo *ChannelTypeRepo) CreateChannelType(channelType ChannelType) (*ChannelType, error) {
-	channelType.Id = bson.NewObjectID() // Generate new ObjectID
-
-	_, err := repo.db.InsertOne(context.TODO(), channelType)
-	if err != nil {
-		return nil, err
-	}
-
-	return &channelType, nil
-}
-
-// DeleteChannelType - deletes a ChannelType by ID
-func (repo *ChannelTypeRepo) DeleteChannelType(channelTypeID bson.ObjectID) error {
-	result, err := repo.db.DeleteOne(context.TODO(), bson.M{"_id": channelTypeID})
-	if err != nil {
-		return err
-	}
-	if result.DeletedCount == 0 {
-		return errors.New("channel type not found")
-	}
-	return nil
-}
-
-// UpdateChannelType - updates a ChannelType by ID with given updates
-func (repo *ChannelTypeRepo) UpdateChannelType(channelTypeID bson.ObjectID, updates bson.M) (*ChannelType, error) {
-	filter := bson.M{"_id": channelTypeID}
-	update := bson.M{"$set": updates}
-
-	_, err := repo.db.UpdateOne(context.TODO(), filter, update)
-	if err != nil {
-		return nil, err
-	}
-
-	var updatedChannelType ChannelType
-	err = repo.db.FindOne(context.TODO(), filter).Decode(&updatedChannelType)
-	if err != nil {
-		return nil, err
-	}
-
-	return &updatedChannelType, nil
+	*repostiory.BaseRepo[ChannelType]
 }
 
 // AddRoleToChannelType - adds a role to the roles array
@@ -60,7 +18,7 @@ func (repo *ChannelTypeRepo) AddRoleToChannelType(channelTypeID, roleID bson.Obj
 	filter := bson.M{"_id": channelTypeID}
 	update := bson.M{"$addToSet": bson.M{"roles": roleID}} // Prevents duplicates
 
-	_, err := repo.db.UpdateOne(context.TODO(), filter, update)
+	_, err := repo.Collection.UpdateOne(context.TODO(), filter, update)
 	return err
 }
 
@@ -69,7 +27,7 @@ func (repo *ChannelTypeRepo) RemoveRoleFromChannelType(channelTypeID, roleID bso
 	filter := bson.M{"_id": channelTypeID}
 	update := bson.M{"$pull": bson.M{"roles": roleID}} // Removes the role
 
-	_, err := repo.db.UpdateOne(context.TODO(), filter, update)
+	_, err := repo.Collection.UpdateOne(context.TODO(), filter, update)
 	return err
 }
 
@@ -77,7 +35,7 @@ func (repo *ChannelTypeRepo) FindByID(channelTypeID bson.ObjectID) (*Channel, er
 	var channel Channel
 	filter := bson.M{"_id": channelTypeID}
 
-	err := repo.db.FindOne(context.TODO(), filter).Decode(&channel)
+	err := repo.Collection.FindOne(context.TODO(), filter).Decode(&channel)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, errors.New("channel type not found")
