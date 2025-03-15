@@ -4,7 +4,6 @@ import (
 	"chatney-backend/graph"
 	"chatney-backend/src/domains/permissions"
 	"chatney-backend/src/domains/role"
-	"chatney-backend/src/domains/role/models"
 
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
@@ -19,24 +18,25 @@ type Resolver struct {
 
 type QueryResolver struct {
 	*Resolver
-	*permissions.PermissionsResolver
+	permissions.PermissionsResolver
+	role.RoleQueryResolvers
 }
 type MutationResolver struct {
 	*Resolver
-	*role.RoleMutationsResolvers
+	role.RoleMutationsResolvers
 }
 
 func (r *Resolver) Query() graph.QueryResolver {
-	return &QueryResolver{r, &permissions.PermissionsResolver{}}
+	return &QueryResolver{r,
+		permissions.PermissionsResolver{},
+		role.GetQueryResolvers(r.DB),
+	}
 }
 
 // Mutation returns graph.MutationResolver implementation.
 func (r *Resolver) Mutation() graph.MutationResolver {
 	return &MutationResolver{
 		r,
-		&role.RoleMutationsResolvers{
-			RootAggregate: &role.RoleRootAggregateStruct{
-				RoleRepo: &models.RoleRepo{Collection: r.DB.Collection("roles")}},
-		},
+		role.GetMutationResolvers(r.DB),
 	}
 }

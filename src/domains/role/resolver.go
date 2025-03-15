@@ -4,6 +4,8 @@ import (
 	graphql_models "chatney-backend/graph/model"
 	"chatney-backend/src/domains/role/models"
 	"context"
+
+	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
 type RoleMutationsResolvers struct {
@@ -68,4 +70,18 @@ func (r *RoleMutationsResolvers) EditRole(ctx context.Context, roleData graphql_
 		Permissions: permissionsOut,
 		Settings:    (*graphql_models.RoleSettings)(&role.Settings),
 	}, err
+}
+
+func GetMutationResolvers(DB *mongo.Database) RoleMutationsResolvers {
+	return RoleMutationsResolvers{
+		RootAggregate: &RoleRootAggregateStruct{
+			RoleRepo: &models.RoleRepo{Collection: DB.Collection("roles")}},
+	}
+}
+
+func GetQueryResolvers(DB *mongo.Database) RoleQueryResolvers {
+	return RoleQueryResolvers{
+		RootAggregate: &RoleRootAggregateStruct{
+			RoleRepo: &models.RoleRepo{Collection: DB.Collection("roles")}},
+	}
 }
