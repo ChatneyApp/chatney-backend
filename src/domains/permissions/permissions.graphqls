@@ -1,0 +1,16 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+type PermissionsGroup {
+  label: String!
+  list: [String!]!
+}
+
+type PermissionsListReturn {
+  groups: [PermissionsGroup!]!
+}
+
+type Query {
+  getPermissionsList: PermissionsListReturn!
+}

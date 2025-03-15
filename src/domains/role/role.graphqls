@@ -1,0 +1,32 @@
+input RoleSettingsDTO {
+  base: Boolean!
+}
+
+type RoleSettings {
+  base: Boolean!
+}
+
+type Role {
+  Id: String!
+  Name: String!
+  Permissions: [String!]
+  Settings: RoleSettings!
+}
+
+input CreateRoleDTO {
+	Name:    String!
+	Permissions: [String!]!
+	Settings: RoleSettingsDTO!
+}
+
+input EditRoleDTO {
+  Id: String!
+	Name:    String!
+	Permissions: [String!]
+	Settings: RoleSettingsDTO!
+}
+
+type Mutation {
+  createRole(RoleData: CreateRoleDTO!): Role!
+  editRole(RoleData: EditRoleDTO!): Role!
+}

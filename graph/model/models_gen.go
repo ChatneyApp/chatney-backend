@@ -11,16 +11,11 @@ type CreateRoleDto struct {
 type EditRoleDto struct {
 	ID          string           `json:"Id"`
 	Name        string           `json:"Name"`
-	Permissions []*string        `json:"Permissions,omitempty"`
+	Permissions []string         `json:"Permissions,omitempty"`
 	Settings    *RoleSettingsDto `json:"Settings"`
 }
 
 type Mutation struct {
-}
-
-type NewTodo struct {
-	Text   string `json:"text"`
-	UserID string `json:"userId"`
 }
 
 type PermissionsGroup struct {
@@ -36,28 +31,16 @@ type Query struct {
 }
 
 type Role struct {
-	ID          string    `json:"Id"`
-	Name        string    `json:"Name"`
-	Permissions []string  `json:"Permissions,omitempty"`
-	Settings    *Settings `json:"Settings"`
+	ID          string        `json:"Id"`
+	Name        string        `json:"Name"`
+	Permissions []string      `json:"Permissions,omitempty"`
+	Settings    *RoleSettings `json:"Settings"`
+}
+
+type RoleSettings struct {
+	Base bool `json:"base"`
 }
 
 type RoleSettingsDto struct {
 	Base bool `json:"base"`
-}
-
-type Settings struct {
-	Base bool `json:"base"`
-}
-
-type Todo struct {
-	ID   string `json:"id"`
-	Text string `json:"text"`
-	Done bool   `json:"done"`
-	User *User  `json:"user"`
-}
-
-type User struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
 }
