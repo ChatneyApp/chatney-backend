@@ -1,1 +1,17 @@
 scalar UUID
+
+type Mutation {
+    createRole(RoleData: CreateRoleDTO!): Role!
+    editRole(RoleData: EditRoleDTO!): Role!
+
+    createChannelGroup(input: CreateChannelGroupInput!): ChannelGroup!
+    updateChannelGroup(input: UpdateChannelGroupInput!): ChannelGroup!
+    deleteChannelGroup(UUID: UUID!): Boolean!
+}
+
+type Query {
+    getPermissionsList: PermissionsListReturn!
+
+    getChannelGroup(UUID: UUID!): ChannelGroup
+    listChannelGroups(workspaceId: UUID!): [ChannelGroup!]!
+}

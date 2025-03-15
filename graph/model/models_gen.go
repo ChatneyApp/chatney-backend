@@ -6,6 +6,21 @@ import (
 	"github.com/google/uuid"
 )
 
+type ChannelGroup struct {
+	ID        uuid.UUID   `json:"Id"`
+	Name      string      `json:"name"`
+	Channels  []uuid.UUID `json:"channels"`
+	Order     int32       `json:"order"`
+	Workspace uuid.UUID   `json:"workspace"`
+}
+
+type CreateChannelGroupInput struct {
+	Name      string      `json:"name"`
+	Channels  []uuid.UUID `json:"channels"`
+	Order     int32       `json:"order"`
+	Workspace uuid.UUID   `json:"workspace"`
+}
+
 type CreateRoleDto struct {
 	Name        string           `json:"Name"`
 	Permissions []string         `json:"Permissions"`
@@ -47,4 +62,11 @@ type RoleSettings struct {
 
 type RoleSettingsDto struct {
 	Base bool `json:"Base"`
+}
+
+type UpdateChannelGroupInput struct {
+	ID       uuid.UUID   `json:"Id"`
+	Name     *string     `json:"name,omitempty"`
+	Channels []uuid.UUID `json:"channels,omitempty"`
+	Order    *int32      `json:"order,omitempty"`
 }

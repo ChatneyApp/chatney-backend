@@ -10,7 +10,3 @@ type PermissionsGroup {
 type PermissionsListReturn {
   groups: [PermissionsGroup!]!
 }
-
-type Query {
-  getPermissionsList: PermissionsListReturn!
-}

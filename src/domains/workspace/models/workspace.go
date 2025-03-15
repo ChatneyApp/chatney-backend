@@ -1,6 +1,8 @@
 package models
 
+import "github.com/google/uuid"
+
 type Workspace struct {
-	Id   string `bson:"_id,omitempty"`
-	Name string `bson:"name,omitempty"`
+	Id   uuid.UUID `bson:"_id,omitempty"`
+	Name string    `bson:"name,omitempty"`
 }

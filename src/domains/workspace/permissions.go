@@ -5,16 +5,16 @@ import (
 )
 
 const (
-	CreateWorkspace models.PermissionKey = "workspace.createWorkspace"
-	DeleteWorkspace models.PermissionKey = "workspace.deleteWorkspace"
-	UpdateWorkspace models.PermissionKey = "workspace.updateWorkspace"
-	ReadWorkspace   models.PermissionKey = "workspace.readWorkspace"
+	createWorkspace models.PermissionKey = "workspace.createWorkspace"
+	deleteWorkspace models.PermissionKey = "workspace.deleteWorkspace"
+	updateWorkspace models.PermissionKey = "workspace.updateWorkspace"
+	readWorkspace   models.PermissionKey = "workspace.readWorkspace"
 )
 
 // Слайс со всеми возможными значениями PermissionKey
 var WorkspacePermissions = []models.PermissionKey{
-	CreateWorkspace,
-	DeleteWorkspace,
-	UpdateWorkspace,
-	ReadWorkspace,
+	createWorkspace,
+	deleteWorkspace,
+	updateWorkspace,
+	readWorkspace,
 }

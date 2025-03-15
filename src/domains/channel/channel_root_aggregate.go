@@ -6,6 +6,7 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
+	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
@@ -15,20 +16,20 @@ type ChannelRootAggregate struct {
 	channelTypeRepo  *models.ChannelTypeRepo
 }
 
-func (root *ChannelRootAggregate) NewChannel(user models.Channel) (*models.Channel, error) {
-	return nil, nil
+func (root *ChannelRootAggregate) getChannelGroupById(id uuid.UUID) (*models.ChannelGroup, error) {
+	return root.channelGroupRepo.GetByID(context.TODO(), id)
 }
 
-func (root *ChannelRootAggregate) GetChannelByID(id int) (*models.Channel, error) {
-	return nil, nil
+func (root *ChannelRootAggregate) getChannelGroupListWithinWorkspace(wsId uuid.UUID) ([]models.ChannelGroup, error) {
+	return root.channelGroupRepo.GetAll(context.TODO(), bson.M{"workspace": wsId})
 }
 
 /** Channel Group */
-func (root *ChannelRootAggregate) CreateChannelGroup(channelGroup models.ChannelGroup) (*models.ChannelGroup, error) {
+func (root *ChannelRootAggregate) createChannelGroup(channelGroup models.ChannelGroup) (*models.ChannelGroup, error) {
 	return root.channelGroupRepo.Create(context.TODO(), &channelGroup)
 }
 
-func (root *ChannelRootAggregate) DeleteChannelGroup(channelGroupId uuid.UUID) (bool, error) {
+func (root *ChannelRootAggregate) deleteChannelGroup(channelGroupId uuid.UUID) (bool, error) {
 	_, err := root.channelGroupRepo.Delete(context.TODO(), channelGroupId)
 	if err != nil {
 		return false, err
@@ -36,8 +37,8 @@ func (root *ChannelRootAggregate) DeleteChannelGroup(channelGroupId uuid.UUID) (
 	return true, nil
 }
 
-func (root *ChannelRootAggregate) UpdateChannelGroupInfo(user models.ChannelGroup) (*models.ChannelGroup, error) {
-	return nil, nil
+func (root *ChannelRootAggregate) updateChannelGroup(group models.ChannelGroup) (*models.ChannelGroup, error) {
+	return root.channelGroupRepo.Update(context.TODO(), group.Id, group)
 }
 
 func (root *ChannelRootAggregate) validatePutChannelIntoGroup(channelId uuid.UUID, groupId uuid.UUID) error {
@@ -67,7 +68,7 @@ func (root *ChannelRootAggregate) validatePutChannelIntoGroup(channelId uuid.UUI
 	return nil
 }
 
-func (root *ChannelRootAggregate) PutChannelIntoChannelGroup(channelId uuid.UUID, groupId uuid.UUID) (bool, error) {
+func (root *ChannelRootAggregate) putChannelIntoChannelGroup(channelId uuid.UUID, groupId uuid.UUID) (bool, error) {
 	err := root.validatePutChannelIntoGroup(channelId, groupId)
 	if err != nil {
 		return false, err

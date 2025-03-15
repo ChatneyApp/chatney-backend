@@ -25,8 +25,3 @@ input EditRoleDTO {
 	Permissions: [String!]
 	Settings: RoleSettingsDTO!
 }
-
-type Mutation {
-  createRole(RoleData: CreateRoleDTO!): Role!
-  editRole(RoleData: EditRoleDTO!): Role!
-}
