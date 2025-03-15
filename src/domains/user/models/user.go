@@ -1,7 +1,5 @@
 package models
 
-import "github.com/google/uuid"
-
 type userStatus string
 
 const (
@@ -12,9 +10,9 @@ const (
 )
 
 type roles struct {
-	Global    string            `bson:"global,omitempty"`
-	Workspace map[string]string `bson:"workspace,omitempty"` // workspaceID -> roleID
-	Channel   map[string]string `bson:"channel,omitempty"`   // channelID -> roleID
+	Global        string            `bson:"global,omitempty"`
+	WorkspacesMap map[string]string `bson:"workspace,omitempty"` // workspaceID -> roleID
+	ChannelsMap   map[string]string `bson:"channel,omitempty"`   // channelID -> roleID
 }
 
 type channel struct {
@@ -23,11 +21,11 @@ type channel struct {
 }
 
 type User struct {
-	Id         uuid.UUID             `bson:"_id,omitempty"`
-	Name       string                `bson:"name,omitempty"`
-	Status     userStatus            `bson:"status,omitempty"`
-	Email      string                `bson:"email,omitempty"`
-	Roles      roles                 `bson:"roles,omitempty"`
-	Channels   map[uuid.UUID]channel `bson:"channels,omitempty"` // channelID -> Channel struct
-	Workspaces []uuid.UUID           `bson:"workspaces,omitempty"`
+	Id            string             `bson:"_id,omitempty"`
+	Name          string             `bson:"name,omitempty"`
+	Status        userStatus         `bson:"status,omitempty"`
+	Email         string             `bson:"email,omitempty"`
+	Roles         roles              `bson:"roles,omitempty"`
+	ChannelsIds   map[string]channel `bson:"channels,omitempty"` // channelID -> Channel struct
+	WorkspacesIds []string           `bson:"workspaces,omitempty"`
 }

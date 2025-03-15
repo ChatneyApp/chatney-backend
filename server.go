@@ -4,6 +4,7 @@ import (
 	"chatney-backend/graph"
 	database "chatney-backend/src/application"
 	"chatney-backend/src/application/middlewares"
+	"chatney-backend/src/application/repository"
 	"chatney-backend/src/application/resolver"
 	"chatney-backend/src/domains/user"
 	"chatney-backend/src/domains/user/models"
@@ -43,7 +44,9 @@ func main() {
 	db := database.NewDatabase(config)
 
 	userRootAggr := &user.UserRootAggregate{
-		UserRepo: &models.UserRepo{Collection: db.Client.Collection("users")},
+		UserRepo: &models.UserRepo{BaseRepo: &repository.BaseRepo[models.User]{
+			Collection: db.Client.Collection("users"),
+		}},
 	}
 
 	router.Use(middlewares.SetUseAndContext(userRootAggr))

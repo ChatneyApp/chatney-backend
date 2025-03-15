@@ -12,7 +12,7 @@ type DB struct {
 }
 
 func NewDatabase(config *EnvConfig) DB {
-	client, err := mongo.Connect(options.Client().ApplyURI(config.MongoConnectionUri + "/" + config.MongoDbName))
+	client, err := mongo.Connect(options.Client().ApplyURI(config.MongoConnectionUri + "/" + config.MongoDbName + "?authSource=admin"))
 
 	if err != nil {
 		log.Fatal("Error connecting to DB.", err.Error())

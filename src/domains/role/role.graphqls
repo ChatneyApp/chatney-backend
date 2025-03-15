@@ -7,7 +7,7 @@ type RoleSettings {
 }
 
 type Role {
-  Id: UUID!
+  Id: ID!
   Name: String!
   Permissions: [String!]
   Settings: RoleSettings!
@@ -20,7 +20,7 @@ input CreateRoleDTO {
 }
 
 input EditRoleDTO {
-  Id: UUID!
+  Id: ID!
 	Name:    String!
 	Permissions: [String!]
 	Settings: RoleSettingsDTO!

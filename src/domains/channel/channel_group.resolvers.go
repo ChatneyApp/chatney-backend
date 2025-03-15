@@ -6,7 +6,6 @@ import (
 	"chatney-backend/src/domains/channel/models"
 	"context"
 
-	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
@@ -18,7 +17,7 @@ type ChannelQueryResolvers struct {
 	rootAggregate *ChannelRootAggregate
 }
 
-func (r *ChannelQueryResolvers) GetChannelGroup(ctx context.Context, id uuid.UUID) (*graphql_models.ChannelGroup, error) {
+func (r *ChannelQueryResolvers) GetChannelGroup(ctx context.Context, id string) (*graphql_models.ChannelGroup, error) {
 	res, err := r.rootAggregate.getChannelGroupById(id)
 	if err != nil {
 		return nil, err
@@ -27,7 +26,7 @@ func (r *ChannelQueryResolvers) GetChannelGroup(ctx context.Context, id uuid.UUI
 	return channelGroupToDTO(*res), nil
 }
 
-func (r *ChannelQueryResolvers) ListChannelGroups(ctx context.Context, workspaceId uuid.UUID) ([]*graphql_models.ChannelGroup, error) {
+func (r *ChannelQueryResolvers) ListChannelGroups(ctx context.Context, workspaceId string) ([]*graphql_models.ChannelGroup, error) {
 	groups, err := r.rootAggregate.getChannelGroupListWithinWorkspace(workspaceId)
 	if err != nil {
 		return nil, err
@@ -43,8 +42,8 @@ func (r *ChannelQueryResolvers) ListChannelGroups(ctx context.Context, workspace
 
 func (r *ChannelMutationsResolvers) CreateChannelGroup(ctx context.Context, input graphql_models.CreateChannelGroupInput) (*graphql_models.ChannelGroup, error) {
 	res, err := r.rootAggregate.createChannelGroup(models.ChannelGroup{
-		Name:      input.Name,
-		Workspace: input.Workspace,
+		Name:        input.Name,
+		WorkspaceId: input.Workspace,
 	})
 
 	if err != nil {
@@ -56,10 +55,10 @@ func (r *ChannelMutationsResolvers) CreateChannelGroup(ctx context.Context, inpu
 
 func (r *ChannelMutationsResolvers) UpdateChannelGroup(ctx context.Context, input graphql_models.UpdateChannelGroupInput) (*graphql_models.ChannelGroup, error) {
 	res, err := r.rootAggregate.updateChannelGroup(models.ChannelGroup{
-		Id:       input.ID,
-		Channels: input.Channels,
-		Name:     *input.Name,
-		Order:    int(*input.Order),
+		Id:          input.ID,
+		ChannelsIds: input.Channels,
+		Name:        *input.Name,
+		Order:       int(*input.Order),
 	})
 
 	if err != nil {
@@ -69,7 +68,7 @@ func (r *ChannelMutationsResolvers) UpdateChannelGroup(ctx context.Context, inpu
 	return channelGroupToDTO(*res), nil
 }
 
-func (r *ChannelMutationsResolvers) DeleteChannelGroup(ctx context.Context, UUID uuid.UUID) (bool, error) {
+func (r *ChannelMutationsResolvers) DeleteChannelGroup(ctx context.Context, UUID string) (bool, error) {
 	return r.rootAggregate.deleteChannelGroup(UUID)
 }
 

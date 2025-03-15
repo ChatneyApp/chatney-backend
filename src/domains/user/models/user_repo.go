@@ -1,15 +1,9 @@
 package models
 
-import "go.mongodb.org/mongo-driver/v2/mongo"
+import (
+	"chatney-backend/src/application/repository"
+)
 
 type UserRepo struct {
-	Collection *mongo.Collection
-}
-
-func (repo *UserRepo) SaveUser(user User) error {
-	return nil
-}
-
-func (repo *UserRepo) GetUserById(id int) error {
-	return nil
+	*repository.BaseRepo[User]
 }

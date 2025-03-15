@@ -2,23 +2,19 @@
 
 package graphql_models
 
-import (
-	"github.com/google/uuid"
-)
-
 type ChannelGroup struct {
-	ID        uuid.UUID   `json:"Id"`
-	Name      string      `json:"name"`
-	Channels  []uuid.UUID `json:"channels"`
-	Order     int32       `json:"order"`
-	Workspace uuid.UUID   `json:"workspace"`
+	ID        string   `json:"Id"`
+	Name      string   `json:"name"`
+	Channels  []string `json:"channels"`
+	Order     int32    `json:"order"`
+	Workspace string   `json:"workspace"`
 }
 
 type CreateChannelGroupInput struct {
-	Name      string      `json:"name"`
-	Channels  []uuid.UUID `json:"channels"`
-	Order     int32       `json:"order"`
-	Workspace uuid.UUID   `json:"workspace"`
+	Name      string   `json:"name"`
+	Channels  []string `json:"channels"`
+	Order     int32    `json:"order"`
+	Workspace string   `json:"workspace"`
 }
 
 type CreateRoleDto struct {
@@ -28,7 +24,7 @@ type CreateRoleDto struct {
 }
 
 type EditRoleDto struct {
-	ID          uuid.UUID        `json:"Id"`
+	ID          string           `json:"Id"`
 	Name        string           `json:"Name"`
 	Permissions []string         `json:"Permissions,omitempty"`
 	Settings    *RoleSettingsDto `json:"Settings"`
@@ -50,7 +46,7 @@ type Query struct {
 }
 
 type Role struct {
-	ID          uuid.UUID     `json:"Id"`
+	ID          string        `json:"Id"`
 	Name        string        `json:"Name"`
 	Permissions []string      `json:"Permissions,omitempty"`
 	Settings    *RoleSettings `json:"Settings"`
@@ -65,8 +61,8 @@ type RoleSettingsDto struct {
 }
 
 type UpdateChannelGroupInput struct {
-	ID       uuid.UUID   `json:"Id"`
-	Name     *string     `json:"name,omitempty"`
-	Channels []uuid.UUID `json:"channels,omitempty"`
-	Order    *int32      `json:"order,omitempty"`
+	ID       string   `json:"Id"`
+	Name     *string  `json:"name,omitempty"`
+	Channels []string `json:"channels,omitempty"`
+	Order    *int32   `json:"order,omitempty"`
 }

@@ -6,6 +6,7 @@ import (
 	"chatney-backend/src/domains/role/models"
 	"context"
 
+	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
@@ -24,6 +25,7 @@ func (r *RoleMutationsResolvers) CreateRole(ctx context.Context, roleData graphq
 		permKeyList[i] = models.PermissionKey(s)
 	}
 	updatedRole, err := r.RootAggregate.CreateNewRole(&models.Role{
+		Id:          uuid.NewString(),
 		Name:        roleData.Name,
 		Settings:    (*models.RoleSettings)(roleData.Settings),
 		Permissions: permKeyList,

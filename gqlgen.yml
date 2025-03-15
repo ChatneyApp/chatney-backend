@@ -126,8 +126,6 @@ autobind:
 # modelgen, the others will be allowed when binding to fields. Configure them to
 # your liking
 models:
-  ObjectID:
-    model: github.com/your_project/graphql_models.ObjectID
   ID:
     model:
       - github.com/99designs/gqlgen/graphql.ID
@@ -139,6 +137,7 @@ models:
   UUID:
     model:
       - github.com/99designs/gqlgen/graphql.UUID
+
 
   # The GraphQL spec explicitly states that the Int type is a signed 32-bit
   # integer. Using Go int or int64 to represent it can lead to unexpected

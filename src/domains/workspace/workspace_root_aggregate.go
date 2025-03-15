@@ -3,8 +3,6 @@ package workspace
 import (
 	"chatney-backend/src/domains/workspace/models"
 	"context"
-
-	"github.com/google/uuid"
 )
 
 type WorkspaceRootAggregate struct {
@@ -15,7 +13,7 @@ func (root *WorkspaceRootAggregate) NewWs(ws models.Workspace) (*models.Workspac
 	return root.workspaceRepo.Create(context.TODO(), &ws)
 }
 
-func (root *WorkspaceRootAggregate) DeleteWs(id uuid.UUID) (bool, error) {
+func (root *WorkspaceRootAggregate) DeleteWs(id string) (bool, error) {
 	_, err := root.workspaceRepo.Delete(context.TODO(), id)
 	if err != nil {
 		return false, err
@@ -24,6 +22,6 @@ func (root *WorkspaceRootAggregate) DeleteWs(id uuid.UUID) (bool, error) {
 	return true, nil
 }
 
-func (root *WorkspaceRootAggregate) GetWsById(id uuid.UUID) (*models.Workspace, error) {
+func (root *WorkspaceRootAggregate) GetWsById(id string) (*models.Workspace, error) {
 	return root.workspaceRepo.GetByID(context.TODO(), id)
 }

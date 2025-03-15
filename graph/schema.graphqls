@@ -6,12 +6,12 @@ type Mutation {
 
     createChannelGroup(input: CreateChannelGroupInput!): ChannelGroup!
     updateChannelGroup(input: UpdateChannelGroupInput!): ChannelGroup!
-    deleteChannelGroup(UUID: UUID!): Boolean!
+    deleteChannelGroup(UUID: ID!): Boolean!
 }
 
 type Query {
     getPermissionsList: PermissionsListReturn!
 
-    getChannelGroup(UUID: UUID!): ChannelGroup
-    listChannelGroups(workspaceId: UUID!): [ChannelGroup!]!
+    getChannelGroup(UUID: ID!): ChannelGroup
+    listChannelGroups(workspaceId: ID!): [ChannelGroup!]!
 }

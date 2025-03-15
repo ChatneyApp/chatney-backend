@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 
-	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
@@ -16,12 +15,12 @@ type ChannelRootAggregate struct {
 	channelTypeRepo  *models.ChannelTypeRepo
 }
 
-func (root *ChannelRootAggregate) getChannelGroupById(id uuid.UUID) (*models.ChannelGroup, error) {
+func (root *ChannelRootAggregate) getChannelGroupById(id string) (*models.ChannelGroup, error) {
 	return root.channelGroupRepo.GetByID(context.TODO(), id)
 }
 
-func (root *ChannelRootAggregate) getChannelGroupListWithinWorkspace(wsId uuid.UUID) ([]models.ChannelGroup, error) {
-	return root.channelGroupRepo.GetAll(context.TODO(), bson.M{"workspace": wsId})
+func (root *ChannelRootAggregate) getChannelGroupListWithinWorkspace(workspaceId string) ([]models.ChannelGroup, error) {
+	return root.channelGroupRepo.GetAll(context.TODO(), bson.M{"workspace": workspaceId})
 }
 
 /** Channel Group */
@@ -29,7 +28,7 @@ func (root *ChannelRootAggregate) createChannelGroup(channelGroup models.Channel
 	return root.channelGroupRepo.Create(context.TODO(), &channelGroup)
 }
 
-func (root *ChannelRootAggregate) deleteChannelGroup(channelGroupId uuid.UUID) (bool, error) {
+func (root *ChannelRootAggregate) deleteChannelGroup(channelGroupId string) (bool, error) {
 	_, err := root.channelGroupRepo.Delete(context.TODO(), channelGroupId)
 	if err != nil {
 		return false, err
@@ -41,7 +40,7 @@ func (root *ChannelRootAggregate) updateChannelGroup(group models.ChannelGroup) 
 	return root.channelGroupRepo.Update(context.TODO(), group.Id, group)
 }
 
-func (root *ChannelRootAggregate) validatePutChannelIntoGroup(channelId uuid.UUID, groupId uuid.UUID) error {
+func (root *ChannelRootAggregate) validatePutChannelIntoGroup(channelId, groupId string) error {
 	// Fetch the channel
 	channel, err := root.channelRepo.GetByID(context.TODO(), channelId)
 	if err != nil {
@@ -61,14 +60,14 @@ func (root *ChannelRootAggregate) validatePutChannelIntoGroup(channelId uuid.UUI
 	}
 
 	// Compare workspace IDs
-	if channel.Workspace != group.Workspace {
+	if channel.WorkspaceId != group.WorkspaceId {
 		return errors.New("channel and channel group belong to different workspaces")
 	}
 
 	return nil
 }
 
-func (root *ChannelRootAggregate) putChannelIntoChannelGroup(channelId uuid.UUID, groupId uuid.UUID) (bool, error) {
+func (root *ChannelRootAggregate) putChannelIntoChannelGroup(channelId, groupId string) (bool, error) {
 	err := root.validatePutChannelIntoGroup(channelId, groupId)
 	if err != nil {
 		return false, err

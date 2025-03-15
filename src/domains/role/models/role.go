@@ -1,9 +1,5 @@
 package models
 
-import (
-	"github.com/google/uuid"
-)
-
 type PermissionKey string
 
 type RoleSettings struct {
@@ -11,7 +7,7 @@ type RoleSettings struct {
 }
 
 type Role struct {
-	Id          uuid.UUID       `bson:"_id,omitempty"`
+	Id          string          `bson:"_id,omitempty"`
 	Name        string          `bson:"name,omitempty"`
 	Settings    *RoleSettings   `bson:"settings,omitempty"`
 	Permissions []PermissionKey `bson:"permissions,omitempty"`

@@ -15,7 +15,6 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
-	"github.com/google/uuid"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -59,7 +58,7 @@ type ComplexityRoot struct {
 	Mutation struct {
 		CreateChannelGroup func(childComplexity int, input graphql_models.CreateChannelGroupInput) int
 		CreateRole         func(childComplexity int, roleData graphql_models.CreateRoleDto) int
-		DeleteChannelGroup func(childComplexity int, uuid uuid.UUID) int
+		DeleteChannelGroup func(childComplexity int, uuid string) int
 		EditRole           func(childComplexity int, roleData graphql_models.EditRoleDto) int
 		UpdateChannelGroup func(childComplexity int, input graphql_models.UpdateChannelGroupInput) int
 	}
@@ -74,9 +73,9 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		GetChannelGroup    func(childComplexity int, uuid uuid.UUID) int
+		GetChannelGroup    func(childComplexity int, uuid string) int
 		GetPermissionsList func(childComplexity int) int
-		ListChannelGroups  func(childComplexity int, workspaceID uuid.UUID) int
+		ListChannelGroups  func(childComplexity int, workspaceID string) int
 	}
 
 	Role struct {
@@ -96,12 +95,12 @@ type MutationResolver interface {
 	EditRole(ctx context.Context, roleData graphql_models.EditRoleDto) (*graphql_models.Role, error)
 	CreateChannelGroup(ctx context.Context, input graphql_models.CreateChannelGroupInput) (*graphql_models.ChannelGroup, error)
 	UpdateChannelGroup(ctx context.Context, input graphql_models.UpdateChannelGroupInput) (*graphql_models.ChannelGroup, error)
-	DeleteChannelGroup(ctx context.Context, uuid uuid.UUID) (bool, error)
+	DeleteChannelGroup(ctx context.Context, uuid string) (bool, error)
 }
 type QueryResolver interface {
 	GetPermissionsList(ctx context.Context) (*graphql_models.PermissionsListReturn, error)
-	GetChannelGroup(ctx context.Context, uuid uuid.UUID) (*graphql_models.ChannelGroup, error)
-	ListChannelGroups(ctx context.Context, workspaceID uuid.UUID) ([]*graphql_models.ChannelGroup, error)
+	GetChannelGroup(ctx context.Context, uuid string) (*graphql_models.ChannelGroup, error)
+	ListChannelGroups(ctx context.Context, workspaceID string) ([]*graphql_models.ChannelGroup, error)
 }
 
 type executableSchema struct {
@@ -192,7 +191,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteChannelGroup(childComplexity, args["UUID"].(uuid.UUID)), true
+		return e.complexity.Mutation.DeleteChannelGroup(childComplexity, args["UUID"].(string)), true
 
 	case "Mutation.editRole":
 		if e.complexity.Mutation.EditRole == nil {
@@ -249,7 +248,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.GetChannelGroup(childComplexity, args["UUID"].(uuid.UUID)), true
+		return e.complexity.Query.GetChannelGroup(childComplexity, args["UUID"].(string)), true
 
 	case "Query.getPermissionsList":
 		if e.complexity.Query.GetPermissionsList == nil {
@@ -268,7 +267,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.ListChannelGroups(childComplexity, args["workspaceId"].(uuid.UUID)), true
+		return e.complexity.Query.ListChannelGroups(childComplexity, args["workspaceId"].(string)), true
 
 	case "Role.Id":
 		if e.complexity.Role.ID == nil {
@@ -428,24 +427,24 @@ func sourceData(filename string) string {
 var sources = []*ast.Source{
 	{Name: "schema.graphqls", Input: sourceData("schema.graphqls"), BuiltIn: false},
 	{Name: "../src/domains/channel/channel_group.graphqls", Input: `type ChannelGroup {
-    Id: UUID!
+    Id: ID!
     name: String!
-    channels: [UUID!]!
+    channels: [ID!]!
     order: Int!
-    workspace: UUID!
+    workspace: ID!
 }
 
 input CreateChannelGroupInput {
     name: String!
-    channels: [UUID!]!
+    channels: [ID!]!
     order: Int!
-    workspace: UUID!
+    workspace: ID!
 }
 
 input UpdateChannelGroupInput {
-    Id: UUID!
+    Id: ID!
     name: String
-    channels: [UUID!]
+    channels: [ID!]
     order: Int
 }`, BuiltIn: false},
 	{Name: "../src/domains/permissions/permissions.graphqls", Input: `# GraphQL schema example
@@ -470,7 +469,7 @@ type RoleSettings {
 }
 
 type Role {
-  Id: UUID!
+  Id: ID!
   Name: String!
   Permissions: [String!]
   Settings: RoleSettings!
@@ -483,7 +482,7 @@ input CreateRoleDTO {
 }
 
 input EditRoleDTO {
-  Id: UUID!
+  Id: ID!
 	Name:    String!
 	Permissions: [String!]
 	Settings: RoleSettingsDTO!
@@ -555,13 +554,13 @@ func (ec *executionContext) field_Mutation_deleteChannelGroup_args(ctx context.C
 func (ec *executionContext) field_Mutation_deleteChannelGroup_argsUUID(
 	ctx context.Context,
 	rawArgs map[string]any,
-) (uuid.UUID, error) {
+) (string, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("UUID"))
 	if tmp, ok := rawArgs["UUID"]; ok {
-		return ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, tmp)
+		return ec.unmarshalNID2string(ctx, tmp)
 	}
 
-	var zeroVal uuid.UUID
+	var zeroVal string
 	return zeroVal, nil
 }
 
@@ -647,13 +646,13 @@ func (ec *executionContext) field_Query_getChannelGroup_args(ctx context.Context
 func (ec *executionContext) field_Query_getChannelGroup_argsUUID(
 	ctx context.Context,
 	rawArgs map[string]any,
-) (uuid.UUID, error) {
+) (string, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("UUID"))
 	if tmp, ok := rawArgs["UUID"]; ok {
-		return ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, tmp)
+		return ec.unmarshalNID2string(ctx, tmp)
 	}
 
-	var zeroVal uuid.UUID
+	var zeroVal string
 	return zeroVal, nil
 }
 
@@ -670,13 +669,13 @@ func (ec *executionContext) field_Query_listChannelGroups_args(ctx context.Conte
 func (ec *executionContext) field_Query_listChannelGroups_argsWorkspaceID(
 	ctx context.Context,
 	rawArgs map[string]any,
-) (uuid.UUID, error) {
+) (string, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("workspaceId"))
 	if tmp, ok := rawArgs["workspaceId"]; ok {
-		return ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, tmp)
+		return ec.unmarshalNID2string(ctx, tmp)
 	}
 
-	var zeroVal uuid.UUID
+	var zeroVal string
 	return zeroVal, nil
 }
 
@@ -806,9 +805,9 @@ func (ec *executionContext) _ChannelGroup_Id(ctx context.Context, field graphql.
 		}
 		return graphql.Null
 	}
-	res := resTmp.(uuid.UUID)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, field.Selections, res)
+	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ChannelGroup_Id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -818,7 +817,7 @@ func (ec *executionContext) fieldContext_ChannelGroup_Id(_ context.Context, fiel
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type UUID does not have child fields")
+			return nil, errors.New("field of type ID does not have child fields")
 		},
 	}
 	return fc, nil
@@ -894,9 +893,9 @@ func (ec *executionContext) _ChannelGroup_channels(ctx context.Context, field gr
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]uuid.UUID)
+	res := resTmp.([]string)
 	fc.Result = res
-	return ec.marshalNUUID2ᚕgithubᚗcomᚋgoogleᚋuuidᚐUUIDᚄ(ctx, field.Selections, res)
+	return ec.marshalNID2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ChannelGroup_channels(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -906,7 +905,7 @@ func (ec *executionContext) fieldContext_ChannelGroup_channels(_ context.Context
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type UUID does not have child fields")
+			return nil, errors.New("field of type ID does not have child fields")
 		},
 	}
 	return fc, nil
@@ -982,9 +981,9 @@ func (ec *executionContext) _ChannelGroup_workspace(ctx context.Context, field g
 		}
 		return graphql.Null
 	}
-	res := resTmp.(uuid.UUID)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, field.Selections, res)
+	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ChannelGroup_workspace(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -994,7 +993,7 @@ func (ec *executionContext) fieldContext_ChannelGroup_workspace(_ context.Contex
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type UUID does not have child fields")
+			return nil, errors.New("field of type ID does not have child fields")
 		},
 	}
 	return fc, nil
@@ -1278,7 +1277,7 @@ func (ec *executionContext) _Mutation_deleteChannelGroup(ctx context.Context, fi
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteChannelGroup(rctx, fc.Args["UUID"].(uuid.UUID))
+		return ec.resolvers.Mutation().DeleteChannelGroup(rctx, fc.Args["UUID"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1519,7 +1518,7 @@ func (ec *executionContext) _Query_getChannelGroup(ctx context.Context, field gr
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().GetChannelGroup(rctx, fc.Args["UUID"].(uuid.UUID))
+		return ec.resolvers.Query().GetChannelGroup(rctx, fc.Args["UUID"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1583,7 +1582,7 @@ func (ec *executionContext) _Query_listChannelGroups(ctx context.Context, field 
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().ListChannelGroups(rctx, fc.Args["workspaceId"].(uuid.UUID))
+		return ec.resolvers.Query().ListChannelGroups(rctx, fc.Args["workspaceId"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1793,9 +1792,9 @@ func (ec *executionContext) _Role_Id(ctx context.Context, field graphql.Collecte
 		}
 		return graphql.Null
 	}
-	res := resTmp.(uuid.UUID)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, field.Selections, res)
+	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Role_Id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1805,7 +1804,7 @@ func (ec *executionContext) fieldContext_Role_Id(_ context.Context, field graphq
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type UUID does not have child fields")
+			return nil, errors.New("field of type ID does not have child fields")
 		},
 	}
 	return fc, nil
@@ -3962,7 +3961,7 @@ func (ec *executionContext) unmarshalInputCreateChannelGroupInput(ctx context.Co
 			it.Name = data
 		case "channels":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("channels"))
-			data, err := ec.unmarshalNUUID2ᚕgithubᚗcomᚋgoogleᚋuuidᚐUUIDᚄ(ctx, v)
+			data, err := ec.unmarshalNID2ᚕstringᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3976,7 +3975,7 @@ func (ec *executionContext) unmarshalInputCreateChannelGroupInput(ctx context.Co
 			it.Order = data
 		case "workspace":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("workspace"))
-			data, err := ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, v)
+			data, err := ec.unmarshalNID2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4044,7 +4043,7 @@ func (ec *executionContext) unmarshalInputEditRoleDTO(ctx context.Context, obj a
 		switch k {
 		case "Id":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Id"))
-			data, err := ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, v)
+			data, err := ec.unmarshalNID2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4119,7 +4118,7 @@ func (ec *executionContext) unmarshalInputUpdateChannelGroupInput(ctx context.Co
 		switch k {
 		case "Id":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Id"))
-			data, err := ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, v)
+			data, err := ec.unmarshalNID2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4133,7 +4132,7 @@ func (ec *executionContext) unmarshalInputUpdateChannelGroupInput(ctx context.Co
 			it.Name = data
 		case "channels":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("channels"))
-			data, err := ec.unmarshalOUUID2ᚕgithubᚗcomᚋgoogleᚋuuidᚐUUIDᚄ(ctx, v)
+			data, err := ec.unmarshalOID2ᚕstringᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -5004,6 +5003,53 @@ func (ec *executionContext) unmarshalNEditRoleDTO2chatneyᚑbackendᚋgraphᚋmo
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNID2string(ctx context.Context, v any) (string, error) {
+	res, err := graphql.UnmarshalID(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
+	res := graphql.MarshalID(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNID2ᚕstringᚄ(ctx context.Context, v any) ([]string, error) {
+	var vSlice []any
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNID2string(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNID2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNID2string(ctx, sel, v[i])
+	}
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
 func (ec *executionContext) unmarshalNInt2int32(ctx context.Context, v any) (int32, error) {
 	res, err := graphql.UnmarshalInt32(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -5152,53 +5198,6 @@ func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel
 	ret := make(graphql.Array, len(v))
 	for i := range v {
 		ret[i] = ec.marshalNString2string(ctx, sel, v[i])
-	}
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx context.Context, v any) (uuid.UUID, error) {
-	res, err := graphql.UnmarshalUUID(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx context.Context, sel ast.SelectionSet, v uuid.UUID) graphql.Marshaler {
-	res := graphql.MarshalUUID(v)
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-	}
-	return res
-}
-
-func (ec *executionContext) unmarshalNUUID2ᚕgithubᚗcomᚋgoogleᚋuuidᚐUUIDᚄ(ctx context.Context, v any) ([]uuid.UUID, error) {
-	var vSlice []any
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
-	var err error
-	res := make([]uuid.UUID, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) marshalNUUID2ᚕgithubᚗcomᚋgoogleᚋuuidᚐUUIDᚄ(ctx context.Context, sel ast.SelectionSet, v []uuid.UUID) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	for i := range v {
-		ret[i] = ec.marshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, sel, v[i])
 	}
 
 	for _, e := range ret {
@@ -5501,6 +5500,44 @@ func (ec *executionContext) marshalOChannelGroup2ᚖchatneyᚑbackendᚋgraphᚋ
 	return ec._ChannelGroup(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalOID2ᚕstringᚄ(ctx context.Context, v any) ([]string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNID2string(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOID2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNID2string(ctx, sel, v[i])
+	}
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
 func (ec *executionContext) unmarshalOInt2ᚖint32(ctx context.Context, v any) (*int32, error) {
 	if v == nil {
 		return nil, nil
@@ -5569,44 +5606,6 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 	}
 	res := graphql.MarshalString(*v)
 	return res
-}
-
-func (ec *executionContext) unmarshalOUUID2ᚕgithubᚗcomᚋgoogleᚋuuidᚐUUIDᚄ(ctx context.Context, v any) ([]uuid.UUID, error) {
-	if v == nil {
-		return nil, nil
-	}
-	var vSlice []any
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
-	var err error
-	res := make([]uuid.UUID, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) marshalOUUID2ᚕgithubᚗcomᚋgoogleᚋuuidᚐUUIDᚄ(ctx context.Context, sel ast.SelectionSet, v []uuid.UUID) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	for i := range v {
-		ret[i] = ec.marshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, sel, v[i])
-	}
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
 }
 
 func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {

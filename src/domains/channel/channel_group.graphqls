@@ -1,21 +1,21 @@
 type ChannelGroup {
-    Id: UUID!
+    Id: ID!
     name: String!
-    channels: [UUID!]!
+    channels: [ID!]!
     order: Int!
-    workspace: UUID!
+    workspace: ID!
 }
 
 input CreateChannelGroupInput {
     name: String!
-    channels: [UUID!]!
+    channels: [ID!]!
     order: Int!
-    workspace: UUID!
+    workspace: ID!
 }
 
 input UpdateChannelGroupInput {
-    Id: UUID!
+    Id: ID!
     name: String
-    channels: [UUID!]
+    channels: [ID!]
     order: Int
 }
