@@ -15,7 +15,7 @@ type UserRepo struct {
 
 func (r *UserRepo) GetChannelUsersList(ctx context.Context, channelId string) ([]*User, error) {
 	filter := bson.D{
-		{"channelSettings.channelId", channelId},
+		{Key: "channelSettings.channelId", Value: channelId},
 	}
 
 	opts := options.Find()

@@ -10,7 +10,7 @@ type UserRootAggregate struct {
 }
 
 func (root *UserRootAggregate) createUser(user *models.User) (*models.User, error) {
-	return nil, nil
+	return root.UserRepo.Create(context.TODO(), user)
 }
 
 func (root *UserRootAggregate) deleteUser(userId string) (bool, error) {
