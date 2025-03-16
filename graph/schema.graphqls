@@ -1,5 +1,3 @@
-scalar UUID
-
 type Mutation {
     createRole(RoleData: CreateRoleDTO!): Role!
     editRole(RoleData: EditRoleDTO!): Role!
@@ -16,6 +14,14 @@ type Mutation {
     createChannel(input: MutateChannelDTO!): Channel
     deleteChannel(channelId: String!): Boolean!
     updateChannel(input: MutateChannelDTO!, channelId: String!): Channel
+
+    createWorkspace(input: MutateWorkspaceDTO!): Workspace
+    deleteWorkspace(workspaceId: String!): Boolean!
+    updateWorkspace(input: MutateWorkspaceDTO!, workspaceId: String!): Workspace
+
+    createUser(input: MutateUserDTO!): User
+    deleteUser(userId: String!): Boolean!
+    updateUser(input: MutateUserDTO!, userId: String!): User
 }
 
 type Query {
@@ -27,4 +33,6 @@ type Query {
 
     getAllChannelTypesList: [ChannelType!]
     getWorkspaceChannelsList(workspaceId: String!): [Channel!]
+
+    getChannelUsersList(channelId: string): [User!]
 }

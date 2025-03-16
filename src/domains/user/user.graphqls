@@ -1,0 +1,35 @@
+scalar JSON
+
+enum UserStatus {
+    ACTIVE
+    INACTIVE
+    BANNED
+    MUTED
+}
+
+type Roles {
+    GlobalRoleId: String
+    WorkspacesMap: JSON
+    ChannelsMap: JSON
+}
+
+type Channel {
+    LastSeenMessage: String
+    Muted: Boolean
+}
+
+type User {
+    Id: ID!
+    Name: String!
+    Status: UserStatus!
+    Email: String!
+    Roles: Roles
+    ChannelsIds: JSON
+    WorkspacesIds: [String!]!
+}
+
+input MutateUserDTO {
+    Name: String!
+    Status: UserStatus
+    Email: String
+}

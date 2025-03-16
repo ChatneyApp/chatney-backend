@@ -1,0 +1,8 @@
+type Workspace {
+    Id: ID!
+    Name: String!
+}
+
+input MutateWorkspaceDTO {
+    Name: String!
+}
