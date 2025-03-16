@@ -23,3 +23,11 @@ func channelTypeToDTO(chType models.ChannelType) *graphql_models.ChannelType {
 		Label:      chType.Label,
 	}
 }
+func channelToDTO(ch models.Channel) *graphql_models.Channel {
+	return &graphql_models.Channel{
+		ID:            ch.Id,
+		Name:          ch.Name,
+		ChannelTypeID: ch.ChannelTypeId,
+		WorkspaceID:   ch.WorkspaceId,
+	}
+}
