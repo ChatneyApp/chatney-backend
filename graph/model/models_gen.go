@@ -2,12 +2,26 @@
 
 package graphql_models
 
+type Channel struct {
+	ID            string `json:"Id"`
+	Name          string `json:"Name"`
+	ChannelTypeID string `json:"ChannelTypeId"`
+	WorkspaceID   string `json:"WorkspaceId"`
+}
+
 type ChannelGroup struct {
 	ID        string   `json:"Id"`
 	Name      string   `json:"name"`
 	Channels  []string `json:"channels"`
 	Order     int32    `json:"order"`
 	Workspace string   `json:"workspace"`
+}
+
+type ChannelType struct {
+	ID      string   `json:"Id"`
+	Label   string   `json:"Label"`
+	Key     []string `json:"Key"`
+	RoleIds []string `json:"RoleIds,omitempty"`
 }
 
 type CreateChannelGroupInput struct {
@@ -28,6 +42,18 @@ type EditRoleDto struct {
 	Name        string           `json:"Name"`
 	Permissions []string         `json:"Permissions,omitempty"`
 	Settings    *RoleSettingsDto `json:"Settings"`
+}
+
+type MutateChannelDto struct {
+	Name          string `json:"Name"`
+	ChannelTypeID string `json:"ChannelTypeId"`
+	WorkspaceID   string `json:"WorkspaceId"`
+}
+
+type MutateChannelTypeDto struct {
+	Label   string   `json:"Label"`
+	Key     []string `json:"Key"`
+	RoleIds []string `json:"RoleIds,omitempty"`
 }
 
 type Mutation struct {

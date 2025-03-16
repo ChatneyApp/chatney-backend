@@ -1,0 +1,12 @@
+type Channel {
+    Id: ID!
+    Name: String!
+    ChannelTypeId: String!
+    WorkspaceId: String!
+}
+
+input MutateChannelDTO {
+    Name: String!
+    ChannelTypeId: String!
+    WorkspaceId: String!
+}
