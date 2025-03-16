@@ -35,7 +35,7 @@ func (r *BaseRepo[T]) GetByID(ctx context.Context, id string) (*T, error) {
 	return &entity, nil
 }
 
-func (r *BaseRepo[T]) Update(ctx context.Context, id string, update T) (*T, error) {
+func (r *BaseRepo[T]) Update(ctx context.Context, id string, update *T) (*T, error) {
 	_, err := r.Collection.UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$set": update})
 	if err != nil {
 		return nil, err
@@ -44,8 +44,13 @@ func (r *BaseRepo[T]) Update(ctx context.Context, id string, update T) (*T, erro
 	return r.GetByID(ctx, id)
 }
 
-func (r *BaseRepo[T]) Delete(ctx context.Context, id string) (*mongo.DeleteResult, error) {
-	return r.Collection.DeleteOne(ctx, bson.M{"_id": id})
+func (r *BaseRepo[T]) Delete(ctx context.Context, id string) (bool, error) {
+	_, err := r.Collection.DeleteOne(ctx, bson.M{"_id": id})
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
 }
 
 func (r *BaseRepo[T]) GetAll(ctx context.Context, filter bson.M) ([]*T, error) {

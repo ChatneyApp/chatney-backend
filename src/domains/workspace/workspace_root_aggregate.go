@@ -14,12 +14,7 @@ func (root *WorkspaceRootAggregate) NewWs(ws models.Workspace) (*models.Workspac
 }
 
 func (root *WorkspaceRootAggregate) DeleteWs(id string) (bool, error) {
-	_, err := root.workspaceRepo.Delete(context.TODO(), id)
-	if err != nil {
-		return false, err
-	}
-
-	return true, nil
+	return root.workspaceRepo.Delete(context.TODO(), id)
 }
 
 func (root *WorkspaceRootAggregate) GetWsById(id string) (*models.Workspace, error) {

@@ -18,10 +18,10 @@ type ChannelGroup struct {
 }
 
 type ChannelType struct {
-	ID      string   `json:"Id"`
-	Label   string   `json:"Label"`
-	Key     []string `json:"Key"`
-	RoleIds []string `json:"RoleIds,omitempty"`
+	ID         string `json:"Id"`
+	Label      string `json:"Label"`
+	Key        string `json:"Key"`
+	BaseRoleID string `json:"BaseRoleId"`
 }
 
 type CreateChannelGroupInput struct {
@@ -51,9 +51,9 @@ type MutateChannelDto struct {
 }
 
 type MutateChannelTypeDto struct {
-	Label   string   `json:"Label"`
-	Key     []string `json:"Key"`
-	RoleIds []string `json:"RoleIds,omitempty"`
+	Label      string `json:"Label"`
+	Key        string `json:"Key"`
+	BaseRoleID string `json:"BaseRoleId"`
 }
 
 type Mutation struct {

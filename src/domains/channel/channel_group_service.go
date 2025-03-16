@@ -15,8 +15,8 @@ func (root *ChannelRootAggregate) getChannelGroupListWithinWorkspace(workspaceId
 	return root.channelGroupRepo.GetAll(context.TODO(), bson.M{"workspace": workspaceId})
 }
 
-func (root *ChannelRootAggregate) createChannelGroup(channelGroup models.ChannelGroup) (*models.ChannelGroup, error) {
-	return root.channelGroupRepo.Create(context.TODO(), &channelGroup)
+func (root *ChannelRootAggregate) createChannelGroup(channelGroup *models.ChannelGroup) (*models.ChannelGroup, error) {
+	return root.channelGroupRepo.Create(context.TODO(), channelGroup)
 }
 
 func (root *ChannelRootAggregate) deleteChannelGroup(channelGroupId string) (bool, error) {
@@ -27,6 +27,6 @@ func (root *ChannelRootAggregate) deleteChannelGroup(channelGroupId string) (boo
 	return true, nil
 }
 
-func (root *ChannelRootAggregate) updateChannelGroup(group models.ChannelGroup) (*models.ChannelGroup, error) {
+func (root *ChannelRootAggregate) updateChannelGroup(group *models.ChannelGroup) (*models.ChannelGroup, error) {
 	return root.channelGroupRepo.Update(context.TODO(), group.Id, group)
 }

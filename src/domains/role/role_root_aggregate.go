@@ -20,13 +20,9 @@ func (root *RoleRootAggregateStruct) CreateNewRole(role *models.Role) (*models.R
 }
 
 func (root *RoleRootAggregateStruct) UpdateRole(role models.Role) (*models.Role, error) {
-	return root.roleRepo.Update(context.TODO(), role.Id, role)
+	return root.roleRepo.Update(context.TODO(), role.Id, &role)
 }
 
 func (root *RoleRootAggregateStruct) deleteRole(id string) (bool, error) {
-	_, err := root.roleRepo.Delete(context.TODO(), id)
-	if err != nil {
-		return false, err
-	}
-	return true, nil
+	return root.roleRepo.Delete(context.TODO(), id)
 }

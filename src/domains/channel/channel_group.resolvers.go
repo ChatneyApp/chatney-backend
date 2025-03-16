@@ -41,7 +41,7 @@ func (r *ChannelQueryResolvers) ListChannelGroups(ctx context.Context, workspace
 }
 
 func (r *ChannelMutationsResolvers) CreateChannelGroup(ctx context.Context, input graphql_models.CreateChannelGroupInput) (*graphql_models.ChannelGroup, error) {
-	res, err := r.rootAggregate.createChannelGroup(models.ChannelGroup{
+	res, err := r.rootAggregate.createChannelGroup(&models.ChannelGroup{
 		Name:        input.Name,
 		WorkspaceId: input.Workspace,
 	})
@@ -54,7 +54,7 @@ func (r *ChannelMutationsResolvers) CreateChannelGroup(ctx context.Context, inpu
 }
 
 func (r *ChannelMutationsResolvers) UpdateChannelGroup(ctx context.Context, input graphql_models.UpdateChannelGroupInput) (*graphql_models.ChannelGroup, error) {
-	res, err := r.rootAggregate.updateChannelGroup(models.ChannelGroup{
+	res, err := r.rootAggregate.updateChannelGroup(&models.ChannelGroup{
 		Id:          input.ID,
 		ChannelsIds: input.Channels,
 		Name:        *input.Name,

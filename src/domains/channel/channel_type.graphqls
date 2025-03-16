@@ -1,12 +1,12 @@
 type ChannelType {
     Id: ID!
     Label: String!
-    Key: [ID!]!
-    RoleIds: [String!]
+    Key: String!
+    BaseRoleId: String!
 }
 
 input MutateChannelTypeDTO {
     Label: String!
-    Key: [ID!]!
-    RoleIds: [String!]
+    Key: String!
+    BaseRoleId: String!
 }

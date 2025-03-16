@@ -8,6 +8,10 @@ type Mutation {
     createChannelGroup(input: CreateChannelGroupInput!): ChannelGroup!
     updateChannelGroup(input: UpdateChannelGroupInput!): ChannelGroup!
     deleteChannelGroup(UUID: ID!): Boolean!
+
+    createChannelType(input: MutateChannelTypeDTO!): ChannelType!
+    updateChannelType(input: MutateChannelTypeDTO!, channelTypeId: String!): ChannelType!
+    deleteChannelType(channelTypeId: String!): Boolean!
 }
 
 type Query {
@@ -16,4 +20,6 @@ type Query {
 
     getChannelGroup(UUID: ID!): ChannelGroup
     listChannelGroups(workspaceId: ID!): [ChannelGroup!]!
+
+    getAllChannelTypesList: [ChannelType!]
 }

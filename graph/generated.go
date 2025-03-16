@@ -63,19 +63,22 @@ type ComplexityRoot struct {
 	}
 
 	ChannelType struct {
-		ID      func(childComplexity int) int
-		Key     func(childComplexity int) int
-		Label   func(childComplexity int) int
-		RoleIds func(childComplexity int) int
+		BaseRoleID func(childComplexity int) int
+		ID         func(childComplexity int) int
+		Key        func(childComplexity int) int
+		Label      func(childComplexity int) int
 	}
 
 	Mutation struct {
 		CreateChannelGroup func(childComplexity int, input graphql_models.CreateChannelGroupInput) int
+		CreateChannelType  func(childComplexity int, input graphql_models.MutateChannelTypeDto) int
 		CreateRole         func(childComplexity int, roleData graphql_models.CreateRoleDto) int
 		DeleteChannelGroup func(childComplexity int, uuid string) int
+		DeleteChannelType  func(childComplexity int, channelTypeID string) int
 		DeleteRole         func(childComplexity int, roleID *string) int
 		EditRole           func(childComplexity int, roleData graphql_models.EditRoleDto) int
 		UpdateChannelGroup func(childComplexity int, input graphql_models.UpdateChannelGroupInput) int
+		UpdateChannelType  func(childComplexity int, input graphql_models.MutateChannelTypeDto, channelTypeID string) int
 	}
 
 	PermissionsGroup struct {
@@ -88,10 +91,11 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		GetChannelGroup    func(childComplexity int, uuid string) int
-		GetPermissionsList func(childComplexity int) int
-		GetRolesList       func(childComplexity int) int
-		ListChannelGroups  func(childComplexity int, workspaceID string) int
+		GetAllChannelTypesList func(childComplexity int) int
+		GetChannelGroup        func(childComplexity int, uuid string) int
+		GetPermissionsList     func(childComplexity int) int
+		GetRolesList           func(childComplexity int) int
+		ListChannelGroups      func(childComplexity int, workspaceID string) int
 	}
 
 	Role struct {
@@ -113,12 +117,16 @@ type MutationResolver interface {
 	CreateChannelGroup(ctx context.Context, input graphql_models.CreateChannelGroupInput) (*graphql_models.ChannelGroup, error)
 	UpdateChannelGroup(ctx context.Context, input graphql_models.UpdateChannelGroupInput) (*graphql_models.ChannelGroup, error)
 	DeleteChannelGroup(ctx context.Context, uuid string) (bool, error)
+	CreateChannelType(ctx context.Context, input graphql_models.MutateChannelTypeDto) (*graphql_models.ChannelType, error)
+	UpdateChannelType(ctx context.Context, input graphql_models.MutateChannelTypeDto, channelTypeID string) (*graphql_models.ChannelType, error)
+	DeleteChannelType(ctx context.Context, channelTypeID string) (bool, error)
 }
 type QueryResolver interface {
 	GetRolesList(ctx context.Context) ([]*graphql_models.Role, error)
 	GetPermissionsList(ctx context.Context) (*graphql_models.PermissionsListReturn, error)
 	GetChannelGroup(ctx context.Context, uuid string) (*graphql_models.ChannelGroup, error)
 	ListChannelGroups(ctx context.Context, workspaceID string) ([]*graphql_models.ChannelGroup, error)
+	GetAllChannelTypesList(ctx context.Context) ([]*graphql_models.ChannelType, error)
 }
 
 type executableSchema struct {
@@ -203,6 +211,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ChannelGroup.Workspace(childComplexity), true
 
+	case "ChannelType.BaseRoleId":
+		if e.complexity.ChannelType.BaseRoleID == nil {
+			break
+		}
+
+		return e.complexity.ChannelType.BaseRoleID(childComplexity), true
+
 	case "ChannelType.Id":
 		if e.complexity.ChannelType.ID == nil {
 			break
@@ -224,13 +239,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ChannelType.Label(childComplexity), true
 
-	case "ChannelType.RoleIds":
-		if e.complexity.ChannelType.RoleIds == nil {
-			break
-		}
-
-		return e.complexity.ChannelType.RoleIds(childComplexity), true
-
 	case "Mutation.createChannelGroup":
 		if e.complexity.Mutation.CreateChannelGroup == nil {
 			break
@@ -242,6 +250,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.CreateChannelGroup(childComplexity, args["input"].(graphql_models.CreateChannelGroupInput)), true
+
+	case "Mutation.createChannelType":
+		if e.complexity.Mutation.CreateChannelType == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createChannelType_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateChannelType(childComplexity, args["input"].(graphql_models.MutateChannelTypeDto)), true
 
 	case "Mutation.createRole":
 		if e.complexity.Mutation.CreateRole == nil {
@@ -266,6 +286,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DeleteChannelGroup(childComplexity, args["UUID"].(string)), true
+
+	case "Mutation.deleteChannelType":
+		if e.complexity.Mutation.DeleteChannelType == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteChannelType_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteChannelType(childComplexity, args["channelTypeId"].(string)), true
 
 	case "Mutation.deleteRole":
 		if e.complexity.Mutation.DeleteRole == nil {
@@ -303,6 +335,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.UpdateChannelGroup(childComplexity, args["input"].(graphql_models.UpdateChannelGroupInput)), true
 
+	case "Mutation.updateChannelType":
+		if e.complexity.Mutation.UpdateChannelType == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateChannelType_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateChannelType(childComplexity, args["input"].(graphql_models.MutateChannelTypeDto), args["channelTypeId"].(string)), true
+
 	case "PermissionsGroup.label":
 		if e.complexity.PermissionsGroup.Label == nil {
 			break
@@ -323,6 +367,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.PermissionsListReturn.Groups(childComplexity), true
+
+	case "Query.getAllChannelTypesList":
+		if e.complexity.Query.GetAllChannelTypesList == nil {
+			break
+		}
+
+		return e.complexity.Query.GetAllChannelTypesList(childComplexity), true
 
 	case "Query.getChannelGroup":
 		if e.complexity.Query.GetChannelGroup == nil {
@@ -521,18 +572,6 @@ func sourceData(filename string) string {
 
 var sources = []*ast.Source{
 	{Name: "schema.graphqls", Input: sourceData("schema.graphqls"), BuiltIn: false},
-	{Name: "../src/domains/channel/channe_type.graphqls", Input: `type ChannelType {
-    Id: ID!
-    Label: String!
-    Key: [ID!]!
-    RoleIds: [String!]
-}
-
-input MutateChannelTypeDTO {
-    Label: String!
-    Key: [ID!]!
-    RoleIds: [String!]
-}`, BuiltIn: false},
 	{Name: "../src/domains/channel/channel.graphqls", Input: `type Channel {
     Id: ID!
     Name: String!
@@ -565,6 +604,18 @@ input UpdateChannelGroupInput {
     name: String
     channels: [ID!]
     order: Int
+}`, BuiltIn: false},
+	{Name: "../src/domains/channel/channel_type.graphqls", Input: `type ChannelType {
+    Id: ID!
+    Label: String!
+    Key: String!
+    BaseRoleId: String!
+}
+
+input MutateChannelTypeDTO {
+    Label: String!
+    Key: String!
+    BaseRoleId: String!
 }`, BuiltIn: false},
 	{Name: "../src/domains/permissions/permissions.graphqls", Input: `# GraphQL schema example
 #
@@ -637,6 +688,29 @@ func (ec *executionContext) field_Mutation_createChannelGroup_argsInput(
 	return zeroVal, nil
 }
 
+func (ec *executionContext) field_Mutation_createChannelType_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_createChannelType_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_createChannelType_argsInput(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (graphql_models.MutateChannelTypeDto, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNMutateChannelTypeDTO2chatneyᚑbackendᚋgraphᚋmodelᚐMutateChannelTypeDto(ctx, tmp)
+	}
+
+	var zeroVal graphql_models.MutateChannelTypeDto
+	return zeroVal, nil
+}
+
 func (ec *executionContext) field_Mutation_createRole_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -677,6 +751,29 @@ func (ec *executionContext) field_Mutation_deleteChannelGroup_argsUUID(
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("UUID"))
 	if tmp, ok := rawArgs["UUID"]; ok {
 		return ec.unmarshalNID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteChannelType_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_deleteChannelType_argsChannelTypeID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["channelTypeId"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_deleteChannelType_argsChannelTypeID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("channelTypeId"))
+	if tmp, ok := rawArgs["channelTypeId"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
 	}
 
 	var zeroVal string
@@ -749,6 +846,47 @@ func (ec *executionContext) field_Mutation_updateChannelGroup_argsInput(
 	}
 
 	var zeroVal graphql_models.UpdateChannelGroupInput
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_updateChannelType_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_updateChannelType_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	arg1, err := ec.field_Mutation_updateChannelType_argsChannelTypeID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["channelTypeId"] = arg1
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_updateChannelType_argsInput(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (graphql_models.MutateChannelTypeDto, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNMutateChannelTypeDTO2chatneyᚑbackendᚋgraphᚋmodelᚐMutateChannelTypeDto(ctx, tmp)
+	}
+
+	var zeroVal graphql_models.MutateChannelTypeDto
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_updateChannelType_argsChannelTypeID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("channelTypeId"))
+	if tmp, ok := rawArgs["channelTypeId"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
 	return zeroVal, nil
 }
 
@@ -1431,9 +1569,9 @@ func (ec *executionContext) _ChannelType_Key(ctx context.Context, field graphql.
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]string)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNID2ᚕstringᚄ(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ChannelType_Key(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1443,14 +1581,14 @@ func (ec *executionContext) fieldContext_ChannelType_Key(_ context.Context, fiel
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _ChannelType_RoleIds(ctx context.Context, field graphql.CollectedField, obj *graphql_models.ChannelType) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ChannelType_RoleIds(ctx, field)
+func (ec *executionContext) _ChannelType_BaseRoleId(ctx context.Context, field graphql.CollectedField, obj *graphql_models.ChannelType) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ChannelType_BaseRoleId(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1463,21 +1601,24 @@ func (ec *executionContext) _ChannelType_RoleIds(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.RoleIds, nil
+		return obj.BaseRoleID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.([]string)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalOString2ᚕstringᚄ(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_ChannelType_RoleIds(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_ChannelType_BaseRoleId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "ChannelType",
 		Field:      field,
@@ -1864,6 +2005,191 @@ func (ec *executionContext) fieldContext_Mutation_deleteChannelGroup(ctx context
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_createChannelType(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_createChannelType(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateChannelType(rctx, fc.Args["input"].(graphql_models.MutateChannelTypeDto))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*graphql_models.ChannelType)
+	fc.Result = res
+	return ec.marshalNChannelType2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐChannelType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createChannelType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "Id":
+				return ec.fieldContext_ChannelType_Id(ctx, field)
+			case "Label":
+				return ec.fieldContext_ChannelType_Label(ctx, field)
+			case "Key":
+				return ec.fieldContext_ChannelType_Key(ctx, field)
+			case "BaseRoleId":
+				return ec.fieldContext_ChannelType_BaseRoleId(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ChannelType", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createChannelType_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateChannelType(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateChannelType(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateChannelType(rctx, fc.Args["input"].(graphql_models.MutateChannelTypeDto), fc.Args["channelTypeId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*graphql_models.ChannelType)
+	fc.Result = res
+	return ec.marshalNChannelType2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐChannelType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateChannelType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "Id":
+				return ec.fieldContext_ChannelType_Id(ctx, field)
+			case "Label":
+				return ec.fieldContext_ChannelType_Label(ctx, field)
+			case "Key":
+				return ec.fieldContext_ChannelType_Key(ctx, field)
+			case "BaseRoleId":
+				return ec.fieldContext_ChannelType_BaseRoleId(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ChannelType", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateChannelType_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteChannelType(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deleteChannelType(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteChannelType(rctx, fc.Args["channelTypeId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteChannelType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteChannelType_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _PermissionsGroup_label(ctx context.Context, field graphql.CollectedField, obj *graphql_models.PermissionsGroup) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PermissionsGroup_label(ctx, field)
 	if err != nil {
@@ -2231,6 +2557,57 @@ func (ec *executionContext) fieldContext_Query_listChannelGroups(ctx context.Con
 	if fc.Args, err = ec.field_Query_listChannelGroups_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_getAllChannelTypesList(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getAllChannelTypesList(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetAllChannelTypesList(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*graphql_models.ChannelType)
+	fc.Result = res
+	return ec.marshalOChannelType2ᚕᚖchatneyᚑbackendᚋgraphᚋmodelᚐChannelTypeᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_getAllChannelTypesList(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "Id":
+				return ec.fieldContext_ChannelType_Id(ctx, field)
+			case "Label":
+				return ec.fieldContext_ChannelType_Label(ctx, field)
+			case "Key":
+				return ec.fieldContext_ChannelType_Key(ctx, field)
+			case "BaseRoleId":
+				return ec.fieldContext_ChannelType_BaseRoleId(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ChannelType", field.Name)
+		},
 	}
 	return fc, nil
 }
@@ -4723,7 +5100,7 @@ func (ec *executionContext) unmarshalInputMutateChannelTypeDTO(ctx context.Conte
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"Label", "Key", "RoleIds"}
+	fieldsInOrder := [...]string{"Label", "Key", "BaseRoleId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -4739,18 +5116,18 @@ func (ec *executionContext) unmarshalInputMutateChannelTypeDTO(ctx context.Conte
 			it.Label = data
 		case "Key":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Key"))
-			data, err := ec.unmarshalNID2ᚕstringᚄ(ctx, v)
+			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.Key = data
-		case "RoleIds":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("RoleIds"))
-			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+		case "BaseRoleId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("BaseRoleId"))
+			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.RoleIds = data
+			it.BaseRoleID = data
 		}
 	}
 
@@ -4979,8 +5356,11 @@ func (ec *executionContext) _ChannelType(ctx context.Context, sel ast.SelectionS
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "RoleIds":
-			out.Values[i] = ec._ChannelType_RoleIds(ctx, field, obj)
+		case "BaseRoleId":
+			out.Values[i] = ec._ChannelType_BaseRoleId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5061,6 +5441,27 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "deleteChannelGroup":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_deleteChannelGroup(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createChannelType":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createChannelType(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updateChannelType":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateChannelType(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deleteChannelType":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteChannelType(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -5266,6 +5667,25 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "getAllChannelTypesList":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getAllChannelTypesList(ctx, field)
 				return res
 			}
 
@@ -5804,6 +6224,20 @@ func (ec *executionContext) marshalNChannelGroup2ᚖchatneyᚑbackendᚋgraphᚋ
 	return ec._ChannelGroup(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNChannelType2chatneyᚑbackendᚋgraphᚋmodelᚐChannelType(ctx context.Context, sel ast.SelectionSet, v graphql_models.ChannelType) graphql.Marshaler {
+	return ec._ChannelType(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNChannelType2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐChannelType(ctx context.Context, sel ast.SelectionSet, v *graphql_models.ChannelType) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ChannelType(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNCreateChannelGroupInput2chatneyᚑbackendᚋgraphᚋmodelᚐCreateChannelGroupInput(ctx context.Context, v any) (graphql_models.CreateChannelGroupInput, error) {
 	res, err := ec.unmarshalInputCreateChannelGroupInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -5879,6 +6313,11 @@ func (ec *executionContext) marshalNInt2int32(ctx context.Context, sel ast.Selec
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNMutateChannelTypeDTO2chatneyᚑbackendᚋgraphᚋmodelᚐMutateChannelTypeDto(ctx context.Context, v any) (graphql_models.MutateChannelTypeDto, error) {
+	res, err := ec.unmarshalInputMutateChannelTypeDTO(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNPermissionsGroup2ᚕᚖchatneyᚑbackendᚋgraphᚋmodelᚐPermissionsGroupᚄ(ctx context.Context, sel ast.SelectionSet, v []*graphql_models.PermissionsGroup) graphql.Marshaler {
@@ -6358,6 +6797,53 @@ func (ec *executionContext) marshalOChannelGroup2ᚖchatneyᚑbackendᚋgraphᚋ
 		return graphql.Null
 	}
 	return ec._ChannelGroup(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOChannelType2ᚕᚖchatneyᚑbackendᚋgraphᚋmodelᚐChannelTypeᚄ(ctx context.Context, sel ast.SelectionSet, v []*graphql_models.ChannelType) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNChannelType2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐChannelType(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalOID2ᚕstringᚄ(ctx context.Context, v any) ([]string, error) {
