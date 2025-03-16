@@ -28,11 +28,11 @@ type Query {
     getRolesList: [Role!]!
     getPermissionsList: PermissionsListReturn!
 
-    getChannelGroup(UUID: ID!): ChannelGroup
-    listChannelGroups(workspaceId: ID!): [ChannelGroup!]!
+    getChannelGroup(UUID: String!): ChannelGroup
+    listChannelGroups(workspaceId: String!): [ChannelGroup!]!
 
     getAllChannelTypesList: [ChannelType!]
     getWorkspaceChannelsList(workspaceId: String!): [Channel!]
 
-    getChannelUsersList(channelId: string): [User!]
+    getChannelUsersList(channelId: String!): [User!]
 }

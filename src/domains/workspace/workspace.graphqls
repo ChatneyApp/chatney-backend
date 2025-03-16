@@ -1,5 +1,5 @@
 type Workspace {
-    Id: ID!
+    Id: String!
     Name: String!
 }
 

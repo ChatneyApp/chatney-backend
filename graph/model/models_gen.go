@@ -2,6 +2,12 @@
 
 package graphql_models
 
+import (
+	"fmt"
+	"io"
+	"strconv"
+)
+
 type Channel struct {
 	ID            string `json:"Id"`
 	Name          string `json:"Name"`
@@ -17,11 +23,27 @@ type ChannelGroup struct {
 	Workspace string   `json:"workspace"`
 }
 
+type ChannelRole struct {
+	ChannelID string `json:"channelId"`
+	RoleID    string `json:"roleId"`
+}
+
+type ChannelSettings struct {
+	ChannelID       string `json:"channelId"`
+	LastSeenMessage string `json:"lastSeenMessage"`
+	Muted           bool   `json:"muted"`
+}
+
 type ChannelType struct {
 	ID         string `json:"Id"`
 	Label      string `json:"Label"`
 	Key        string `json:"Key"`
 	BaseRoleID string `json:"BaseRoleId"`
+}
+
+type ChannelTypeRole struct {
+	ChannelTypeID string `json:"channelTypeId"`
+	RoleID        string `json:"roleId"`
 }
 
 type CreateChannelGroupInput struct {
@@ -54,6 +76,17 @@ type MutateChannelTypeDto struct {
 	Label      string `json:"Label"`
 	Key        string `json:"Key"`
 	BaseRoleID string `json:"BaseRoleId"`
+}
+
+type MutateUserDto struct {
+	Name       string     `json:"name"`
+	Status     UserStatus `json:"status"`
+	Email      string     `json:"email"`
+	Workspaces []string   `json:"workspaces,omitempty"`
+}
+
+type MutateWorkspaceDto struct {
+	Name string `json:"Name"`
 }
 
 type Mutation struct {
@@ -91,4 +124,76 @@ type UpdateChannelGroupInput struct {
 	Name     *string  `json:"name,omitempty"`
 	Channels []string `json:"channels,omitempty"`
 	Order    *int32   `json:"order,omitempty"`
+}
+
+type User struct {
+	ID               string             `json:"id"`
+	Name             string             `json:"name"`
+	Status           UserStatus         `json:"status"`
+	Email            string             `json:"email"`
+	Roles            *UserRolesSettings `json:"roles"`
+	ChannelsSettings []*ChannelSettings `json:"channelsSettings,omitempty"`
+	Workspaces       []string           `json:"workspaces,omitempty"`
+}
+
+type UserRolesSettings struct {
+	Global       *string            `json:"global,omitempty"`
+	Workspace    []*WorkspaceRole   `json:"workspace,omitempty"`
+	Channel      []*ChannelRole     `json:"channel,omitempty"`
+	ChannelTypes []*ChannelTypeRole `json:"channel_types,omitempty"`
+}
+
+type Workspace struct {
+	ID   string `json:"Id"`
+	Name string `json:"Name"`
+}
+
+type WorkspaceRole struct {
+	WorkspaceID string `json:"workspaceId"`
+	RoleID      string `json:"roleId"`
+}
+
+type UserStatus string
+
+const (
+	UserStatusActive   UserStatus = "ACTIVE"
+	UserStatusInactive UserStatus = "INACTIVE"
+	UserStatusBanned   UserStatus = "BANNED"
+	UserStatusMuted    UserStatus = "MUTED"
+)
+
+var AllUserStatus = []UserStatus{
+	UserStatusActive,
+	UserStatusInactive,
+	UserStatusBanned,
+	UserStatusMuted,
+}
+
+func (e UserStatus) IsValid() bool {
+	switch e {
+	case UserStatusActive, UserStatusInactive, UserStatusBanned, UserStatusMuted:
+		return true
+	}
+	return false
+}
+
+func (e UserStatus) String() string {
+	return string(e)
+}
+
+func (e *UserStatus) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = UserStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid UserStatus", str)
+	}
+	return nil
+}
+
+func (e UserStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }

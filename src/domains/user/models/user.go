@@ -1,31 +1,42 @@
 package models
 
-type userStatus string
+type UserStatus string
 
 const (
-	StatusActive   userStatus = "active"
-	StatusInactive userStatus = "inactive"
-	StatusBanned   userStatus = "banned"
-	StatusMuted    userStatus = "muted"
+	StatusActive   UserStatus = "active"
+	StatusInactive UserStatus = "inactive"
+	StatusBanned   UserStatus = "banned"
+	StatusMuted    UserStatus = "muted"
 )
 
-type roles struct {
-	Global        string            `bson:"global,omitempty"`
-	WorkspacesMap map[string]string `bson:"workspace,omitempty"` // workspaceID -> roleID
-	ChannelsMap   map[string]string `bson:"channel,omitempty"`   // channelID -> roleID
+type Role struct {
+	Global    string `bson:"global" json:"global"`
+	Workspace []struct {
+		WorkspaceID string `bson:"workspaceId" json:"workspaceId"`
+		RoleID      string `bson:"roleId" json:"roleId"`
+	} `bson:"workspace" json:"workspace"`
+	Channel []struct {
+		ChannelID string `bson:"channelId" json:"channelId"`
+		RoleID    string `bson:"roleId" json:"roleId"`
+	} `bson:"channel" json:"channel"`
+	ChannelTypes []struct {
+		ChannelTypeID string `bson:"channelTypeId" json:"channelTypeId"`
+		RoleID        string `bson:"roleId" json:"roleId"`
+	} `bson:"channel_types" json:"channel_types"`
 }
 
-type channel struct {
-	LastSeenMessage string `bson:"lastSeenMessage,omitempty"`
-	Muted           bool   `bson:"muted,omitempty"`
+type ChannelSettings struct {
+	ChannelID       string `bson:"channelId" json:"channelId"`
+	LastSeenMessage string `bson:"lastSeenMessage" json:"lastSeenMessage"`
+	Muted           bool   `bson:"muted" json:"muted"`
 }
 
 type User struct {
-	Id            string             `bson:"_id,omitempty"`
-	Name          string             `bson:"name,omitempty"`
-	Status        userStatus         `bson:"status,omitempty"`
-	Email         string             `bson:"email,omitempty"`
-	Roles         roles              `bson:"roles,omitempty"`
-	ChannelsIds   map[string]channel `bson:"channels,omitempty"` // channelID -> Channel struct
-	WorkspacesIds []string           `bson:"workspaces,omitempty"`
+	ID               string            `bson:"id" json:"id"`
+	Name             string            `bson:"name" json:"name"`
+	Status           UserStatus        `bson:"status" json:"status"`
+	Email            string            `bson:"email" json:"email"`
+	Roles            Role              `bson:"roles" json:"roles"`
+	ChannelsSettings []ChannelSettings `bson:"channelsSettings" json:"channelsSettings"`
+	Workspaces       []string          `bson:"workspaces" json:"workspaces"`
 }

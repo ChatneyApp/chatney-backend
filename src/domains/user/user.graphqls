@@ -1,35 +1,51 @@
-scalar JSON
-
 enum UserStatus {
-    ACTIVE
-    INACTIVE
-    BANNED
-    MUTED
+  ACTIVE
+  INACTIVE
+  BANNED
+  MUTED
 }
 
-type Roles {
-    GlobalRoleId: String
-    WorkspacesMap: JSON
-    ChannelsMap: JSON
+type UserRolesSettings {
+  global: String
+  workspace: [WorkspaceRole!]
+  channel: [ChannelRole!]
+  channel_types: [ChannelTypeRole!]
 }
 
-type Channel {
-    LastSeenMessage: String
-    Muted: Boolean
+type WorkspaceRole {
+  workspaceId: String!
+  roleId: String!
+}
+
+type ChannelRole {
+  channelId: String!
+  roleId: String!
+}
+
+type ChannelTypeRole {
+  channelTypeId: String!
+  roleId: String!
+}
+
+type ChannelSettings {
+  channelId: String!
+  lastSeenMessage: String!
+  muted: Boolean!
 }
 
 type User {
-    Id: ID!
-    Name: String!
-    Status: UserStatus!
-    Email: String!
-    Roles: Roles
-    ChannelsIds: JSON
-    WorkspacesIds: [String!]!
+  id: String!
+  name: String!
+  status: UserStatus!
+  email: String!
+  roles: UserRolesSettings!
+  channelsSettings: [ChannelSettings!]
+  workspaces: [String!]
 }
 
 input MutateUserDTO {
-    Name: String!
-    Status: UserStatus
-    Email: String
+    name: String!
+    status: UserStatus!
+    email: String!
+    workspaces: [String!]
 }

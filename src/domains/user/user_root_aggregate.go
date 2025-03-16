@@ -3,22 +3,24 @@ package user
 import (
 	"chatney-backend/src/domains/user/models"
 	"context"
-
-	"github.com/google/uuid"
 )
 
 type UserRootAggregate struct {
 	UserRepo *models.UserRepo
 }
 
-func (root *UserRootAggregate) NewUser(user models.User) (*models.User, error) {
+func (root *UserRootAggregate) createUser(user *models.User) (*models.User, error) {
 	return nil, nil
 }
 
-func (root *UserRootAggregate) GetUserByID(id uuid.UUID) (*models.User, error) {
-	return nil, nil
+func (root *UserRootAggregate) deleteUser(userId string) (bool, error) {
+	return root.UserRepo.Delete(context.TODO(), userId)
 }
 
-func (root *UserRootAggregate) DeleteUser(id string) (bool, error) {
-	return root.UserRepo.Delete(context.TODO(), id)
+func (root *UserRootAggregate) updateUser(id string, update *models.User) (*models.User, error) {
+	return root.UserRepo.Update(context.TODO(), id, update)
+}
+
+func (root *UserRootAggregate) getChannelUsersList(channelId string) ([]*models.User, error) {
+	return root.UserRepo.GetChannelUsersList(context.TODO(), channelId)
 }

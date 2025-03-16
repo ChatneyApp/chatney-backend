@@ -5,6 +5,8 @@ import (
 	"chatney-backend/src/domains/channel"
 	"chatney-backend/src/domains/permissions"
 	"chatney-backend/src/domains/role"
+	"chatney-backend/src/domains/user"
+	"chatney-backend/src/domains/workspace"
 
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
@@ -21,19 +23,25 @@ type QueryResolver struct {
 	*Resolver
 	permissions.PermissionsResolver
 	role.RoleQueryResolvers
+	user.UserQueryResolvers
 	channel.ChannelQueryResolvers
+	workspace.WorkspaceQueryResolvers
 }
 type MutationResolver struct {
 	*Resolver
 	role.RoleMutationsResolvers
 	channel.ChannelMutationsResolvers
+	workspace.WorkspaceMutationsResolvers
+	user.UserMutationsResolvers
 }
 
 func (r *Resolver) Query() graph.QueryResolver {
 	return &QueryResolver{r,
 		permissions.PermissionsResolver{},
 		role.GetQueryResolvers(r.DB),
+		user.GetQueryResolvers(r.DB),
 		channel.GetQueryResolvers(r.DB),
+		workspace.GetQueryResolvers(r.DB),
 	}
 }
 
@@ -43,5 +51,7 @@ func (r *Resolver) Mutation() graph.MutationResolver {
 		r,
 		role.GetMutationResolvers(r.DB),
 		channel.GetMutationResolvers(r.DB),
+		workspace.GetMutationResolvers(r.DB),
+		user.GetMutationResolvers(r.DB),
 	}
 }
