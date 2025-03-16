@@ -2,9 +2,9 @@ package permissions
 
 import (
 	graphql_models "chatney-backend/graph/model"
-	"chatney-backend/src/application/utils"
 	"chatney-backend/src/domains/channel"
 	"chatney-backend/src/domains/role"
+	"chatney-backend/src/domains/role/models"
 	"chatney-backend/src/domains/user"
 	"chatney-backend/src/domains/workspace"
 )
@@ -12,12 +12,24 @@ import (
 type PermissionsGroupsStruct struct {
 }
 
+func GetPermissionsGroup(groupLabel string, permissionsList []models.PermissionKey) *graphql_models.PermissionsGroup {
+	permissionsStrings := make([]string, len(permissionsList))
+	for i, p := range permissionsList {
+		permissionsStrings[i] = string(p) // converting PermissionKey type into string
+	}
+
+	return &graphql_models.PermissionsGroup{
+		Label: groupLabel,
+		List:  permissionsStrings,
+	}
+}
+
 func (pg *PermissionsGroupsStruct) GetPermissionsList() ([]*graphql_models.PermissionsGroup, error) {
 	return []*graphql_models.PermissionsGroup{
-		utils.GetPermissionsGroup("Workpsace permissions", workspace.WorkspacePermissions),
-		utils.GetPermissionsGroup("Channel permissions", channel.ChannelPermissions),
-		utils.GetPermissionsGroup("User permissions", user.UserPermissions),
-		utils.GetPermissionsGroup("Role permissions", role.RolePermissions),
+		GetPermissionsGroup("Workpsace permissions", workspace.WorkspacePermissions),
+		GetPermissionsGroup("Channel permissions", channel.ChannelPermissions),
+		GetPermissionsGroup("User permissions", user.UserPermissions),
+		GetPermissionsGroup("Role permissions", role.RolePermissions),
 	}, nil
 }
 
