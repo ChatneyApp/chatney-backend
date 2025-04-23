@@ -2,7 +2,7 @@ services:
   mongo:
     image: mongo:6
     container_name: mongodb-chatney
-    restart: always
+    restart: unless-stopped
     ports:
       - "27017:27017"
     environment:
@@ -14,7 +14,7 @@ services:
   mongo_express:
     image: mongo-express
     container_name: mongo_admin_dashboard
-    restart: always
+    restart: unless-stopped
     ports:
       - "8081:8081"
     environment:
@@ -26,6 +26,7 @@ services:
 
   minio:
     image: docker.io/bitnami/minio:2022
+    restart: unless-stopped
     ports:
       - '9000:9000'
       - '9001:9001'
