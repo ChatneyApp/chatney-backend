@@ -31,6 +31,8 @@ type Query {
     getChannelGroup(UUID: String!): ChannelGroup
     listChannelGroups(workspaceId: String!): [ChannelGroup!]!
 
+    getWorkspacesList: [Workspace!]
+
     getAllChannelTypesList: [ChannelType!]
     getWorkspaceChannelsList(workspaceId: String!): [Channel!]
 

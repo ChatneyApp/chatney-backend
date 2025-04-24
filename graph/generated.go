@@ -122,6 +122,7 @@ type ComplexityRoot struct {
 		GetPermissionsList       func(childComplexity int) int
 		GetRolesList             func(childComplexity int) int
 		GetWorkspaceChannelsList func(childComplexity int, workspaceID string) int
+		GetWorkspacesList        func(childComplexity int) int
 		ListChannelGroups        func(childComplexity int, workspaceID string) int
 	}
 
@@ -189,6 +190,7 @@ type QueryResolver interface {
 	GetPermissionsList(ctx context.Context) (*graphql_models.PermissionsListReturn, error)
 	GetChannelGroup(ctx context.Context, uuid string) (*graphql_models.ChannelGroup, error)
 	ListChannelGroups(ctx context.Context, workspaceID string) ([]*graphql_models.ChannelGroup, error)
+	GetWorkspacesList(ctx context.Context) ([]*graphql_models.Workspace, error)
 	GetAllChannelTypesList(ctx context.Context) ([]*graphql_models.ChannelType, error)
 	GetWorkspaceChannelsList(ctx context.Context, workspaceID string) ([]*graphql_models.Channel, error)
 	GetChannelUsersList(ctx context.Context, channelID string) ([]*graphql_models.User, error)
@@ -646,6 +648,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.GetWorkspaceChannelsList(childComplexity, args["workspaceId"].(string)), true
+
+	case "Query.getWorkspacesList":
+		if e.complexity.Query.GetWorkspacesList == nil {
+			break
+		}
+
+		return e.complexity.Query.GetWorkspacesList(childComplexity), true
 
 	case "Query.listChannelGroups":
 		if e.complexity.Query.ListChannelGroups == nil {
@@ -4125,6 +4134,53 @@ func (ec *executionContext) fieldContext_Query_listChannelGroups(ctx context.Con
 	if fc.Args, err = ec.field_Query_listChannelGroups_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_getWorkspacesList(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getWorkspacesList(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetWorkspacesList(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*graphql_models.Workspace)
+	fc.Result = res
+	return ec.marshalOWorkspace2ᚕᚖchatneyᚑbackendᚋgraphᚋmodelᚐWorkspaceᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_getWorkspacesList(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "Id":
+				return ec.fieldContext_Workspace_Id(ctx, field)
+			case "Name":
+				return ec.fieldContext_Workspace_Name(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Workspace", field.Name)
+		},
 	}
 	return fc, nil
 }
@@ -8309,6 +8365,25 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "getWorkspacesList":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getWorkspacesList(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "getAllChannelTypesList":
 			field := field
 
@@ -9462,6 +9537,16 @@ func (ec *executionContext) marshalNUserStatus2chatneyᚑbackendᚋgraphᚋmodel
 	return v
 }
 
+func (ec *executionContext) marshalNWorkspace2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐWorkspace(ctx context.Context, sel ast.SelectionSet, v *graphql_models.Workspace) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Workspace(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNWorkspaceRole2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐWorkspaceRole(ctx context.Context, sel ast.SelectionSet, v *graphql_models.WorkspaceRole) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -10160,6 +10245,53 @@ func (ec *executionContext) marshalOUser2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐ
 		return graphql.Null
 	}
 	return ec._User(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOWorkspace2ᚕᚖchatneyᚑbackendᚋgraphᚋmodelᚐWorkspaceᚄ(ctx context.Context, sel ast.SelectionSet, v []*graphql_models.Workspace) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNWorkspace2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐWorkspace(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalOWorkspace2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐWorkspace(ctx context.Context, sel ast.SelectionSet, v *graphql_models.Workspace) graphql.Marshaler {

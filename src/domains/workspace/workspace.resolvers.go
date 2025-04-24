@@ -24,7 +24,7 @@ func (r *WorkspaceQueryResolvers) GetWorkspacesList(ctx context.Context) ([]*gra
 		return nil, err
 	}
 
-	var out []*graphql_models.Workspace
+	var out = make([]*graphql_models.Workspace, 0)
 	for _, ws := range workspaces {
 		out = append(out, WorkspaceToDTO(ws))
 	}
