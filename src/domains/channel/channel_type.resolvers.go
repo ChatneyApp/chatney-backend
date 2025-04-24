@@ -48,7 +48,7 @@ func (r *ChannelQueryResolvers) GetAllChannelTypesList(ctx context.Context) ([]*
 		return nil, err
 	}
 
-	var output []*graphql_models.ChannelType
+	output := make([]*graphql_models.ChannelType, 0)
 	for _, chType := range list {
 		output = append(output, channelTypeToDTO(*chType))
 	}
