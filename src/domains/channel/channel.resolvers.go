@@ -48,7 +48,7 @@ func (r *ChannelQueryResolvers) GetWorkspaceChannelsList(ctx context.Context, wo
 		return nil, err
 	}
 
-	output := make([]*graphql_models.Channel, len(list))
+	output := make([]*graphql_models.Channel, 0)
 	for _, ch := range list {
 		output = append(output, channelToDTO(*ch))
 	}
