@@ -12,7 +12,7 @@ func (root *ChannelRootAggregate) getChannelGroupById(id string) (*models.Channe
 }
 
 func (root *ChannelRootAggregate) getChannelGroupListWithinWorkspace(workspaceId string) ([]*models.ChannelGroup, error) {
-	return root.channelGroupRepo.GetAll(context.TODO(), bson.M{"workspace": workspaceId})
+	return root.channelGroupRepo.GetAll(context.TODO(), bson.M{"workspaceId": workspaceId})
 }
 
 func (root *ChannelRootAggregate) createChannelGroup(channelGroup *models.ChannelGroup) (*models.ChannelGroup, error) {

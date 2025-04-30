@@ -5,6 +5,7 @@ import (
 	"chatney-backend/src/application/repository"
 	"chatney-backend/src/domains/channel/models"
 	"context"
+	"github.com/google/uuid"
 
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
@@ -32,7 +33,7 @@ func (r *ChannelQueryResolvers) ListChannelGroups(ctx context.Context, workspace
 		return nil, err
 	}
 
-	out := make([]*graphql_models.ChannelGroup, len(groups))
+	out := make([]*graphql_models.ChannelGroup, 0)
 	for _, group := range groups {
 		out = append(out, channelGroupToDTO(*group))
 	}
@@ -42,8 +43,11 @@ func (r *ChannelQueryResolvers) ListChannelGroups(ctx context.Context, workspace
 
 func (r *ChannelMutationsResolvers) CreateChannelGroup(ctx context.Context, input graphql_models.CreateChannelGroupInput) (*graphql_models.ChannelGroup, error) {
 	res, err := r.rootAggregate.createChannelGroup(&models.ChannelGroup{
+		Id:          uuid.NewString(),
 		Name:        input.Name,
 		WorkspaceId: input.Workspace,
+		ChannelsIds: input.Channels,
+		Order:       input.Order,
 	})
 
 	if err != nil {
@@ -58,7 +62,7 @@ func (r *ChannelMutationsResolvers) UpdateChannelGroup(ctx context.Context, inpu
 		Id:          input.ID,
 		ChannelsIds: input.Channels,
 		Name:        *input.Name,
-		Order:       int(*input.Order),
+		Order:       *input.Order,
 	})
 
 	if err != nil {

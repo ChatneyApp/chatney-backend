@@ -10,7 +10,7 @@ func channelGroupToDTO(group models.ChannelGroup) *graphql_models.ChannelGroup {
 		ID:        group.Id,
 		Channels:  group.ChannelsIds,
 		Workspace: group.WorkspaceId,
-		Order:     int32(group.Order),
+		Order:     group.Order,
 		Name:      group.Name,
 	}
 }
