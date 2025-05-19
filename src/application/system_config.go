@@ -40,7 +40,6 @@ func InitDefaultSystemConfigValues(DB *mongo.Database) {
 	var toInsert []models.SystemConfigValue
 	for _, def := range defaultSystemConfigCollection {
 		if _, found := existingNames[def.Name]; !found {
-			// Always generate a new ID for insertion
 			toInsert = append(toInsert, def)
 		}
 	}
