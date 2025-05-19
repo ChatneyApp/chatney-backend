@@ -7,6 +7,7 @@ import (
 
 func systemConfigValueToDTO(systemConfigValue *models.SystemConfigValue) *graphql_models.SystemConfigValue {
 	return &graphql_models.SystemConfigValue{
+		ID:    systemConfigValue.Id,
 		Name:  systemConfigValue.Name,
 		Value: systemConfigValue.Value,
 	}
