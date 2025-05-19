@@ -1,0 +1,10 @@
+type SystemConfigValue {
+    Id: String!
+    Name: String!
+    Value: String!
+}
+
+input MutateSystemConfigValueDTO {
+    Name: String!
+    Value: String!
+}
