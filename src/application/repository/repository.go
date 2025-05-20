@@ -35,6 +35,15 @@ func (r *BaseRepo[T]) GetByID(ctx context.Context, id string) (*T, error) {
 	return &entity, nil
 }
 
+func (r *BaseRepo[T]) GetByFilter(ctx context.Context, filter interface{}) (*T, error) {
+	var entity T
+	err := r.Collection.FindOne(ctx, filter).Decode(&entity)
+	if err != nil {
+		return nil, err
+	}
+	return &entity, nil
+}
+
 func (r *BaseRepo[T]) Update(ctx context.Context, id string, update *T) (*T, error) {
 	_, err := r.Collection.UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$set": update})
 	if err != nil {
@@ -42,6 +51,15 @@ func (r *BaseRepo[T]) Update(ctx context.Context, id string, update *T) (*T, err
 	}
 
 	return r.GetByID(ctx, id)
+}
+
+func (r *BaseRepo[T]) UpdateByFilter(ctx context.Context, filter interface{}, update interface{}) (*T, error) {
+	_, err := r.Collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.GetByFilter(ctx, filter)
 }
 
 func (r *BaseRepo[T]) Delete(ctx context.Context, id string) (bool, error) {

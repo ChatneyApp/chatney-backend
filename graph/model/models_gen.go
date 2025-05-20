@@ -78,11 +78,6 @@ type MutateChannelTypeDto struct {
 	BaseRoleID string `json:"BaseRoleId"`
 }
 
-type MutateSystemConfigValueDto struct {
-	Name  string `json:"Name"`
-	Value string `json:"Value"`
-}
-
 type MutateUserDto struct {
 	Name       string     `json:"name"`
 	Status     UserStatus `json:"status"`
@@ -125,7 +120,6 @@ type RoleSettingsDto struct {
 }
 
 type SystemConfigValue struct {
-	ID    string `json:"Id"`
 	Name  string `json:"Name"`
 	Value string `json:"Value"`
 }

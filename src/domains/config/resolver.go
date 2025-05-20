@@ -31,12 +31,8 @@ func (r *ConfigQueryResolvers) GetSystemConfig(ctx context.Context) ([]*graphql_
 	return out, nil
 }
 
-func (r *ConfigMutationsResolvers) UpdateSystemConfigValue(ctx context.Context, input graphql_models.MutateSystemConfigValueDto, valueId string) (*graphql_models.SystemConfigValue, error) {
-	res, err := r.RootAggregate.UpdateSystemConfigValue(&models.SystemConfigValue{
-		Id:    valueId,
-		Name:  input.Name,
-		Value: input.Value,
-	})
+func (r *ConfigMutationsResolvers) UpdateSystemConfigValue(ctx context.Context, configName string, configValue string) (*graphql_models.SystemConfigValue, error) {
+	res, err := r.RootAggregate.UpdateSystemConfigValue(configName, configValue)
 
 	if err != nil {
 		return nil, err

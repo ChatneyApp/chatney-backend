@@ -1,5 +1,5 @@
 type Mutation {
-    updateSystemConfigValue(input: MutateSystemConfigValueDTO!, valueId: String!): SystemConfigValue!
+    updateSystemConfigValue(configName: String!, configValue: String!): SystemConfigValue!
 
     createRole(RoleData: CreateRoleDTO!): Role!
     editRole(RoleData: EditRoleDTO!): Role!

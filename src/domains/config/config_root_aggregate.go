@@ -15,6 +15,18 @@ func (root *ConfigRootAggregateStruct) getAllSystemConfigValues(ctx context.Cont
 	return root.SystemConfigRepo.GetAll(ctx, bson.M{})
 }
 
-func (root *ConfigRootAggregateStruct) UpdateSystemConfigValue(configValue *models.SystemConfigValue) (*models.SystemConfigValue, error) {
-	return root.SystemConfigRepo.Update(context.TODO(), configValue.Id, configValue)
+func (root *ConfigRootAggregateStruct) UpdateSystemConfigValue(configName string, configValue string) (*models.SystemConfigValue, error) {
+	filter := bson.M{"name": configName}
+	update := bson.M{
+		"$set": bson.M{
+			"value": configValue,
+		},
+	}
+
+	updatedRecord, err := root.SystemConfigRepo.UpdateByFilter(context.TODO(), filter, update)
+	if err != nil {
+		return nil, err
+	}
+
+	return updatedRecord, nil
 }

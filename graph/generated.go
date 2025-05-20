@@ -102,7 +102,7 @@ type ComplexityRoot struct {
 		UpdateChannel           func(childComplexity int, input graphql_models.MutateChannelDto, channelID string) int
 		UpdateChannelGroup      func(childComplexity int, input graphql_models.UpdateChannelGroupInput) int
 		UpdateChannelType       func(childComplexity int, input graphql_models.MutateChannelTypeDto, channelTypeID string) int
-		UpdateSystemConfigValue func(childComplexity int, input graphql_models.MutateSystemConfigValueDto, valueID string) int
+		UpdateSystemConfigValue func(childComplexity int, configName string, configValue string) int
 		UpdateUser              func(childComplexity int, input graphql_models.MutateUserDto, userID string) int
 		UpdateWorkspace         func(childComplexity int, input graphql_models.MutateWorkspaceDto, workspaceID string) int
 	}
@@ -140,7 +140,6 @@ type ComplexityRoot struct {
 	}
 
 	SystemConfigValue struct {
-		ID    func(childComplexity int) int
 		Name  func(childComplexity int) int
 		Value func(childComplexity int) int
 	}
@@ -174,7 +173,7 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
-	UpdateSystemConfigValue(ctx context.Context, input graphql_models.MutateSystemConfigValueDto, valueID string) (*graphql_models.SystemConfigValue, error)
+	UpdateSystemConfigValue(ctx context.Context, configName string, configValue string) (*graphql_models.SystemConfigValue, error)
 	CreateRole(ctx context.Context, roleData graphql_models.CreateRoleDto) (*graphql_models.Role, error)
 	EditRole(ctx context.Context, roleData graphql_models.EditRoleDto) (*graphql_models.Role, error)
 	DeleteRole(ctx context.Context, roleID *string) (bool, error)
@@ -567,7 +566,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateSystemConfigValue(childComplexity, args["input"].(graphql_models.MutateSystemConfigValueDto), args["valueId"].(string)), true
+		return e.complexity.Mutation.UpdateSystemConfigValue(childComplexity, args["configName"].(string), args["configValue"].(string)), true
 
 	case "Mutation.updateUser":
 		if e.complexity.Mutation.UpdateUser == nil {
@@ -732,13 +731,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.RoleSettings.Base(childComplexity), true
 
-	case "SystemConfigValue.Id":
-		if e.complexity.SystemConfigValue.ID == nil {
-			break
-		}
-
-		return e.complexity.SystemConfigValue.ID(childComplexity), true
-
 	case "SystemConfigValue.Name":
 		if e.complexity.SystemConfigValue.Name == nil {
 			break
@@ -871,7 +863,6 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputEditRoleDTO,
 		ec.unmarshalInputMutateChannelDTO,
 		ec.unmarshalInputMutateChannelTypeDTO,
-		ec.unmarshalInputMutateSystemConfigValueDTO,
 		ec.unmarshalInputMutateUserDTO,
 		ec.unmarshalInputMutateWorkspaceDTO,
 		ec.unmarshalInputRoleSettingsDTO,
@@ -1031,12 +1022,6 @@ input MutateChannelTypeDTO {
     BaseRoleId: String!
 }`, BuiltIn: false},
 	{Name: "../src/domains/config/config.graphqls", Input: `type SystemConfigValue {
-    Id: String!
-    Name: String!
-    Value: String!
-}
-
-input MutateSystemConfigValueDTO {
     Name: String!
     Value: String!
 }
@@ -1555,37 +1540,37 @@ func (ec *executionContext) field_Mutation_updateChannel_argsChannelID(
 func (ec *executionContext) field_Mutation_updateSystemConfigValue_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := ec.field_Mutation_updateSystemConfigValue_argsInput(ctx, rawArgs)
+	arg0, err := ec.field_Mutation_updateSystemConfigValue_argsConfigName(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
-	args["input"] = arg0
-	arg1, err := ec.field_Mutation_updateSystemConfigValue_argsValueID(ctx, rawArgs)
+	args["configName"] = arg0
+	arg1, err := ec.field_Mutation_updateSystemConfigValue_argsConfigValue(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
-	args["valueId"] = arg1
+	args["configValue"] = arg1
 	return args, nil
 }
-func (ec *executionContext) field_Mutation_updateSystemConfigValue_argsInput(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (graphql_models.MutateSystemConfigValueDto, error) {
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNMutateSystemConfigValueDTO2chatneyᚑbackendᚋgraphᚋmodelᚐMutateSystemConfigValueDto(ctx, tmp)
-	}
-
-	var zeroVal graphql_models.MutateSystemConfigValueDto
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_updateSystemConfigValue_argsValueID(
+func (ec *executionContext) field_Mutation_updateSystemConfigValue_argsConfigName(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (string, error) {
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("valueId"))
-	if tmp, ok := rawArgs["valueId"]; ok {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("configName"))
+	if tmp, ok := rawArgs["configName"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_updateSystemConfigValue_argsConfigValue(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("configValue"))
+	if tmp, ok := rawArgs["configValue"]; ok {
 		return ec.unmarshalNString2string(ctx, tmp)
 	}
 
@@ -2784,7 +2769,7 @@ func (ec *executionContext) _Mutation_updateSystemConfigValue(ctx context.Contex
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateSystemConfigValue(rctx, fc.Args["input"].(graphql_models.MutateSystemConfigValueDto), fc.Args["valueId"].(string))
+		return ec.resolvers.Mutation().UpdateSystemConfigValue(rctx, fc.Args["configName"].(string), fc.Args["configValue"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2809,8 +2794,6 @@ func (ec *executionContext) fieldContext_Mutation_updateSystemConfigValue(ctx co
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "Id":
-				return ec.fieldContext_SystemConfigValue_Id(ctx, field)
 			case "Name":
 				return ec.fieldContext_SystemConfigValue_Name(ctx, field)
 			case "Value":
@@ -4110,8 +4093,6 @@ func (ec *executionContext) fieldContext_Query_getSystemConfig(_ context.Context
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "Id":
-				return ec.fieldContext_SystemConfigValue_Id(ctx, field)
 			case "Name":
 				return ec.fieldContext_SystemConfigValue_Name(ctx, field)
 			case "Value":
@@ -4931,50 +4912,6 @@ func (ec *executionContext) fieldContext_RoleSettings_Base(_ context.Context, fi
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _SystemConfigValue_Id(ctx context.Context, field graphql.CollectedField, obj *graphql_models.SystemConfigValue) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SystemConfigValue_Id(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_SystemConfigValue_Id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "SystemConfigValue",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -7916,40 +7853,6 @@ func (ec *executionContext) unmarshalInputMutateChannelTypeDTO(ctx context.Conte
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputMutateSystemConfigValueDTO(ctx context.Context, obj any) (graphql_models.MutateSystemConfigValueDto, error) {
-	var it graphql_models.MutateSystemConfigValueDto
-	asMap := map[string]any{}
-	for k, v := range obj.(map[string]any) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"Name", "Value"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "Name":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Name"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Name = data
-		case "Value":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Value"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Value = data
-		}
-	}
-
-	return it, nil
-}
-
 func (ec *executionContext) unmarshalInputMutateUserDTO(ctx context.Context, obj any) (graphql_models.MutateUserDto, error) {
 	var it graphql_models.MutateUserDto
 	asMap := map[string]any{}
@@ -8986,11 +8889,6 @@ func (ec *executionContext) _SystemConfigValue(ctx context.Context, sel ast.Sele
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("SystemConfigValue")
-		case "Id":
-			out.Values[i] = ec._SystemConfigValue_Id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "Name":
 			out.Values[i] = ec._SystemConfigValue_Name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -9763,11 +9661,6 @@ func (ec *executionContext) unmarshalNMutateChannelDTO2chatneyᚑbackendᚋgraph
 
 func (ec *executionContext) unmarshalNMutateChannelTypeDTO2chatneyᚑbackendᚋgraphᚋmodelᚐMutateChannelTypeDto(ctx context.Context, v any) (graphql_models.MutateChannelTypeDto, error) {
 	res, err := ec.unmarshalInputMutateChannelTypeDTO(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalNMutateSystemConfigValueDTO2chatneyᚑbackendᚋgraphᚋmodelᚐMutateSystemConfigValueDto(ctx context.Context, v any) (graphql_models.MutateSystemConfigValueDto, error) {
-	res, err := ec.unmarshalInputMutateSystemConfigValueDTO(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
