@@ -122,6 +122,7 @@ type RoleSettingsDto struct {
 type SystemConfigValue struct {
 	Name  string `json:"Name"`
 	Value string `json:"Value"`
+	Type  string `json:"Type"`
 }
 
 type UpdateChannelGroupInput struct {

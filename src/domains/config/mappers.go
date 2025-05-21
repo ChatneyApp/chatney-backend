@@ -9,5 +9,6 @@ func systemConfigValueToDTO(systemConfigValue *models.SystemConfigValue) *graphq
 	return &graphql_models.SystemConfigValue{
 		Name:  systemConfigValue.Name,
 		Value: systemConfigValue.Value,
+		Type:  systemConfigValue.Type,
 	}
 }

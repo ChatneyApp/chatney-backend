@@ -12,10 +12,12 @@ var defaultSystemConfigCollection = []models.SystemConfigValue{
 	{
 		Name:  "messages.sendCooldown",
 		Value: "600",
+		Type:  "int",
 	},
 	{
 		Name:  "events.typesEnabled",
 		Value: "message.sent,message.edited,message.deleted",
+		Type:  "string[]",
 	},
 }
 

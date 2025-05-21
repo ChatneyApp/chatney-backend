@@ -141,6 +141,7 @@ type ComplexityRoot struct {
 
 	SystemConfigValue struct {
 		Name  func(childComplexity int) int
+		Type  func(childComplexity int) int
 		Value func(childComplexity int) int
 	}
 
@@ -738,6 +739,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.SystemConfigValue.Name(childComplexity), true
 
+	case "SystemConfigValue.Type":
+		if e.complexity.SystemConfigValue.Type == nil {
+			break
+		}
+
+		return e.complexity.SystemConfigValue.Type(childComplexity), true
+
 	case "SystemConfigValue.Value":
 		if e.complexity.SystemConfigValue.Value == nil {
 			break
@@ -1024,6 +1032,7 @@ input MutateChannelTypeDTO {
 	{Name: "../src/domains/config/config.graphqls", Input: `type SystemConfigValue {
     Name: String!
     Value: String!
+    Type: String!
 }
 `, BuiltIn: false},
 	{Name: "../src/domains/permissions/permissions.graphqls", Input: `# GraphQL schema example
@@ -2798,6 +2807,8 @@ func (ec *executionContext) fieldContext_Mutation_updateSystemConfigValue(ctx co
 				return ec.fieldContext_SystemConfigValue_Name(ctx, field)
 			case "Value":
 				return ec.fieldContext_SystemConfigValue_Value(ctx, field)
+			case "Type":
+				return ec.fieldContext_SystemConfigValue_Type(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SystemConfigValue", field.Name)
 		},
@@ -4097,6 +4108,8 @@ func (ec *executionContext) fieldContext_Query_getSystemConfig(_ context.Context
 				return ec.fieldContext_SystemConfigValue_Name(ctx, field)
 			case "Value":
 				return ec.fieldContext_SystemConfigValue_Value(ctx, field)
+			case "Type":
+				return ec.fieldContext_SystemConfigValue_Type(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SystemConfigValue", field.Name)
 		},
@@ -4993,6 +5006,50 @@ func (ec *executionContext) _SystemConfigValue_Value(ctx context.Context, field 
 }
 
 func (ec *executionContext) fieldContext_SystemConfigValue_Value(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemConfigValue",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemConfigValue_Type(ctx context.Context, field graphql.CollectedField, obj *graphql_models.SystemConfigValue) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SystemConfigValue_Type(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Type, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SystemConfigValue_Type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SystemConfigValue",
 		Field:      field,
@@ -8896,6 +8953,11 @@ func (ec *executionContext) _SystemConfigValue(ctx context.Context, sel ast.Sele
 			}
 		case "Value":
 			out.Values[i] = ec._SystemConfigValue_Value(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "Type":
+			out.Values[i] = ec._SystemConfigValue_Type(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
