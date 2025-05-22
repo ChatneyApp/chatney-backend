@@ -26,16 +26,16 @@ func SetUseAndContext(userRootAggr *user.UserRootAggregate) func(http.Handler) h
 
 			println(userId, "auth header in context")
 
-			user, err := userRootAggr.UserRepo.GetByID(context.TODO(), "sdsfsdf")
-			if err != nil {
-				println(err.Error())
+			//user, err := userRootAggr.UserRepo.GetByID(context.TODO(), "sdsfsdf")
+			// if err != nil {
+			// 	println(err.Error())
 
-				return
-			}
+			// 	return
+			// }
 
 			ctx := &Ctx{
 				rawJson: map[string]interface{}{},
-				user:    user,
+				user:    nil,
 			}
 
 			overrided_context := context.WithValue(r.Context(), CtxUserKey, &ctx)

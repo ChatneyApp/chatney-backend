@@ -1,12 +1,14 @@
 package user
 
 import (
+	"chatney-backend/src/application"
 	"chatney-backend/src/domains/user/models"
 	"context"
 )
 
 type UserRootAggregate struct {
 	UserRepo *models.UserRepo
+	Config   *application.EnvConfig
 }
 
 func (root *UserRootAggregate) createUser(user *models.User) (*models.User, error) {

@@ -90,7 +90,7 @@ type ComplexityRoot struct {
 		CreateChannelGroup func(childComplexity int, input graphql_models.CreateChannelGroupInput) int
 		CreateChannelType  func(childComplexity int, input graphql_models.MutateChannelTypeDto) int
 		CreateRole         func(childComplexity int, roleData graphql_models.CreateRoleDto) int
-		CreateUser         func(childComplexity int, input graphql_models.MutateUserDto) int
+		CreateUser         func(childComplexity int, input graphql_models.CreateUserDto) int
 		CreateWorkspace    func(childComplexity int, input graphql_models.MutateWorkspaceDto) int
 		DeleteChannel      func(childComplexity int, channelID string) int
 		DeleteChannelGroup func(childComplexity int, uuid string) int
@@ -102,7 +102,7 @@ type ComplexityRoot struct {
 		UpdateChannel      func(childComplexity int, input graphql_models.MutateChannelDto, channelID string) int
 		UpdateChannelGroup func(childComplexity int, input graphql_models.UpdateChannelGroupInput) int
 		UpdateChannelType  func(childComplexity int, input graphql_models.MutateChannelTypeDto, channelTypeID string) int
-		UpdateUser         func(childComplexity int, input graphql_models.MutateUserDto, userID string) int
+		UpdateUser         func(childComplexity int, input graphql_models.UpdateUserDto, userID string) int
 		UpdateWorkspace    func(childComplexity int, input graphql_models.MutateWorkspaceDto, workspaceID string) int
 	}
 
@@ -181,9 +181,9 @@ type MutationResolver interface {
 	CreateWorkspace(ctx context.Context, input graphql_models.MutateWorkspaceDto) (*graphql_models.Workspace, error)
 	DeleteWorkspace(ctx context.Context, workspaceID string) (bool, error)
 	UpdateWorkspace(ctx context.Context, input graphql_models.MutateWorkspaceDto, workspaceID string) (*graphql_models.Workspace, error)
-	CreateUser(ctx context.Context, input graphql_models.MutateUserDto) (*graphql_models.User, error)
+	CreateUser(ctx context.Context, input graphql_models.CreateUserDto) (*graphql_models.User, error)
 	DeleteUser(ctx context.Context, userID string) (bool, error)
-	UpdateUser(ctx context.Context, input graphql_models.MutateUserDto, userID string) (*graphql_models.User, error)
+	UpdateUser(ctx context.Context, input graphql_models.UpdateUserDto, userID string) (*graphql_models.User, error)
 }
 type QueryResolver interface {
 	GetRolesList(ctx context.Context) ([]*graphql_models.Role, error)
@@ -413,7 +413,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateUser(childComplexity, args["input"].(graphql_models.MutateUserDto)), true
+		return e.complexity.Mutation.CreateUser(childComplexity, args["input"].(graphql_models.CreateUserDto)), true
 
 	case "Mutation.createWorkspace":
 		if e.complexity.Mutation.CreateWorkspace == nil {
@@ -557,7 +557,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateUser(childComplexity, args["input"].(graphql_models.MutateUserDto), args["userId"].(string)), true
+		return e.complexity.Mutation.UpdateUser(childComplexity, args["input"].(graphql_models.UpdateUserDto), args["userId"].(string)), true
 
 	case "Mutation.updateWorkspace":
 		if e.complexity.Mutation.UpdateWorkspace == nil {
@@ -818,13 +818,14 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputCreateChannelGroupInput,
 		ec.unmarshalInputCreateRoleDTO,
+		ec.unmarshalInputCreateUserDTO,
 		ec.unmarshalInputEditRoleDTO,
 		ec.unmarshalInputMutateChannelDTO,
 		ec.unmarshalInputMutateChannelTypeDTO,
-		ec.unmarshalInputMutateUserDTO,
 		ec.unmarshalInputMutateWorkspaceDTO,
 		ec.unmarshalInputRoleSettingsDTO,
 		ec.unmarshalInputUpdateChannelGroupInput,
+		ec.unmarshalInputUpdateUserDTO,
 	)
 	first := true
 
@@ -1065,7 +1066,15 @@ type User {
   workspaces: [String!]
 }
 
-input MutateUserDTO {
+input UpdateUserDTO {
+    name: String!
+    status: UserStatus!
+    email: String!
+    workspaces: [String!]
+}
+
+input CreateUserDTO {
+    password: String!
     name: String!
     status: UserStatus!
     email: String!
@@ -1191,13 +1200,13 @@ func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, 
 func (ec *executionContext) field_Mutation_createUser_argsInput(
 	ctx context.Context,
 	rawArgs map[string]any,
-) (graphql_models.MutateUserDto, error) {
+) (graphql_models.CreateUserDto, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNMutateUserDTO2chatneyᚑbackendᚋgraphᚋmodelᚐMutateUserDto(ctx, tmp)
+		return ec.unmarshalNCreateUserDTO2chatneyᚑbackendᚋgraphᚋmodelᚐCreateUserDto(ctx, tmp)
 	}
 
-	var zeroVal graphql_models.MutateUserDto
+	var zeroVal graphql_models.CreateUserDto
 	return zeroVal, nil
 }
 
@@ -1508,13 +1517,13 @@ func (ec *executionContext) field_Mutation_updateUser_args(ctx context.Context, 
 func (ec *executionContext) field_Mutation_updateUser_argsInput(
 	ctx context.Context,
 	rawArgs map[string]any,
-) (graphql_models.MutateUserDto, error) {
+) (graphql_models.UpdateUserDto, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNMutateUserDTO2chatneyᚑbackendᚋgraphᚋmodelᚐMutateUserDto(ctx, tmp)
+		return ec.unmarshalNUpdateUserDTO2chatneyᚑbackendᚋgraphᚋmodelᚐUpdateUserDto(ctx, tmp)
 	}
 
-	var zeroVal graphql_models.MutateUserDto
+	var zeroVal graphql_models.UpdateUserDto
 	return zeroVal, nil
 }
 
@@ -3590,7 +3599,7 @@ func (ec *executionContext) _Mutation_createUser(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateUser(rctx, fc.Args["input"].(graphql_models.MutateUserDto))
+		return ec.resolvers.Mutation().CreateUser(rctx, fc.Args["input"].(graphql_models.CreateUserDto))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3713,7 +3722,7 @@ func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateUser(rctx, fc.Args["input"].(graphql_models.MutateUserDto), fc.Args["userId"].(string))
+		return ec.resolvers.Mutation().UpdateUser(rctx, fc.Args["input"].(graphql_models.UpdateUserDto), fc.Args["userId"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7436,6 +7445,61 @@ func (ec *executionContext) unmarshalInputCreateRoleDTO(ctx context.Context, obj
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputCreateUserDTO(ctx context.Context, obj any) (graphql_models.CreateUserDto, error) {
+	var it graphql_models.CreateUserDto
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"password", "name", "status", "email", "workspaces"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "password":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Password = data
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "status":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			data, err := ec.unmarshalNUserStatus2chatneyᚑbackendᚋgraphᚋmodelᚐUserStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Status = data
+		case "email":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Email = data
+		case "workspaces":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("workspaces"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Workspaces = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputEditRoleDTO(ctx context.Context, obj any) (graphql_models.EditRoleDto, error) {
 	var it graphql_models.EditRoleDto
 	asMap := map[string]any{}
@@ -7566,54 +7630,6 @@ func (ec *executionContext) unmarshalInputMutateChannelTypeDTO(ctx context.Conte
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputMutateUserDTO(ctx context.Context, obj any) (graphql_models.MutateUserDto, error) {
-	var it graphql_models.MutateUserDto
-	asMap := map[string]any{}
-	for k, v := range obj.(map[string]any) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"name", "status", "email", "workspaces"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "name":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Name = data
-		case "status":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
-			data, err := ec.unmarshalNUserStatus2chatneyᚑbackendᚋgraphᚋmodelᚐUserStatus(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Status = data
-		case "email":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Email = data
-		case "workspaces":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("workspaces"))
-			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Workspaces = data
-		}
-	}
-
-	return it, nil
-}
-
 func (ec *executionContext) unmarshalInputMutateWorkspaceDTO(ctx context.Context, obj any) (graphql_models.MutateWorkspaceDto, error) {
 	var it graphql_models.MutateWorkspaceDto
 	asMap := map[string]any{}
@@ -7710,6 +7726,54 @@ func (ec *executionContext) unmarshalInputUpdateChannelGroupInput(ctx context.Co
 				return it, err
 			}
 			it.Order = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputUpdateUserDTO(ctx context.Context, obj any) (graphql_models.UpdateUserDto, error) {
+	var it graphql_models.UpdateUserDto
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"name", "status", "email", "workspaces"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "status":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			data, err := ec.unmarshalNUserStatus2chatneyᚑbackendᚋgraphᚋmodelᚐUserStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Status = data
+		case "email":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Email = data
+		case "workspaces":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("workspaces"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Workspaces = data
 		}
 	}
 
@@ -9227,6 +9291,11 @@ func (ec *executionContext) unmarshalNCreateRoleDTO2chatneyᚑbackendᚋgraphᚋ
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNCreateUserDTO2chatneyᚑbackendᚋgraphᚋmodelᚐCreateUserDto(ctx context.Context, v any) (graphql_models.CreateUserDto, error) {
+	res, err := ec.unmarshalInputCreateUserDTO(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNEditRoleDTO2chatneyᚑbackendᚋgraphᚋmodelᚐEditRoleDto(ctx context.Context, v any) (graphql_models.EditRoleDto, error) {
 	res, err := ec.unmarshalInputEditRoleDTO(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -9301,11 +9370,6 @@ func (ec *executionContext) unmarshalNMutateChannelDTO2chatneyᚑbackendᚋgraph
 
 func (ec *executionContext) unmarshalNMutateChannelTypeDTO2chatneyᚑbackendᚋgraphᚋmodelᚐMutateChannelTypeDto(ctx context.Context, v any) (graphql_models.MutateChannelTypeDto, error) {
 	res, err := ec.unmarshalInputMutateChannelTypeDTO(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalNMutateUserDTO2chatneyᚑbackendᚋgraphᚋmodelᚐMutateUserDto(ctx context.Context, v any) (graphql_models.MutateUserDto, error) {
-	res, err := ec.unmarshalInputMutateUserDTO(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -9504,6 +9568,11 @@ func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel
 
 func (ec *executionContext) unmarshalNUpdateChannelGroupInput2chatneyᚑbackendᚋgraphᚋmodelᚐUpdateChannelGroupInput(ctx context.Context, v any) (graphql_models.UpdateChannelGroupInput, error) {
 	res, err := ec.unmarshalInputUpdateChannelGroupInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNUpdateUserDTO2chatneyᚑbackendᚋgraphᚋmodelᚐUpdateUserDto(ctx context.Context, v any) (graphql_models.UpdateUserDto, error) {
+	res, err := ec.unmarshalInputUpdateUserDTO(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 

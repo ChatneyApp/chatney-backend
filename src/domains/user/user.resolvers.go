@@ -2,9 +2,12 @@ package user
 
 import (
 	graphql_models "chatney-backend/graph/model"
+	"chatney-backend/src/application"
 	"chatney-backend/src/application/repository"
 	"chatney-backend/src/domains/user/models"
 	"context"
+	"crypto/md5"
+	"encoding/hex"
 
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -39,8 +42,11 @@ func (r *UserQueryResolvers) GetChannelUsersList(ctx context.Context, channelId 
 	return out, nil
 }
 
-func (r *UserMutationsResolvers) CreateUser(ctx context.Context, userData graphql_models.MutateUserDto) (*graphql_models.User, error) {
+func (r *UserMutationsResolvers) CreateUser(ctx context.Context, userData graphql_models.CreateUserDto) (*graphql_models.User, error) {
+	hash := md5.Sum([]byte(userData.Password + r.RootAggregate.Config.PasswordSalt))
+
 	newUser, err := r.RootAggregate.createUser(&models.User{
+		Password:   hex.EncodeToString(hash[:]),
 		ID:         uuid.NewString(),
 		Name:       userData.Name,
 		Status:     models.UserStatus(userData.Status),
@@ -53,7 +59,7 @@ func (r *UserMutationsResolvers) CreateUser(ctx context.Context, userData graphq
 	return UserToDTO(*newUser), nil
 }
 
-func (r *UserMutationsResolvers) UpdateUser(ctx context.Context, input graphql_models.MutateUserDto, userId string) (*graphql_models.User, error) {
+func (r *UserMutationsResolvers) UpdateUser(ctx context.Context, input graphql_models.UpdateUserDto, userId string) (*graphql_models.User, error) {
 	updatedUser, err := r.RootAggregate.updateUser(userId, &models.User{
 		Name:       input.Name,
 		Status:     models.UserStatus(input.Status),
@@ -72,6 +78,7 @@ func (r *UserMutationsResolvers) DeleteUser(ctx context.Context, userID string) 
 
 func getUserRootAggregate(DB *mongo.Database) *UserRootAggregate {
 	return &UserRootAggregate{
+		Config: application.Config,
 		UserRepo: &models.UserRepo{
 			BaseRepo: &repository.BaseRepo[models.User]{
 				Collection: DB.Collection("users"),

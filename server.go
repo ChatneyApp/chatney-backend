@@ -2,6 +2,7 @@ package main
 
 import (
 	"chatney-backend/graph"
+	"chatney-backend/src/application"
 	database "chatney-backend/src/application"
 	"chatney-backend/src/application/middlewares"
 	"chatney-backend/src/application/repository"
@@ -23,10 +24,11 @@ import (
 )
 
 func main() {
-	config, err := database.LoadEnvConfig()
-	if err != nil {
-		panic("Error loading env var" + err.Error())
-	}
+	config := database.LoadEnvConfig()
+
+	go func() {
+		application.RunWebSocket()
+	}()
 
 	bucket := database.NewBucketConnection(config)
 	// Adding file example
@@ -70,7 +72,7 @@ func main() {
 	router.Handle("/query", srv)
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", config.ApiPort)
-	err = http.ListenAndServe(":8080", router)
+	err := http.ListenAndServe(":8080", router)
 	if err != nil {
 		panic(err)
 	}

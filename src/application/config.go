@@ -17,7 +17,10 @@ type EnvConfig struct {
 	BucketName            string
 	BucketRegion          string
 	ApiPort               string
+	PasswordSalt          string
 }
+
+var Config = LoadEnvConfig()
 
 func getEnvWithDefault(key, defaultValue string) string {
 	if val, exists := os.LookupEnv(key); exists {
@@ -35,7 +38,7 @@ func parseBoolEnv(key string) bool {
 	return parsed
 }
 
-func LoadEnvConfig() (*EnvConfig, error) {
+func LoadEnvConfig() *EnvConfig {
 	config := &EnvConfig{
 		MongoConnectionUri:    getEnvWithDefault("MONGO_CONNECTION_URI", ""),
 		MongoDbName:           getEnvWithDefault("MONGO_DB_NAME", ""),
@@ -46,13 +49,14 @@ func LoadEnvConfig() (*EnvConfig, error) {
 		BucketName:            getEnvWithDefault("BUCKET_NAME", ""),
 		BucketRegion:          getEnvWithDefault("BUCKET_REGION", ""),
 		ApiPort:               getEnvWithDefault("API_PORT", ""),
+		PasswordSalt:          getEnvWithDefault("PASSWORD_SALT", ""),
 	}
 
 	if err := validateStruct(config); err != nil {
-		return nil, err
+		panic("Error loading env vars")
 	}
 
-	return config, nil
+	return config
 }
 
 func validateStruct(s interface{}) error {

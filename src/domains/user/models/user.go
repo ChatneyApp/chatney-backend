@@ -39,4 +39,5 @@ type User struct {
 	Roles            Role              `bson:"roles" json:"roles"`
 	ChannelsSettings []ChannelSettings `bson:"channelsSettings" json:"channelsSettings"`
 	Workspaces       []string          `bson:"workspaces" json:"workspaces"`
+	Password         string            `bson:"password" json:"password"`
 }
