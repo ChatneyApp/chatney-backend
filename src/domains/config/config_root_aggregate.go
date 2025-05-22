@@ -17,13 +17,14 @@ func (root *ConfigRootAggregateStruct) getAllSystemConfigValues(ctx context.Cont
 
 func (root *ConfigRootAggregateStruct) UpdateSystemConfigValue(configName string, configValue string) (*models.SystemConfigValue, error) {
 	filter := bson.M{"name": configName}
-	update := bson.M{
-		"$set": bson.M{
-			"value": configValue,
-		},
+	recordToUpdate, err := root.SystemConfigRepo.GetOne(context.TODO(), filter)
+	if err != nil {
+		return nil, err
 	}
 
-	updatedRecord, err := root.SystemConfigRepo.UpdateByFilter(context.TODO(), filter, update)
+	recordToUpdate.Value = configValue
+	updatedRecord, err := root.SystemConfigRepo.Update(context.TODO(), recordToUpdate.Id, recordToUpdate)
+
 	if err != nil {
 		return nil, err
 	}
