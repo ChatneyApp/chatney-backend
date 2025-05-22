@@ -3,6 +3,7 @@ package permissions
 import (
 	graphql_models "chatney-backend/graph/model"
 	"chatney-backend/src/domains/channel"
+	"chatney-backend/src/domains/config"
 	"chatney-backend/src/domains/role"
 	"chatney-backend/src/domains/role/models"
 	"chatney-backend/src/domains/user"
@@ -26,7 +27,8 @@ func GetPermissionsGroup(groupLabel string, permissionsList []models.PermissionK
 
 func (pg *PermissionsGroupsStruct) GetPermissionsList() ([]*graphql_models.PermissionsGroup, error) {
 	return []*graphql_models.PermissionsGroup{
-		GetPermissionsGroup("Workpsace permissions", workspace.WorkspacePermissions),
+		GetPermissionsGroup("System config permissions", config.SystemConfigPermissions),
+		GetPermissionsGroup("Workspace permissions", workspace.WorkspacePermissions),
 		GetPermissionsGroup("Channel permissions", channel.ChannelPermissions),
 		GetPermissionsGroup("User permissions", user.UserPermissions),
 		GetPermissionsGroup("Role permissions", role.RolePermissions),

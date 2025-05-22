@@ -1,0 +1,5 @@
+type SystemConfigValue {
+    Name: String!
+    Value: String!
+    Type: String!
+}

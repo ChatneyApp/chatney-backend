@@ -119,6 +119,12 @@ type RoleSettingsDto struct {
 	Base bool `json:"Base"`
 }
 
+type SystemConfigValue struct {
+	Name  string `json:"Name"`
+	Value string `json:"Value"`
+	Type  string `json:"Type"`
+}
+
 type UpdateChannelGroupInput struct {
 	ID       string   `json:"Id"`
 	Name     *string  `json:"name,omitempty"`

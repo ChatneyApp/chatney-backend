@@ -86,24 +86,25 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CreateChannel      func(childComplexity int, input graphql_models.MutateChannelDto) int
-		CreateChannelGroup func(childComplexity int, input graphql_models.CreateChannelGroupInput) int
-		CreateChannelType  func(childComplexity int, input graphql_models.MutateChannelTypeDto) int
-		CreateRole         func(childComplexity int, roleData graphql_models.CreateRoleDto) int
-		CreateUser         func(childComplexity int, input graphql_models.MutateUserDto) int
-		CreateWorkspace    func(childComplexity int, input graphql_models.MutateWorkspaceDto) int
-		DeleteChannel      func(childComplexity int, channelID string) int
-		DeleteChannelGroup func(childComplexity int, uuid string) int
-		DeleteChannelType  func(childComplexity int, channelTypeID string) int
-		DeleteRole         func(childComplexity int, roleID *string) int
-		DeleteUser         func(childComplexity int, userID string) int
-		DeleteWorkspace    func(childComplexity int, workspaceID string) int
-		EditRole           func(childComplexity int, roleData graphql_models.EditRoleDto) int
-		UpdateChannel      func(childComplexity int, input graphql_models.MutateChannelDto, channelID string) int
-		UpdateChannelGroup func(childComplexity int, input graphql_models.UpdateChannelGroupInput) int
-		UpdateChannelType  func(childComplexity int, input graphql_models.MutateChannelTypeDto, channelTypeID string) int
-		UpdateUser         func(childComplexity int, input graphql_models.MutateUserDto, userID string) int
-		UpdateWorkspace    func(childComplexity int, input graphql_models.MutateWorkspaceDto, workspaceID string) int
+		CreateChannel           func(childComplexity int, input graphql_models.MutateChannelDto) int
+		CreateChannelGroup      func(childComplexity int, input graphql_models.CreateChannelGroupInput) int
+		CreateChannelType       func(childComplexity int, input graphql_models.MutateChannelTypeDto) int
+		CreateRole              func(childComplexity int, roleData graphql_models.CreateRoleDto) int
+		CreateUser              func(childComplexity int, input graphql_models.MutateUserDto) int
+		CreateWorkspace         func(childComplexity int, input graphql_models.MutateWorkspaceDto) int
+		DeleteChannel           func(childComplexity int, channelID string) int
+		DeleteChannelGroup      func(childComplexity int, uuid string) int
+		DeleteChannelType       func(childComplexity int, channelTypeID string) int
+		DeleteRole              func(childComplexity int, roleID *string) int
+		DeleteUser              func(childComplexity int, userID string) int
+		DeleteWorkspace         func(childComplexity int, workspaceID string) int
+		EditRole                func(childComplexity int, roleData graphql_models.EditRoleDto) int
+		UpdateChannel           func(childComplexity int, input graphql_models.MutateChannelDto, channelID string) int
+		UpdateChannelGroup      func(childComplexity int, input graphql_models.UpdateChannelGroupInput) int
+		UpdateChannelType       func(childComplexity int, input graphql_models.MutateChannelTypeDto, channelTypeID string) int
+		UpdateSystemConfigValue func(childComplexity int, configName string, configValue string) int
+		UpdateUser              func(childComplexity int, input graphql_models.MutateUserDto, userID string) int
+		UpdateWorkspace         func(childComplexity int, input graphql_models.MutateWorkspaceDto, workspaceID string) int
 	}
 
 	PermissionsGroup struct {
@@ -121,6 +122,7 @@ type ComplexityRoot struct {
 		GetChannelUsersList      func(childComplexity int, channelID string) int
 		GetPermissionsList       func(childComplexity int) int
 		GetRolesList             func(childComplexity int) int
+		GetSystemConfig          func(childComplexity int) int
 		GetWorkspaceChannelsList func(childComplexity int, workspaceID string) int
 		GetWorkspacesList        func(childComplexity int) int
 		ListChannelGroups        func(childComplexity int, workspaceID string) int
@@ -135,6 +137,12 @@ type ComplexityRoot struct {
 
 	RoleSettings struct {
 		Base func(childComplexity int) int
+	}
+
+	SystemConfigValue struct {
+		Name  func(childComplexity int) int
+		Type  func(childComplexity int) int
+		Value func(childComplexity int) int
 	}
 
 	User struct {
@@ -166,6 +174,7 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
+	UpdateSystemConfigValue(ctx context.Context, configName string, configValue string) (*graphql_models.SystemConfigValue, error)
 	CreateRole(ctx context.Context, roleData graphql_models.CreateRoleDto) (*graphql_models.Role, error)
 	EditRole(ctx context.Context, roleData graphql_models.EditRoleDto) (*graphql_models.Role, error)
 	DeleteRole(ctx context.Context, roleID *string) (bool, error)
@@ -186,6 +195,7 @@ type MutationResolver interface {
 	UpdateUser(ctx context.Context, input graphql_models.MutateUserDto, userID string) (*graphql_models.User, error)
 }
 type QueryResolver interface {
+	GetSystemConfig(ctx context.Context) ([]*graphql_models.SystemConfigValue, error)
 	GetRolesList(ctx context.Context) ([]*graphql_models.Role, error)
 	GetPermissionsList(ctx context.Context) (*graphql_models.PermissionsListReturn, error)
 	GetChannelGroup(ctx context.Context, uuid string) (*graphql_models.ChannelGroup, error)
@@ -547,6 +557,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.UpdateChannelType(childComplexity, args["input"].(graphql_models.MutateChannelTypeDto), args["channelTypeId"].(string)), true
 
+	case "Mutation.updateSystemConfigValue":
+		if e.complexity.Mutation.UpdateSystemConfigValue == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateSystemConfigValue_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateSystemConfigValue(childComplexity, args["configName"].(string), args["configValue"].(string)), true
+
 	case "Mutation.updateUser":
 		if e.complexity.Mutation.UpdateUser == nil {
 			break
@@ -637,6 +659,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.GetRolesList(childComplexity), true
 
+	case "Query.getSystemConfig":
+		if e.complexity.Query.GetSystemConfig == nil {
+			break
+		}
+
+		return e.complexity.Query.GetSystemConfig(childComplexity), true
+
 	case "Query.getWorkspaceChannelsList":
 		if e.complexity.Query.GetWorkspaceChannelsList == nil {
 			break
@@ -702,6 +731,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.RoleSettings.Base(childComplexity), true
+
+	case "SystemConfigValue.Name":
+		if e.complexity.SystemConfigValue.Name == nil {
+			break
+		}
+
+		return e.complexity.SystemConfigValue.Name(childComplexity), true
+
+	case "SystemConfigValue.Type":
+		if e.complexity.SystemConfigValue.Type == nil {
+			break
+		}
+
+		return e.complexity.SystemConfigValue.Type(childComplexity), true
+
+	case "SystemConfigValue.Value":
+		if e.complexity.SystemConfigValue.Value == nil {
+			break
+		}
+
+		return e.complexity.SystemConfigValue.Value(childComplexity), true
 
 	case "User.channelsSettings":
 		if e.complexity.User.ChannelsSettings == nil {
@@ -979,6 +1029,12 @@ input MutateChannelTypeDTO {
     Key: String!
     BaseRoleId: String!
 }`, BuiltIn: false},
+	{Name: "../src/domains/config/config.graphqls", Input: `type SystemConfigValue {
+    Name: String!
+    Value: String!
+    Type: String!
+}
+`, BuiltIn: false},
 	{Name: "../src/domains/permissions/permissions.graphqls", Input: `# GraphQL schema example
 #
 # https://gqlgen.com/getting-started/
@@ -1483,6 +1539,47 @@ func (ec *executionContext) field_Mutation_updateChannel_argsChannelID(
 ) (string, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("channelId"))
 	if tmp, ok := rawArgs["channelId"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_updateSystemConfigValue_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_updateSystemConfigValue_argsConfigName(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["configName"] = arg0
+	arg1, err := ec.field_Mutation_updateSystemConfigValue_argsConfigValue(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["configValue"] = arg1
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_updateSystemConfigValue_argsConfigName(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("configName"))
+	if tmp, ok := rawArgs["configName"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_updateSystemConfigValue_argsConfigValue(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("configValue"))
+	if tmp, ok := rawArgs["configValue"]; ok {
 		return ec.unmarshalNString2string(ctx, tmp)
 	}
 
@@ -2663,6 +2760,69 @@ func (ec *executionContext) fieldContext_ChannelTypeRole_roleId(_ context.Contex
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateSystemConfigValue(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateSystemConfigValue(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateSystemConfigValue(rctx, fc.Args["configName"].(string), fc.Args["configValue"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*graphql_models.SystemConfigValue)
+	fc.Result = res
+	return ec.marshalNSystemConfigValue2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐSystemConfigValue(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateSystemConfigValue(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "Name":
+				return ec.fieldContext_SystemConfigValue_Name(ctx, field)
+			case "Value":
+				return ec.fieldContext_SystemConfigValue_Value(ctx, field)
+			case "Type":
+				return ec.fieldContext_SystemConfigValue_Type(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SystemConfigValue", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateSystemConfigValue_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -3905,6 +4065,58 @@ func (ec *executionContext) fieldContext_PermissionsListReturn_groups(_ context.
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_getSystemConfig(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getSystemConfig(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetSystemConfig(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*graphql_models.SystemConfigValue)
+	fc.Result = res
+	return ec.marshalNSystemConfigValue2ᚕᚖchatneyᚑbackendᚋgraphᚋmodelᚐSystemConfigValueᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_getSystemConfig(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "Name":
+				return ec.fieldContext_SystemConfigValue_Name(ctx, field)
+			case "Value":
+				return ec.fieldContext_SystemConfigValue_Value(ctx, field)
+			case "Type":
+				return ec.fieldContext_SystemConfigValue_Type(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SystemConfigValue", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_getRolesList(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_getRolesList(ctx, field)
 	if err != nil {
@@ -4713,6 +4925,138 @@ func (ec *executionContext) fieldContext_RoleSettings_Base(_ context.Context, fi
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemConfigValue_Name(ctx context.Context, field graphql.CollectedField, obj *graphql_models.SystemConfigValue) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SystemConfigValue_Name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SystemConfigValue_Name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemConfigValue",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemConfigValue_Value(ctx context.Context, field graphql.CollectedField, obj *graphql_models.SystemConfigValue) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SystemConfigValue_Value(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Value, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SystemConfigValue_Value(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemConfigValue",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemConfigValue_Type(ctx context.Context, field graphql.CollectedField, obj *graphql_models.SystemConfigValue) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SystemConfigValue_Type(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Type, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SystemConfigValue_Type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemConfigValue",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -8047,6 +8391,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
+		case "updateSystemConfigValue":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateSystemConfigValue(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "createRole":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createRole(ctx, field)
@@ -8280,6 +8631,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Query")
+		case "getSystemConfig":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getSystemConfig(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "getRolesList":
 			field := field
 
@@ -8536,6 +8909,55 @@ func (ec *executionContext) _RoleSettings(ctx context.Context, sel ast.Selection
 			out.Values[i] = graphql.MarshalString("RoleSettings")
 		case "Base":
 			out.Values[i] = ec._RoleSettings_Base(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var systemConfigValueImplementors = []string{"SystemConfigValue"}
+
+func (ec *executionContext) _SystemConfigValue(ctx context.Context, sel ast.SelectionSet, obj *graphql_models.SystemConfigValue) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, systemConfigValueImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SystemConfigValue")
+		case "Name":
+			out.Values[i] = ec._SystemConfigValue_Name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "Value":
+			out.Values[i] = ec._SystemConfigValue_Value(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "Type":
+			out.Values[i] = ec._SystemConfigValue_Type(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -9500,6 +9922,64 @@ func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel
 	}
 
 	return ret
+}
+
+func (ec *executionContext) marshalNSystemConfigValue2chatneyᚑbackendᚋgraphᚋmodelᚐSystemConfigValue(ctx context.Context, sel ast.SelectionSet, v graphql_models.SystemConfigValue) graphql.Marshaler {
+	return ec._SystemConfigValue(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNSystemConfigValue2ᚕᚖchatneyᚑbackendᚋgraphᚋmodelᚐSystemConfigValueᚄ(ctx context.Context, sel ast.SelectionSet, v []*graphql_models.SystemConfigValue) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNSystemConfigValue2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐSystemConfigValue(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNSystemConfigValue2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐSystemConfigValue(ctx context.Context, sel ast.SelectionSet, v *graphql_models.SystemConfigValue) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._SystemConfigValue(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNUpdateChannelGroupInput2chatneyᚑbackendᚋgraphᚋmodelᚐUpdateChannelGroupInput(ctx context.Context, v any) (graphql_models.UpdateChannelGroupInput, error) {

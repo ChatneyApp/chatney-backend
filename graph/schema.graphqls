@@ -1,4 +1,6 @@
 type Mutation {
+    updateSystemConfigValue(configName: String!, configValue: String!): SystemConfigValue!
+
     createRole(RoleData: CreateRoleDTO!): Role!
     editRole(RoleData: EditRoleDTO!): Role!
     deleteRole(roleId: String): Boolean!
@@ -25,6 +27,8 @@ type Mutation {
 }
 
 type Query {
+    getSystemConfig: [SystemConfigValue!]!
+
     getRolesList: [Role!]!
     getPermissionsList: PermissionsListReturn!
 
