@@ -62,3 +62,13 @@ input CreateUserDTO {
   Email: String!
   Workspaces: [String!]
 }
+
+extend type Mutation {
+  createUser(input: CreateUserDTO!): User
+  deleteUser(userId: String!): Boolean!
+  updateUser(input: UpdateUserDTO!, userId: String!): User
+}
+
+extend type Query {
+  AuthorizeUser(login: String!, password: String!): UserAuthData!
+}

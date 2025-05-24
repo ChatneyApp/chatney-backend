@@ -6,6 +6,7 @@ import (
 	database "chatney-backend/src/application"
 	"chatney-backend/src/application/middlewares"
 	"chatney-backend/src/application/resolver"
+	"chatney-backend/src/domains/message"
 	"chatney-backend/src/domains/user"
 	"log"
 	"net/http"
@@ -45,7 +46,8 @@ func main() {
 	router.Use(middlewares.SetUseAndContext(user.GetUserRootAggregate(db.Client)))
 
 	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: &resolver.Resolver{
-		DB: db.Client,
+		DB:     db.Client,
+		Bucket: bucket,
 	}}))
 
 	srv.AddTransport(transport.Options{})
@@ -63,6 +65,9 @@ func main() {
 	router.Handle("/query", srv)
 
 	database.InitDefaultSystemConfigValues(db.Client)
+
+	// Register endpoint for presigned URL (moved to message domain)
+	router.Get("/attachments/presign", message.GetPresignedURLHandler(bucket))
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", config.ApiPort)
 	err := http.ListenAndServe(":8080", router)

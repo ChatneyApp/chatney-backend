@@ -12,3 +12,13 @@ input MutateChannelDTO {
     ChannelTypeId: String!
     WorkspaceId: String!
 }
+
+extend type Mutation {
+  createChannel(input: MutateChannelDTO!): Channel
+  deleteChannel(channelId: String!): Boolean!
+  updateChannel(input: MutateChannelDTO!, channelId: String!): Channel
+}
+
+extend type Query {
+  getChannelUsersList(channelId: String!): [User!]
+}
