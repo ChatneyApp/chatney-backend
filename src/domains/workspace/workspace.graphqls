@@ -1,6 +1,8 @@
 type Workspace {
     Id: String!
     Name: String!
+    CreatedAt: Time!
+    UpdatedAt: Time!
 }
 
 input MutateWorkspaceDTO {
