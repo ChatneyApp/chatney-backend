@@ -2,6 +2,7 @@ package resolver
 
 import (
 	"chatney-backend/graph"
+	"chatney-backend/src/application"
 	"chatney-backend/src/domains/channel"
 	"chatney-backend/src/domains/config"
 	"chatney-backend/src/domains/message"
@@ -18,7 +19,8 @@ import (
 // It serves as dependency injection for your app, add any dependencies you require here.
 
 type Resolver struct {
-	DB *mongo.Database
+	DB     *mongo.Database
+	Bucket *application.Bucket
 }
 
 type QueryResolver struct {
@@ -49,7 +51,7 @@ func (r *Resolver) Query() graph.QueryResolver {
 		user.GetQueryResolvers(r.DB),
 		channel.GetQueryResolvers(r.DB),
 		workspace.GetQueryResolvers(r.DB),
-		message.GetMessageQueryResolvers(r.DB),
+		message.GetMessageQueryResolvers(r.DB, r.Bucket),
 	}
 }
 

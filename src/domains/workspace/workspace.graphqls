@@ -8,3 +8,13 @@ type Workspace {
 input MutateWorkspaceDTO {
     Name: String!
 }
+
+extend type Mutation {
+  createWorkspace(input: MutateWorkspaceDTO!): Workspace
+  deleteWorkspace(workspaceId: String!): Boolean!
+  updateWorkspace(input: MutateWorkspaceDTO!, workspaceId: String!): Workspace
+}
+
+extend type Query {
+  getWorkspacesList: [Workspace!]
+}

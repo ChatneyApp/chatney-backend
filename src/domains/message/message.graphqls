@@ -28,3 +28,14 @@ type Message {
   UpdatedAt: Time!
   Reactions: [Reaction!]
 }
+
+extend type Query {
+  getPresignedAttachmentUrl(key: String!): String!
+  getMessagesList: [Message!]
+}
+
+extend type Mutation {
+  createMessage(input: MutateMessageDTO!): Message!
+  updateMessage(input: MutateMessageDTO!, messageId: String!): Message!
+  deleteMessage(messageId: String!): Boolean!
+}

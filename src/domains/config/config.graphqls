@@ -5,3 +5,11 @@ type SystemConfigValue {
     CreatedAt: Time!
     UpdatedAt: Time!
 }
+
+extend type Mutation {
+  updateSystemConfigValue(configName: String!, configValue: String!): SystemConfigValue!
+}
+
+extend type Query {
+  getSystemConfig: [SystemConfigValue!]!
+}
