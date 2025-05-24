@@ -62,6 +62,8 @@ func main() {
 	router.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	router.Handle("/query", srv)
 
+	database.InitDefaultSystemConfigValues(db.Client)
+
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", config.ApiPort)
 	err := http.ListenAndServe(":8080", router)
 	if err != nil {
