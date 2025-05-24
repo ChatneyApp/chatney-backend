@@ -6,51 +6,58 @@ import (
 	"fmt"
 	"io"
 	"strconv"
+	"time"
 )
 
 type Channel struct {
-	ID            string `json:"Id"`
-	Name          string `json:"Name"`
-	ChannelTypeID string `json:"ChannelTypeId"`
-	WorkspaceID   string `json:"WorkspaceId"`
+	ID            string    `json:"Id"`
+	Name          string    `json:"Name"`
+	ChannelTypeID string    `json:"ChannelTypeId"`
+	WorkspaceID   string    `json:"WorkspaceId"`
+	CreatedAt     time.Time `json:"CreatedAt"`
+	UpdatedAt     time.Time `json:"UpdatedAt"`
 }
 
 type ChannelGroup struct {
-	ID        string   `json:"Id"`
-	Name      string   `json:"name"`
-	Channels  []string `json:"channels"`
-	Order     int32    `json:"order"`
-	Workspace string   `json:"workspace"`
+	ID        string    `json:"Id"`
+	Name      string    `json:"Name"`
+	Channels  []string  `json:"Channels"`
+	Order     int32     `json:"Order"`
+	Workspace string    `json:"Workspace"`
+	CreatedAt time.Time `json:"CreatedAt"`
+	UpdatedAt time.Time `json:"UpdatedAt"`
 }
 
 type ChannelRole struct {
-	ChannelID string `json:"channelId"`
-	RoleID    string `json:"roleId"`
+	ChannelID string `json:"ChannelId"`
+	RoleID    string `json:"RoleId"`
 }
 
 type ChannelSettings struct {
-	ChannelID       string `json:"channelId"`
-	LastSeenMessage string `json:"lastSeenMessage"`
-	Muted           bool   `json:"muted"`
+	ChannelID       string `json:"ChannelId"`
+	LastSeenMessage string `json:"LastSeenMessage"`
+	Muted           bool   `json:"Muted"`
 }
 
 type ChannelType struct {
-	ID         string `json:"Id"`
-	Label      string `json:"Label"`
-	Key        string `json:"Key"`
-	BaseRoleID string `json:"BaseRoleId"`
+	ID         string    `json:"Id"`
+	Label      string    `json:"Label"`
+	Key        string    `json:"Key"`
+	BaseRoleID string    `json:"BaseRoleId"`
+	CreatedAt  time.Time `json:"CreatedAt"`
+	UpdatedAt  time.Time `json:"UpdatedAt"`
 }
 
 type ChannelTypeRole struct {
-	ChannelTypeID string `json:"channelTypeId"`
-	RoleID        string `json:"roleId"`
+	ChannelTypeID string `json:"ChannelTypeId"`
+	RoleID        string `json:"RoleId"`
 }
 
 type CreateChannelGroupInput struct {
-	Name      string   `json:"name"`
-	Channels  []string `json:"channels"`
-	Order     int32    `json:"order"`
-	Workspace string   `json:"workspace"`
+	Name      string   `json:"Name"`
+	Channels  []string `json:"Channels"`
+	Order     int32    `json:"Order"`
+	Workspace string   `json:"Workspace"`
 }
 
 type CreateRoleDto struct {
@@ -60,11 +67,11 @@ type CreateRoleDto struct {
 }
 
 type CreateUserDto struct {
-	Password   string     `json:"password"`
-	Name       string     `json:"name"`
-	Status     UserStatus `json:"status"`
-	Email      string     `json:"email"`
-	Workspaces []string   `json:"workspaces,omitempty"`
+	Password   string     `json:"Password"`
+	Name       string     `json:"Name"`
+	Status     UserStatus `json:"Status"`
+	Email      string     `json:"Email"`
+	Workspaces []string   `json:"Workspaces,omitempty"`
 }
 
 type EditRoleDto struct {
@@ -72,6 +79,18 @@ type EditRoleDto struct {
 	Name        string           `json:"Name"`
 	Permissions []string         `json:"Permissions,omitempty"`
 	Settings    *RoleSettingsDto `json:"Settings"`
+}
+
+type Message struct {
+	ID          string      `json:"Id"`
+	ChannelID   string      `json:"ChannelId"`
+	UserID      string      `json:"UserId"`
+	Content     string      `json:"Content"`
+	Attachments []string    `json:"Attachments,omitempty"`
+	Status      string      `json:"Status"`
+	CreatedAt   time.Time   `json:"CreatedAt"`
+	UpdatedAt   time.Time   `json:"UpdatedAt"`
+	Reactions   []*Reaction `json:"Reactions,omitempty"`
 }
 
 type MutateChannelDto struct {
@@ -84,6 +103,15 @@ type MutateChannelTypeDto struct {
 	Label      string `json:"Label"`
 	Key        string `json:"Key"`
 	BaseRoleID string `json:"BaseRoleId"`
+}
+
+type MutateMessageDto struct {
+	ChannelID   string         `json:"ChannelId"`
+	UserID      string         `json:"UserId"`
+	Content     *string        `json:"Content,omitempty"`
+	Attachments []string       `json:"Attachments,omitempty"`
+	Status      string         `json:"Status"`
+	Reactions   []*ReactionDto `json:"Reactions,omitempty"`
 }
 
 type MutateWorkspaceDto struct {
@@ -105,11 +133,23 @@ type PermissionsListReturn struct {
 type Query struct {
 }
 
+type Reaction struct {
+	UserID   string `json:"UserId"`
+	Reaction string `json:"Reaction"`
+}
+
+type ReactionDto struct {
+	UserID   string `json:"UserId"`
+	Reaction string `json:"Reaction"`
+}
+
 type Role struct {
 	ID          string        `json:"Id"`
 	Name        string        `json:"Name"`
 	Permissions []string      `json:"Permissions,omitempty"`
 	Settings    *RoleSettings `json:"Settings"`
+	CreatedAt   time.Time     `json:"CreatedAt"`
+	UpdatedAt   time.Time     `json:"UpdatedAt"`
 }
 
 type RoleSettings struct {
@@ -121,54 +161,60 @@ type RoleSettingsDto struct {
 }
 
 type SystemConfigValue struct {
-	Name  string `json:"Name"`
-	Value string `json:"Value"`
-	Type  string `json:"Type"`
+	Name      string    `json:"Name"`
+	Value     string    `json:"Value"`
+	Type      string    `json:"Type"`
+	CreatedAt time.Time `json:"CreatedAt"`
+	UpdatedAt time.Time `json:"UpdatedAt"`
 }
 
 type UpdateChannelGroupInput struct {
 	ID       string   `json:"Id"`
-	Name     *string  `json:"name,omitempty"`
-	Channels []string `json:"channels,omitempty"`
-	Order    *int32   `json:"order,omitempty"`
+	Name     *string  `json:"Name,omitempty"`
+	Channels []string `json:"Channels,omitempty"`
+	Order    *int32   `json:"Order,omitempty"`
 }
 
 type UpdateUserDto struct {
-	Name       string     `json:"name"`
-	Status     UserStatus `json:"status"`
-	Email      string     `json:"email"`
-	Workspaces []string   `json:"workspaces,omitempty"`
+	Name       string     `json:"Name"`
+	Status     UserStatus `json:"Status"`
+	Email      string     `json:"Email"`
+	Workspaces []string   `json:"Workspaces,omitempty"`
 }
 
 type User struct {
-	ID               string             `json:"id"`
-	Name             string             `json:"name"`
-	Status           UserStatus         `json:"status"`
-	Email            string             `json:"email"`
-	Roles            *UserRolesSettings `json:"roles"`
-	ChannelsSettings []*ChannelSettings `json:"channelsSettings,omitempty"`
-	Workspaces       []string           `json:"workspaces,omitempty"`
+	ID               string             `json:"Id"`
+	Name             string             `json:"Name"`
+	Status           UserStatus         `json:"Status"`
+	Email            string             `json:"Email"`
+	Roles            *UserRolesSettings `json:"Roles"`
+	ChannelsSettings []*ChannelSettings `json:"ChannelsSettings,omitempty"`
+	Workspaces       []string           `json:"Workspaces,omitempty"`
+	CreatedAt        time.Time          `json:"CreatedAt"`
+	UpdatedAt        time.Time          `json:"UpdatedAt"`
 }
 
 type UserAuthData struct {
-	Token string `json:"token"`
+	Token string `json:"Token"`
 }
 
 type UserRolesSettings struct {
-	Global       *string            `json:"global,omitempty"`
-	Workspace    []*WorkspaceRole   `json:"workspace,omitempty"`
-	Channel      []*ChannelRole     `json:"channel,omitempty"`
-	ChannelTypes []*ChannelTypeRole `json:"channel_types,omitempty"`
+	Global       *string            `json:"Global,omitempty"`
+	Workspace    []*WorkspaceRole   `json:"Workspace,omitempty"`
+	Channel      []*ChannelRole     `json:"Channel,omitempty"`
+	ChannelTypes []*ChannelTypeRole `json:"ChannelTypes,omitempty"`
 }
 
 type Workspace struct {
-	ID   string `json:"Id"`
-	Name string `json:"Name"`
+	ID        string    `json:"Id"`
+	Name      string    `json:"Name"`
+	CreatedAt time.Time `json:"CreatedAt"`
+	UpdatedAt time.Time `json:"UpdatedAt"`
 }
 
 type WorkspaceRole struct {
-	WorkspaceID string `json:"workspaceId"`
-	RoleID      string `json:"roleId"`
+	WorkspaceID string `json:"WorkspaceId"`
+	RoleID      string `json:"RoleId"`
 }
 
 type UserStatus string

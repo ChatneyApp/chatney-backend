@@ -1,21 +1,23 @@
 type ChannelGroup {
     Id: ID!
-    name: String!
-    channels: [ID!]!
-    order: Int!
-    workspace: ID!
+    Name: String!
+    Channels: [ID!]!
+    Order: Int!
+    Workspace: ID!
+    CreatedAt: Time!
+    UpdatedAt: Time!
 }
 
 input CreateChannelGroupInput {
-    name: String!
-    channels: [ID!]!
-    order: Int!
-    workspace: ID!
+    Name: String!
+    Channels: [ID!]!
+    Order: Int!
+    Workspace: ID!
 }
 
 input UpdateChannelGroupInput {
     Id: ID!
-    name: String
-    channels: [ID!]
-    order: Int
+    Name: String
+    Channels: [ID!]
+    Order: Int
 }

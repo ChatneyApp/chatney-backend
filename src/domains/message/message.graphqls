@@ -1,0 +1,30 @@
+input ReactionDTO {
+  UserId: String!
+  Reaction: String!
+}
+
+input MutateMessageDTO {
+  ChannelId: String!
+  UserId: String!
+  Content: String
+  Attachments: [String!]
+  Status: String!
+  Reactions: [ReactionDTO!]
+}
+
+type Reaction {
+  UserId: String!
+  Reaction: String!
+}
+
+type Message {
+  Id: String!
+  ChannelId: String!
+  UserId: String!
+  Content: String!
+  Attachments: [String!]
+  Status: String!
+  CreatedAt: Time!
+  UpdatedAt: Time!
+  Reactions: [Reaction!]
+}

@@ -1,3 +1,5 @@
+scalar Time
+
 type Mutation {
     updateSystemConfigValue(configName: String!, configValue: String!): SystemConfigValue!
 
@@ -24,6 +26,10 @@ type Mutation {
     createUser(input: CreateUserDTO!): User
     deleteUser(userId: String!): Boolean!
     updateUser(input: UpdateUserDTO!, userId: String!): User
+
+    createMessage(input: MutateMessageDTO!): Message!
+    updateMessage(input: MutateMessageDTO!, messageId: String!): Message!
+    deleteMessage(messageId: String!): Boolean!
 }
 
 type Query {

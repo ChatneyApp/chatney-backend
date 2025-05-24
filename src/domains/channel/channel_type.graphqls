@@ -3,6 +3,8 @@ type ChannelType {
     Label: String!
     Key: String!
     BaseRoleId: String!
+    CreatedAt: Time!
+    UpdatedAt: Time!
 }
 
 input MutateChannelTypeDTO {

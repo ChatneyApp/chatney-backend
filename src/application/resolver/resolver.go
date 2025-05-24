@@ -4,6 +4,7 @@ import (
 	"chatney-backend/graph"
 	"chatney-backend/src/domains/channel"
 	"chatney-backend/src/domains/config"
+	"chatney-backend/src/domains/message"
 	"chatney-backend/src/domains/permissions"
 	"chatney-backend/src/domains/role"
 	"chatney-backend/src/domains/user"
@@ -28,6 +29,7 @@ type QueryResolver struct {
 	user.UserQueryResolvers
 	channel.ChannelQueryResolvers
 	workspace.WorkspaceQueryResolvers
+	message.MessageQueryResolvers
 }
 type MutationResolver struct {
 	*Resolver
@@ -36,6 +38,7 @@ type MutationResolver struct {
 	channel.ChannelMutationsResolvers
 	workspace.WorkspaceMutationsResolvers
 	user.UserMutationsResolvers
+	message.MessageMutationsResolvers
 }
 
 func (r *Resolver) Query() graph.QueryResolver {
@@ -46,6 +49,7 @@ func (r *Resolver) Query() graph.QueryResolver {
 		user.GetQueryResolvers(r.DB),
 		channel.GetQueryResolvers(r.DB),
 		workspace.GetQueryResolvers(r.DB),
+		message.GetMessageQueryResolvers(r.DB),
 	}
 }
 
@@ -58,5 +62,6 @@ func (r *Resolver) Mutation() graph.MutationResolver {
 		channel.GetMutationResolvers(r.DB),
 		workspace.GetMutationResolvers(r.DB),
 		user.GetMutationResolvers(r.DB),
+		message.GetMessageMutationResolvers(r.DB),
 	}
 }
