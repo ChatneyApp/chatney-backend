@@ -33,6 +33,10 @@ type ChannelSettings {
   muted: Boolean!
 }
 
+type UserAuthData {
+  token: String!
+}
+
 type User {
   id: String!
   name: String!
@@ -43,7 +47,15 @@ type User {
   workspaces: [String!]
 }
 
-input MutateUserDTO {
+input UpdateUserDTO {
+    name: String!
+    status: UserStatus!
+    email: String!
+    workspaces: [String!]
+}
+
+input CreateUserDTO {
+    password: String!
     name: String!
     status: UserStatus!
     email: String!

@@ -59,6 +59,14 @@ type CreateRoleDto struct {
 	Settings    *RoleSettingsDto `json:"Settings"`
 }
 
+type CreateUserDto struct {
+	Password   string     `json:"password"`
+	Name       string     `json:"name"`
+	Status     UserStatus `json:"status"`
+	Email      string     `json:"email"`
+	Workspaces []string   `json:"workspaces,omitempty"`
+}
+
 type EditRoleDto struct {
 	ID          string           `json:"Id"`
 	Name        string           `json:"Name"`
@@ -76,13 +84,6 @@ type MutateChannelTypeDto struct {
 	Label      string `json:"Label"`
 	Key        string `json:"Key"`
 	BaseRoleID string `json:"BaseRoleId"`
-}
-
-type MutateUserDto struct {
-	Name       string     `json:"name"`
-	Status     UserStatus `json:"status"`
-	Email      string     `json:"email"`
-	Workspaces []string   `json:"workspaces,omitempty"`
 }
 
 type MutateWorkspaceDto struct {
@@ -132,6 +133,13 @@ type UpdateChannelGroupInput struct {
 	Order    *int32   `json:"order,omitempty"`
 }
 
+type UpdateUserDto struct {
+	Name       string     `json:"name"`
+	Status     UserStatus `json:"status"`
+	Email      string     `json:"email"`
+	Workspaces []string   `json:"workspaces,omitempty"`
+}
+
 type User struct {
 	ID               string             `json:"id"`
 	Name             string             `json:"name"`
@@ -140,6 +148,10 @@ type User struct {
 	Roles            *UserRolesSettings `json:"roles"`
 	ChannelsSettings []*ChannelSettings `json:"channelsSettings,omitempty"`
 	Workspaces       []string           `json:"workspaces,omitempty"`
+}
+
+type UserAuthData struct {
+	Token string `json:"token"`
 }
 
 type UserRolesSettings struct {

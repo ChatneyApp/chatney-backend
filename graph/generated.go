@@ -86,25 +86,24 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CreateChannel           func(childComplexity int, input graphql_models.MutateChannelDto) int
-		CreateChannelGroup      func(childComplexity int, input graphql_models.CreateChannelGroupInput) int
-		CreateChannelType       func(childComplexity int, input graphql_models.MutateChannelTypeDto) int
-		CreateRole              func(childComplexity int, roleData graphql_models.CreateRoleDto) int
-		CreateUser              func(childComplexity int, input graphql_models.MutateUserDto) int
-		CreateWorkspace         func(childComplexity int, input graphql_models.MutateWorkspaceDto) int
-		DeleteChannel           func(childComplexity int, channelID string) int
-		DeleteChannelGroup      func(childComplexity int, uuid string) int
-		DeleteChannelType       func(childComplexity int, channelTypeID string) int
-		DeleteRole              func(childComplexity int, roleID *string) int
-		DeleteUser              func(childComplexity int, userID string) int
-		DeleteWorkspace         func(childComplexity int, workspaceID string) int
-		EditRole                func(childComplexity int, roleData graphql_models.EditRoleDto) int
-		UpdateChannel           func(childComplexity int, input graphql_models.MutateChannelDto, channelID string) int
-		UpdateChannelGroup      func(childComplexity int, input graphql_models.UpdateChannelGroupInput) int
-		UpdateChannelType       func(childComplexity int, input graphql_models.MutateChannelTypeDto, channelTypeID string) int
-		UpdateSystemConfigValue func(childComplexity int, configName string, configValue string) int
-		UpdateUser              func(childComplexity int, input graphql_models.MutateUserDto, userID string) int
-		UpdateWorkspace         func(childComplexity int, input graphql_models.MutateWorkspaceDto, workspaceID string) int
+		CreateChannel      func(childComplexity int, input graphql_models.MutateChannelDto) int
+		CreateChannelGroup func(childComplexity int, input graphql_models.CreateChannelGroupInput) int
+		CreateChannelType  func(childComplexity int, input graphql_models.MutateChannelTypeDto) int
+		CreateRole         func(childComplexity int, roleData graphql_models.CreateRoleDto) int
+		CreateUser         func(childComplexity int, input graphql_models.CreateUserDto) int
+		CreateWorkspace    func(childComplexity int, input graphql_models.MutateWorkspaceDto) int
+		DeleteChannel      func(childComplexity int, channelID string) int
+		DeleteChannelGroup func(childComplexity int, uuid string) int
+		DeleteChannelType  func(childComplexity int, channelTypeID string) int
+		DeleteRole         func(childComplexity int, roleID *string) int
+		DeleteUser         func(childComplexity int, userID string) int
+		DeleteWorkspace    func(childComplexity int, workspaceID string) int
+		EditRole           func(childComplexity int, roleData graphql_models.EditRoleDto) int
+		UpdateChannel      func(childComplexity int, input graphql_models.MutateChannelDto, channelID string) int
+		UpdateChannelGroup func(childComplexity int, input graphql_models.UpdateChannelGroupInput) int
+		UpdateChannelType  func(childComplexity int, input graphql_models.MutateChannelTypeDto, channelTypeID string) int
+		UpdateUser         func(childComplexity int, input graphql_models.UpdateUserDto, userID string) int
+		UpdateWorkspace    func(childComplexity int, input graphql_models.MutateWorkspaceDto, workspaceID string) int
 	}
 
 	PermissionsGroup struct {
@@ -117,6 +116,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
+		AuthorizeUser            func(childComplexity int, login string, password string) int
 		GetAllChannelTypesList   func(childComplexity int) int
 		GetChannelGroup          func(childComplexity int, uuid string) int
 		GetChannelUsersList      func(childComplexity int, channelID string) int
@@ -155,6 +155,10 @@ type ComplexityRoot struct {
 		Workspaces       func(childComplexity int) int
 	}
 
+	UserAuthData struct {
+		Token func(childComplexity int) int
+	}
+
 	UserRolesSettings struct {
 		Channel      func(childComplexity int) int
 		ChannelTypes func(childComplexity int) int
@@ -190,9 +194,9 @@ type MutationResolver interface {
 	CreateWorkspace(ctx context.Context, input graphql_models.MutateWorkspaceDto) (*graphql_models.Workspace, error)
 	DeleteWorkspace(ctx context.Context, workspaceID string) (bool, error)
 	UpdateWorkspace(ctx context.Context, input graphql_models.MutateWorkspaceDto, workspaceID string) (*graphql_models.Workspace, error)
-	CreateUser(ctx context.Context, input graphql_models.MutateUserDto) (*graphql_models.User, error)
+	CreateUser(ctx context.Context, input graphql_models.CreateUserDto) (*graphql_models.User, error)
 	DeleteUser(ctx context.Context, userID string) (bool, error)
-	UpdateUser(ctx context.Context, input graphql_models.MutateUserDto, userID string) (*graphql_models.User, error)
+	UpdateUser(ctx context.Context, input graphql_models.UpdateUserDto, userID string) (*graphql_models.User, error)
 }
 type QueryResolver interface {
 	GetSystemConfig(ctx context.Context) ([]*graphql_models.SystemConfigValue, error)
@@ -204,6 +208,7 @@ type QueryResolver interface {
 	GetAllChannelTypesList(ctx context.Context) ([]*graphql_models.ChannelType, error)
 	GetWorkspaceChannelsList(ctx context.Context, workspaceID string) ([]*graphql_models.Channel, error)
 	GetChannelUsersList(ctx context.Context, channelID string) ([]*graphql_models.User, error)
+	AuthorizeUser(ctx context.Context, login string, password string) (*graphql_models.UserAuthData, error)
 }
 
 type executableSchema struct {
@@ -423,7 +428,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateUser(childComplexity, args["input"].(graphql_models.MutateUserDto)), true
+		return e.complexity.Mutation.CreateUser(childComplexity, args["input"].(graphql_models.CreateUserDto)), true
 
 	case "Mutation.createWorkspace":
 		if e.complexity.Mutation.CreateWorkspace == nil {
@@ -579,7 +584,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateUser(childComplexity, args["input"].(graphql_models.MutateUserDto), args["userId"].(string)), true
+		return e.complexity.Mutation.UpdateUser(childComplexity, args["input"].(graphql_models.UpdateUserDto), args["userId"].(string)), true
 
 	case "Mutation.updateWorkspace":
 		if e.complexity.Mutation.UpdateWorkspace == nil {
@@ -613,6 +618,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.PermissionsListReturn.Groups(childComplexity), true
+
+	case "Query.AuthorizeUser":
+		if e.complexity.Query.AuthorizeUser == nil {
+			break
+		}
+
+		args, err := ec.field_Query_AuthorizeUser_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.AuthorizeUser(childComplexity, args["login"].(string), args["password"].(string)), true
 
 	case "Query.getAllChannelTypesList":
 		if e.complexity.Query.GetAllChannelTypesList == nil {
@@ -802,6 +819,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.Workspaces(childComplexity), true
 
+	case "UserAuthData.token":
+		if e.complexity.UserAuthData.Token == nil {
+			break
+		}
+
+		return e.complexity.UserAuthData.Token(childComplexity), true
+
 	case "UserRolesSettings.channel":
 		if e.complexity.UserRolesSettings.Channel == nil {
 			break
@@ -868,13 +892,14 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputCreateChannelGroupInput,
 		ec.unmarshalInputCreateRoleDTO,
+		ec.unmarshalInputCreateUserDTO,
 		ec.unmarshalInputEditRoleDTO,
 		ec.unmarshalInputMutateChannelDTO,
 		ec.unmarshalInputMutateChannelTypeDTO,
-		ec.unmarshalInputMutateUserDTO,
 		ec.unmarshalInputMutateWorkspaceDTO,
 		ec.unmarshalInputRoleSettingsDTO,
 		ec.unmarshalInputUpdateChannelGroupInput,
+		ec.unmarshalInputUpdateUserDTO,
 	)
 	first := true
 
@@ -1111,6 +1136,10 @@ type ChannelSettings {
   muted: Boolean!
 }
 
+type UserAuthData {
+  token: String!
+}
+
 type User {
   id: String!
   name: String!
@@ -1121,7 +1150,15 @@ type User {
   workspaces: [String!]
 }
 
-input MutateUserDTO {
+input UpdateUserDTO {
+    name: String!
+    status: UserStatus!
+    email: String!
+    workspaces: [String!]
+}
+
+input CreateUserDTO {
+    password: String!
     name: String!
     status: UserStatus!
     email: String!
@@ -1247,13 +1284,13 @@ func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, 
 func (ec *executionContext) field_Mutation_createUser_argsInput(
 	ctx context.Context,
 	rawArgs map[string]any,
-) (graphql_models.MutateUserDto, error) {
+) (graphql_models.CreateUserDto, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNMutateUserDTO2chatneyᚑbackendᚋgraphᚋmodelᚐMutateUserDto(ctx, tmp)
+		return ec.unmarshalNCreateUserDTO2chatneyᚑbackendᚋgraphᚋmodelᚐCreateUserDto(ctx, tmp)
 	}
 
-	var zeroVal graphql_models.MutateUserDto
+	var zeroVal graphql_models.CreateUserDto
 	return zeroVal, nil
 }
 
@@ -1605,13 +1642,13 @@ func (ec *executionContext) field_Mutation_updateUser_args(ctx context.Context, 
 func (ec *executionContext) field_Mutation_updateUser_argsInput(
 	ctx context.Context,
 	rawArgs map[string]any,
-) (graphql_models.MutateUserDto, error) {
+) (graphql_models.UpdateUserDto, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNMutateUserDTO2chatneyᚑbackendᚋgraphᚋmodelᚐMutateUserDto(ctx, tmp)
+		return ec.unmarshalNUpdateUserDTO2chatneyᚑbackendᚋgraphᚋmodelᚐUpdateUserDto(ctx, tmp)
 	}
 
-	var zeroVal graphql_models.MutateUserDto
+	var zeroVal graphql_models.UpdateUserDto
 	return zeroVal, nil
 }
 
@@ -1662,6 +1699,47 @@ func (ec *executionContext) field_Mutation_updateWorkspace_argsWorkspaceID(
 ) (string, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("workspaceId"))
 	if tmp, ok := rawArgs["workspaceId"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_AuthorizeUser_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_AuthorizeUser_argsLogin(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["login"] = arg0
+	arg1, err := ec.field_Query_AuthorizeUser_argsPassword(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["password"] = arg1
+	return args, nil
+}
+func (ec *executionContext) field_Query_AuthorizeUser_argsLogin(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("login"))
+	if tmp, ok := rawArgs["login"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_AuthorizeUser_argsPassword(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
+	if tmp, ok := rawArgs["password"]; ok {
 		return ec.unmarshalNString2string(ctx, tmp)
 	}
 
@@ -3750,7 +3828,7 @@ func (ec *executionContext) _Mutation_createUser(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateUser(rctx, fc.Args["input"].(graphql_models.MutateUserDto))
+		return ec.resolvers.Mutation().CreateUser(rctx, fc.Args["input"].(graphql_models.CreateUserDto))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3873,7 +3951,7 @@ func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateUser(rctx, fc.Args["input"].(graphql_models.MutateUserDto), fc.Args["userId"].(string))
+		return ec.resolvers.Mutation().UpdateUser(rctx, fc.Args["input"].(graphql_models.UpdateUserDto), fc.Args["userId"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4572,6 +4650,65 @@ func (ec *executionContext) fieldContext_Query_getChannelUsersList(ctx context.C
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_getChannelUsersList_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_AuthorizeUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_AuthorizeUser(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().AuthorizeUser(rctx, fc.Args["login"].(string), fc.Args["password"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*graphql_models.UserAuthData)
+	fc.Result = res
+	return ec.marshalNUserAuthData2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐUserAuthData(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_AuthorizeUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "token":
+				return ec.fieldContext_UserAuthData_token(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UserAuthData", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_AuthorizeUser_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -5372,6 +5509,50 @@ func (ec *executionContext) _User_workspaces(ctx context.Context, field graphql.
 func (ec *executionContext) fieldContext_User_workspaces(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "User",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserAuthData_token(ctx context.Context, field graphql.CollectedField, obj *graphql_models.UserAuthData) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAuthData_token(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Token, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserAuthData_token(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserAuthData",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -7780,6 +7961,61 @@ func (ec *executionContext) unmarshalInputCreateRoleDTO(ctx context.Context, obj
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputCreateUserDTO(ctx context.Context, obj any) (graphql_models.CreateUserDto, error) {
+	var it graphql_models.CreateUserDto
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"password", "name", "status", "email", "workspaces"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "password":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Password = data
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "status":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			data, err := ec.unmarshalNUserStatus2chatneyᚑbackendᚋgraphᚋmodelᚐUserStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Status = data
+		case "email":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Email = data
+		case "workspaces":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("workspaces"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Workspaces = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputEditRoleDTO(ctx context.Context, obj any) (graphql_models.EditRoleDto, error) {
 	var it graphql_models.EditRoleDto
 	asMap := map[string]any{}
@@ -7910,54 +8146,6 @@ func (ec *executionContext) unmarshalInputMutateChannelTypeDTO(ctx context.Conte
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputMutateUserDTO(ctx context.Context, obj any) (graphql_models.MutateUserDto, error) {
-	var it graphql_models.MutateUserDto
-	asMap := map[string]any{}
-	for k, v := range obj.(map[string]any) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"name", "status", "email", "workspaces"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "name":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Name = data
-		case "status":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
-			data, err := ec.unmarshalNUserStatus2chatneyᚑbackendᚋgraphᚋmodelᚐUserStatus(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Status = data
-		case "email":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Email = data
-		case "workspaces":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("workspaces"))
-			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Workspaces = data
-		}
-	}
-
-	return it, nil
-}
-
 func (ec *executionContext) unmarshalInputMutateWorkspaceDTO(ctx context.Context, obj any) (graphql_models.MutateWorkspaceDto, error) {
 	var it graphql_models.MutateWorkspaceDto
 	asMap := map[string]any{}
@@ -8054,6 +8242,54 @@ func (ec *executionContext) unmarshalInputUpdateChannelGroupInput(ctx context.Co
 				return it, err
 			}
 			it.Order = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputUpdateUserDTO(ctx context.Context, obj any) (graphql_models.UpdateUserDto, error) {
+	var it graphql_models.UpdateUserDto
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"name", "status", "email", "workspaces"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "status":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			data, err := ec.unmarshalNUserStatus2chatneyᚑbackendᚋgraphᚋmodelᚐUserStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Status = data
+		case "email":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Email = data
+		case "workspaces":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("workspaces"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Workspaces = data
 		}
 	}
 
@@ -8814,6 +9050,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "AuthorizeUser":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_AuthorizeUser(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "__type":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Query___type(ctx, field)
@@ -9024,6 +9282,45 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			out.Values[i] = ec._User_channelsSettings(ctx, field, obj)
 		case "workspaces":
 			out.Values[i] = ec._User_workspaces(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var userAuthDataImplementors = []string{"UserAuthData"}
+
+func (ec *executionContext) _UserAuthData(ctx context.Context, sel ast.SelectionSet, obj *graphql_models.UserAuthData) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, userAuthDataImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UserAuthData")
+		case "token":
+			out.Values[i] = ec._UserAuthData_token(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -9649,6 +9946,11 @@ func (ec *executionContext) unmarshalNCreateRoleDTO2chatneyᚑbackendᚋgraphᚋ
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNCreateUserDTO2chatneyᚑbackendᚋgraphᚋmodelᚐCreateUserDto(ctx context.Context, v any) (graphql_models.CreateUserDto, error) {
+	res, err := ec.unmarshalInputCreateUserDTO(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNEditRoleDTO2chatneyᚑbackendᚋgraphᚋmodelᚐEditRoleDto(ctx context.Context, v any) (graphql_models.EditRoleDto, error) {
 	res, err := ec.unmarshalInputEditRoleDTO(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -9723,11 +10025,6 @@ func (ec *executionContext) unmarshalNMutateChannelDTO2chatneyᚑbackendᚋgraph
 
 func (ec *executionContext) unmarshalNMutateChannelTypeDTO2chatneyᚑbackendᚋgraphᚋmodelᚐMutateChannelTypeDto(ctx context.Context, v any) (graphql_models.MutateChannelTypeDto, error) {
 	res, err := ec.unmarshalInputMutateChannelTypeDTO(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalNMutateUserDTO2chatneyᚑbackendᚋgraphᚋmodelᚐMutateUserDto(ctx context.Context, v any) (graphql_models.MutateUserDto, error) {
-	res, err := ec.unmarshalInputMutateUserDTO(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -9987,6 +10284,11 @@ func (ec *executionContext) unmarshalNUpdateChannelGroupInput2chatneyᚑbackend�
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNUpdateUserDTO2chatneyᚑbackendᚋgraphᚋmodelᚐUpdateUserDto(ctx context.Context, v any) (graphql_models.UpdateUserDto, error) {
+	res, err := ec.unmarshalInputUpdateUserDTO(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) marshalNUser2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v *graphql_models.User) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -9995,6 +10297,20 @@ func (ec *executionContext) marshalNUser2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐ
 		return graphql.Null
 	}
 	return ec._User(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNUserAuthData2chatneyᚑbackendᚋgraphᚋmodelᚐUserAuthData(ctx context.Context, sel ast.SelectionSet, v graphql_models.UserAuthData) graphql.Marshaler {
+	return ec._UserAuthData(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNUserAuthData2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐUserAuthData(ctx context.Context, sel ast.SelectionSet, v *graphql_models.UserAuthData) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._UserAuthData(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNUserRolesSettings2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐUserRolesSettings(ctx context.Context, sel ast.SelectionSet, v *graphql_models.UserRolesSettings) graphql.Marshaler {

@@ -21,9 +21,9 @@ type Mutation {
     deleteWorkspace(workspaceId: String!): Boolean!
     updateWorkspace(input: MutateWorkspaceDTO!, workspaceId: String!): Workspace
 
-    createUser(input: MutateUserDTO!): User
+    createUser(input: CreateUserDTO!): User
     deleteUser(userId: String!): Boolean!
-    updateUser(input: MutateUserDTO!, userId: String!): User
+    updateUser(input: UpdateUserDTO!, userId: String!): User
 }
 
 type Query {
@@ -41,4 +41,6 @@ type Query {
     getWorkspaceChannelsList(workspaceId: String!): [Channel!]
 
     getChannelUsersList(channelId: String!): [User!]
+
+    AuthorizeUser(login: String!, password: String!): UserAuthData!
 }

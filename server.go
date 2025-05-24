@@ -2,12 +2,11 @@ package main
 
 import (
 	"chatney-backend/graph"
+	"chatney-backend/src/application"
 	database "chatney-backend/src/application"
 	"chatney-backend/src/application/middlewares"
-	"chatney-backend/src/application/repository"
 	"chatney-backend/src/application/resolver"
 	"chatney-backend/src/domains/user"
-	"chatney-backend/src/domains/user/models"
 	"log"
 	"net/http"
 
@@ -23,10 +22,11 @@ import (
 )
 
 func main() {
-	config, err := database.LoadEnvConfig()
-	if err != nil {
-		panic("Error loading env var" + err.Error())
-	}
+	config := database.LoadEnvConfig()
+
+	go func() {
+		application.RunWebSocket()
+	}()
 
 	bucket := database.NewBucketConnection(config)
 	// Adding file example
@@ -42,14 +42,7 @@ func main() {
 	}).Handler)
 
 	db := database.NewDatabase(config)
-
-	userRootAggr := &user.UserRootAggregate{
-		UserRepo: &models.UserRepo{BaseRepo: &repository.BaseRepo[models.User]{
-			Collection: db.Client.Collection("users"),
-		}},
-	}
-
-	router.Use(middlewares.SetUseAndContext(userRootAggr))
+	router.Use(middlewares.SetUseAndContext(user.GetUserRootAggregate(db.Client)))
 
 	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: &resolver.Resolver{
 		DB: db.Client,
@@ -72,7 +65,7 @@ func main() {
 	database.InitDefaultSystemConfigValues(db.Client)
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", config.ApiPort)
-	err = http.ListenAndServe(":8080", router)
+	err := http.ListenAndServe(":8080", router)
 	if err != nil {
 		panic(err)
 	}

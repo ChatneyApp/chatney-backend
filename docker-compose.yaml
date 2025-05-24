@@ -24,6 +24,11 @@ services:
       ME_CONFIG_MONGODB_URL: mongodb://root:pass@mongo:27017/
       ME_CONFIG_BASICAUTH: false
 
+  kafka:
+    image: apache/kafka
+    ports:
+      - '9092:9092'
+
   minio:
     image: docker.io/bitnami/minio:2022
     restart: unless-stopped

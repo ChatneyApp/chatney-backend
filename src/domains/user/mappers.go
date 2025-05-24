@@ -7,7 +7,7 @@ import (
 
 func UserToDTO(model models.User) *graphql_models.User {
 	return &graphql_models.User{
-		ID:         model.ID,
+		ID:         model.Id,
 		Name:       model.Name,
 		Status:     graphql_models.UserStatus(model.Status),
 		Email:      model.Email,
