@@ -32,7 +32,7 @@ type ChannelSettings struct {
 }
 
 type User struct {
-	ID               string            `bson:"id" json:"id"`
+	Id               string            `bson:"_id" json:"_id"`
 	Name             string            `bson:"name" json:"name"`
 	Status           UserStatus        `bson:"status" json:"status"`
 	Email            string            `bson:"email" json:"email"`

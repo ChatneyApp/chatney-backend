@@ -116,6 +116,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
+		AuthorizeUser            func(childComplexity int, login string, password string) int
 		GetAllChannelTypesList   func(childComplexity int) int
 		GetChannelGroup          func(childComplexity int, uuid string) int
 		GetChannelUsersList      func(childComplexity int, channelID string) int
@@ -145,6 +146,10 @@ type ComplexityRoot struct {
 		Roles            func(childComplexity int) int
 		Status           func(childComplexity int) int
 		Workspaces       func(childComplexity int) int
+	}
+
+	UserAuthData struct {
+		Token func(childComplexity int) int
 	}
 
 	UserRolesSettings struct {
@@ -194,6 +199,7 @@ type QueryResolver interface {
 	GetAllChannelTypesList(ctx context.Context) ([]*graphql_models.ChannelType, error)
 	GetWorkspaceChannelsList(ctx context.Context, workspaceID string) ([]*graphql_models.Channel, error)
 	GetChannelUsersList(ctx context.Context, channelID string) ([]*graphql_models.User, error)
+	AuthorizeUser(ctx context.Context, login string, password string) (*graphql_models.UserAuthData, error)
 }
 
 type executableSchema struct {
@@ -592,6 +598,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PermissionsListReturn.Groups(childComplexity), true
 
+	case "Query.AuthorizeUser":
+		if e.complexity.Query.AuthorizeUser == nil {
+			break
+		}
+
+		args, err := ec.field_Query_AuthorizeUser_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.AuthorizeUser(childComplexity, args["login"].(string), args["password"].(string)), true
+
 	case "Query.getAllChannelTypesList":
 		if e.complexity.Query.GetAllChannelTypesList == nil {
 			break
@@ -751,6 +769,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.User.Workspaces(childComplexity), true
+
+	case "UserAuthData.token":
+		if e.complexity.UserAuthData.Token == nil {
+			break
+		}
+
+		return e.complexity.UserAuthData.Token(childComplexity), true
 
 	case "UserRolesSettings.channel":
 		if e.complexity.UserRolesSettings.Channel == nil {
@@ -1054,6 +1079,10 @@ type ChannelSettings {
   channelId: String!
   lastSeenMessage: String!
   muted: Boolean!
+}
+
+type UserAuthData {
+  token: String!
 }
 
 type User {
@@ -1574,6 +1603,47 @@ func (ec *executionContext) field_Mutation_updateWorkspace_argsWorkspaceID(
 ) (string, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("workspaceId"))
 	if tmp, ok := rawArgs["workspaceId"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_AuthorizeUser_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_AuthorizeUser_argsLogin(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["login"] = arg0
+	arg1, err := ec.field_Query_AuthorizeUser_argsPassword(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["password"] = arg1
+	return args, nil
+}
+func (ec *executionContext) field_Query_AuthorizeUser_argsLogin(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("login"))
+	if tmp, ok := rawArgs["login"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_AuthorizeUser_argsPassword(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
+	if tmp, ok := rawArgs["password"]; ok {
 		return ec.unmarshalNString2string(ctx, tmp)
 	}
 
@@ -4375,6 +4445,65 @@ func (ec *executionContext) fieldContext_Query_getChannelUsersList(ctx context.C
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_AuthorizeUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_AuthorizeUser(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().AuthorizeUser(rctx, fc.Args["login"].(string), fc.Args["password"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*graphql_models.UserAuthData)
+	fc.Result = res
+	return ec.marshalNUserAuthData2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐUserAuthData(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_AuthorizeUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "token":
+				return ec.fieldContext_UserAuthData_token(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UserAuthData", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_AuthorizeUser_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query___type(ctx, field)
 	if err != nil {
@@ -5037,6 +5166,50 @@ func (ec *executionContext) _User_workspaces(ctx context.Context, field graphql.
 func (ec *executionContext) fieldContext_User_workspaces(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "User",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserAuthData_token(ctx context.Context, field graphql.CollectedField, obj *graphql_models.UserAuthData) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAuthData_token(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Token, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserAuthData_token(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserAuthData",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -8505,6 +8678,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "AuthorizeUser":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_AuthorizeUser(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "__type":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Query___type(ctx, field)
@@ -8666,6 +8861,45 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			out.Values[i] = ec._User_channelsSettings(ctx, field, obj)
 		case "workspaces":
 			out.Values[i] = ec._User_workspaces(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var userAuthDataImplementors = []string{"UserAuthData"}
+
+func (ec *executionContext) _UserAuthData(ctx context.Context, sel ast.SelectionSet, obj *graphql_models.UserAuthData) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, userAuthDataImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UserAuthData")
+		case "token":
+			out.Values[i] = ec._UserAuthData_token(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -9584,6 +9818,20 @@ func (ec *executionContext) marshalNUser2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐ
 		return graphql.Null
 	}
 	return ec._User(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNUserAuthData2chatneyᚑbackendᚋgraphᚋmodelᚐUserAuthData(ctx context.Context, sel ast.SelectionSet, v graphql_models.UserAuthData) graphql.Marshaler {
+	return ec._UserAuthData(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNUserAuthData2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐUserAuthData(ctx context.Context, sel ast.SelectionSet, v *graphql_models.UserAuthData) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._UserAuthData(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNUserRolesSettings2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐUserRolesSettings(ctx context.Context, sel ast.SelectionSet, v *graphql_models.UserRolesSettings) graphql.Marshaler {

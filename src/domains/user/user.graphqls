@@ -33,6 +33,10 @@ type ChannelSettings {
   muted: Boolean!
 }
 
+type UserAuthData {
+  token: String!
+}
+
 type User {
   id: String!
   name: String!

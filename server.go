@@ -5,10 +5,8 @@ import (
 	"chatney-backend/src/application"
 	database "chatney-backend/src/application"
 	"chatney-backend/src/application/middlewares"
-	"chatney-backend/src/application/repository"
 	"chatney-backend/src/application/resolver"
 	"chatney-backend/src/domains/user"
-	"chatney-backend/src/domains/user/models"
 	"log"
 	"net/http"
 
@@ -44,14 +42,7 @@ func main() {
 	}).Handler)
 
 	db := database.NewDatabase(config)
-
-	userRootAggr := &user.UserRootAggregate{
-		UserRepo: &models.UserRepo{BaseRepo: &repository.BaseRepo[models.User]{
-			Collection: db.Client.Collection("users"),
-		}},
-	}
-
-	router.Use(middlewares.SetUseAndContext(userRootAggr))
+	router.Use(middlewares.SetUseAndContext(user.GetUserRootAggregate(db.Client)))
 
 	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: &resolver.Resolver{
 		DB: db.Client,

@@ -6,6 +6,8 @@ require (
 	github.com/99designs/gqlgen v0.17.66
 	github.com/coder/websocket v1.8.13
 	github.com/go-chi/chi v1.5.5
+	github.com/golang-jwt/jwt v3.2.2+incompatible
+	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/google/uuid v1.6.0
 	github.com/minio/minio-go/v7 v7.0.86
 	github.com/rs/cors v1.11.1

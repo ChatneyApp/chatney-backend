@@ -18,6 +18,7 @@ type EnvConfig struct {
 	BucketRegion          string
 	ApiPort               string
 	PasswordSalt          string
+	JwtKey                string
 }
 
 var Config = LoadEnvConfig()
@@ -50,6 +51,7 @@ func LoadEnvConfig() *EnvConfig {
 		BucketRegion:          getEnvWithDefault("BUCKET_REGION", ""),
 		ApiPort:               getEnvWithDefault("API_PORT", ""),
 		PasswordSalt:          getEnvWithDefault("PASSWORD_SALT", ""),
+		JwtKey:                getEnvWithDefault("JWT_KEY", ""),
 	}
 
 	if err := validateStruct(config); err != nil {

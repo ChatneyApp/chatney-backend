@@ -37,4 +37,6 @@ type Query {
     getWorkspaceChannelsList(workspaceId: String!): [Channel!]
 
     getChannelUsersList(channelId: String!): [User!]
+
+    AuthorizeUser(login: String!, password: String!): UserAuthData!
 }

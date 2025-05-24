@@ -144,6 +144,10 @@ type User struct {
 	Workspaces       []string           `json:"workspaces,omitempty"`
 }
 
+type UserAuthData struct {
+	Token string `json:"token"`
+}
+
 type UserRolesSettings struct {
 	Global       *string            `json:"global,omitempty"`
 	Workspace    []*WorkspaceRole   `json:"workspace,omitempty"`
