@@ -19,4 +19,5 @@ type Message struct {
 	CreatedAt   time.Time  `json:"createdAt"`
 	UpdatedAt   time.Time  `json:"updatedAt"`
 	Reactions   []Reaction `json:"reactions"`
+	ParentId    string     `json:"parentId"`
 }
