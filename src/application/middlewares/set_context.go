@@ -1,10 +1,15 @@
 package middlewares
 
 import (
+	LogError "chatney-backend/src/application/error_utils"
 	"chatney-backend/src/domains/user"
 	"chatney-backend/src/domains/user/models"
 	"context"
+	"errors"
 	"net/http"
+	"strings"
+
+	"github.com/golang-jwt/jwt"
 )
 
 type Ctx struct {
@@ -21,16 +26,26 @@ var CtxUserKey = CtxUserKeyType{name: "user"}
 func SetUseAndContext(userRootAggr *user.UserRootAggregate) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			//userId := r.Header.Get("auth")
-			userId := "3463434"
+			token := r.Header.Get("Authorization")
+			var user *models.User = nil
 
-			println(userId, "auth header in context")
+			if len(token) > 0 && strings.Contains(token, "Bearer") {
+				tokenValue := strings.TrimPrefix(token, "Bearer ")
+				userId, err := extractUserIDFromJWT(tokenValue, []byte(userRootAggr.Config.JwtKey))
+				if err != nil {
+					LogError.LogError(LogError.MakeError("ST001", "User extraction from token failed", err))
+					http.Error(w, "Unauthorized", http.StatusUnauthorized)
+					return
+				}
 
-			user, err := userRootAggr.UserRepo.GetByID(context.TODO(), "sdsfsdf")
-			if err != nil {
-				println(err.Error())
+				fetchedUser, err := userRootAggr.UserRepo.GetByID(context.TODO(), userId)
+				if err != nil {
+					LogError.LogError(LogError.MakeError("ST002", "User not found using userId:"+userId, err))
+					http.Error(w, "Unauthorized", http.StatusUnauthorized)
+					return
+				}
 
-				return
+				user = fetchedUser
 			}
 
 			ctx := &Ctx{
@@ -45,4 +60,33 @@ func SetUseAndContext(userRootAggr *user.UserRootAggregate) func(http.Handler) h
 			next.ServeHTTP(w, r)
 		})
 	}
+}
+
+func extractUserIDFromJWT(tokenStr string, secretKey []byte) (string, error) {
+	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		// Checking that algo is what we want
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("unexpected signing method")
+		}
+		return secretKey, nil
+	})
+	if err != nil {
+		return "", err
+	}
+
+	if !token.Valid {
+		return "", errors.New("invalid token")
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return "", errors.New("invalid claims format")
+	}
+
+	sub, ok := claims["sub"].(string)
+	if !ok || sub == "" {
+		return "", errors.New("sub not found or invalid")
+	}
+
+	return sub, nil
 }

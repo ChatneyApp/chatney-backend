@@ -17,12 +17,13 @@ func NewBaseRepo[T any](db *mongo.Database, collectionName string) *BaseRepo[T] 
 
 func (r *BaseRepo[T]) Create(ctx context.Context, entity *T) (*T, error) {
 	res, err := r.Collection.InsertOne(ctx, entity)
+
 	if err != nil {
 		return nil, err
 	}
 
 	resId := res.InsertedID
-
+	println(resId)
 	return r.GetByID(ctx, resId.(string))
 }
 
