@@ -4,60 +4,61 @@ enum UserStatus {
   BANNED
   MUTED
 }
-
 type UserRolesSettings {
-  global: String
-  workspace: [WorkspaceRole!]
-  channel: [ChannelRole!]
-  channel_types: [ChannelTypeRole!]
+  Global: String
+  Workspace: [WorkspaceRole!]
+  Channel: [ChannelRole!]
+  ChannelTypes: [ChannelTypeRole!]
 }
 
 type WorkspaceRole {
-  workspaceId: String!
-  roleId: String!
+  WorkspaceId: String!
+  RoleId: String!
 }
 
 type ChannelRole {
-  channelId: String!
-  roleId: String!
+  ChannelId: String!
+  RoleId: String!
 }
 
 type ChannelTypeRole {
-  channelTypeId: String!
-  roleId: String!
+  ChannelTypeId: String!
+  RoleId: String!
 }
 
 type ChannelSettings {
-  channelId: String!
-  lastSeenMessage: String!
-  muted: Boolean!
+  ChannelId: String!
+  LastSeenMessage: String!
+  Muted: Boolean!
 }
 
 type UserAuthData {
-  token: String!
+  Token: String!
 }
 
 type User {
-  id: String!
-  name: String!
-  status: UserStatus!
-  email: String!
-  roles: UserRolesSettings!
-  channelsSettings: [ChannelSettings!]
-  workspaces: [String!]
+  Id: String!
+  Name: String!
+  Status: UserStatus!
+  Email: String!
+  Roles: UserRolesSettings!
+  ChannelsSettings: [ChannelSettings!]
+  Workspaces: [String!]
+  CreatedAt: Time!
+  UpdatedAt: Time!
 }
 
 input UpdateUserDTO {
-    name: String!
-    status: UserStatus!
-    email: String!
-    workspaces: [String!]
+  Name: String!
+  Status: UserStatus!
+  Email: String!
+  Workspaces: [String!]
 }
 
 input CreateUserDTO {
-    password: String!
-    name: String!
-    status: UserStatus!
-    email: String!
-    workspaces: [String!]
+  Password: String!
+  Name: String!
+  Status: UserStatus!
+  Email: String!
+  Workspaces: [String!]
 }

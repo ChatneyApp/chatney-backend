@@ -11,6 +11,8 @@ type Role {
   Name: String!
   Permissions: [String!]
   Settings: RoleSettings!
+  CreatedAt: Time! 
+  UpdatedAt: Time!
 }
 
 input CreateRoleDTO {
