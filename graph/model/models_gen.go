@@ -175,11 +175,16 @@ type UpdateChannelGroupInput struct {
 	Order    *int32   `json:"Order,omitempty"`
 }
 
-type UpdateUserDto struct {
+type UpdateUserAdminDto struct {
 	Name       string     `json:"Name"`
 	Status     UserStatus `json:"Status"`
 	Email      string     `json:"Email"`
 	Workspaces []string   `json:"Workspaces,omitempty"`
+}
+
+type UpdateUserDto struct {
+	Name  string `json:"Name"`
+	Email string `json:"Email"`
 }
 
 type User struct {

@@ -50,6 +50,11 @@ type User {
 
 input UpdateUserDTO {
   Name: String!
+  Email: String!
+}
+
+input UpdateUserAdminDTO {
+  Name: String!
   Status: UserStatus!
   Email: String!
   Workspaces: [String!]
@@ -67,6 +72,7 @@ extend type Mutation {
   createUser(input: CreateUserDTO!): User
   deleteUser(userId: String!): Boolean!
   updateUser(input: UpdateUserDTO!, userId: String!): User
+  updateUserAdmin(input: UpdateUserAdminDTO!, userId: String!): User
 }
 
 extend type Query {

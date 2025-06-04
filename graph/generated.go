@@ -126,6 +126,7 @@ type ComplexityRoot struct {
 		UpdateMessage           func(childComplexity int, input graphql_models.MutateMessageDto, messageID string) int
 		UpdateSystemConfigValue func(childComplexity int, configName string, configValue string) int
 		UpdateUser              func(childComplexity int, input graphql_models.UpdateUserDto, userID string) int
+		UpdateUserAdmin         func(childComplexity int, input graphql_models.UpdateUserAdminDto, userID string) int
 		UpdateWorkspace         func(childComplexity int, input graphql_models.MutateWorkspaceDto, workspaceID string) int
 	}
 
@@ -235,6 +236,7 @@ type MutationResolver interface {
 	CreateUser(ctx context.Context, input graphql_models.CreateUserDto) (*graphql_models.User, error)
 	DeleteUser(ctx context.Context, userID string) (bool, error)
 	UpdateUser(ctx context.Context, input graphql_models.UpdateUserDto, userID string) (*graphql_models.User, error)
+	UpdateUserAdmin(ctx context.Context, input graphql_models.UpdateUserAdminDto, userID string) (*graphql_models.User, error)
 	CreateWorkspace(ctx context.Context, input graphql_models.MutateWorkspaceDto) (*graphql_models.Workspace, error)
 	DeleteWorkspace(ctx context.Context, workspaceID string) (bool, error)
 	UpdateWorkspace(ctx context.Context, input graphql_models.MutateWorkspaceDto, workspaceID string) (*graphql_models.Workspace, error)
@@ -770,6 +772,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.UpdateUser(childComplexity, args["input"].(graphql_models.UpdateUserDto), args["userId"].(string)), true
 
+	case "Mutation.updateUserAdmin":
+		if e.complexity.Mutation.UpdateUserAdmin == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateUserAdmin_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateUserAdmin(childComplexity, args["input"].(graphql_models.UpdateUserAdminDto), args["userId"].(string)), true
+
 	case "Mutation.updateWorkspace":
 		if e.complexity.Mutation.UpdateWorkspace == nil {
 			break
@@ -1174,6 +1188,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputReactionDTO,
 		ec.unmarshalInputRoleSettingsDTO,
 		ec.unmarshalInputUpdateChannelGroupInput,
+		ec.unmarshalInputUpdateUserAdminDTO,
 		ec.unmarshalInputUpdateUserDTO,
 	)
 	first := true
@@ -1533,6 +1548,11 @@ type User {
 
 input UpdateUserDTO {
   Name: String!
+  Email: String!
+}
+
+input UpdateUserAdminDTO {
+  Name: String!
   Status: UserStatus!
   Email: String!
   Workspaces: [String!]
@@ -1550,6 +1570,7 @@ extend type Mutation {
   createUser(input: CreateUserDTO!): User
   deleteUser(userId: String!): Boolean!
   updateUser(input: UpdateUserDTO!, userId: String!): User
+  updateUserAdmin(input: UpdateUserAdminDTO!, userId: String!): User
 }
 
 extend type Query {
@@ -2108,6 +2129,47 @@ func (ec *executionContext) field_Mutation_updateSystemConfigValue_argsConfigVal
 ) (string, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("configValue"))
 	if tmp, ok := rawArgs["configValue"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_updateUserAdmin_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_updateUserAdmin_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	arg1, err := ec.field_Mutation_updateUserAdmin_argsUserID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["userId"] = arg1
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_updateUserAdmin_argsInput(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (graphql_models.UpdateUserAdminDto, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNUpdateUserAdminDTO2chatneyᚑbackendᚋgraphᚋmodelᚐUpdateUserAdminDto(ctx, tmp)
+	}
+
+	var zeroVal graphql_models.UpdateUserAdminDto
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_updateUserAdmin_argsUserID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
+	if tmp, ok := rawArgs["userId"]; ok {
 		return ec.unmarshalNString2string(ctx, tmp)
 	}
 
@@ -5251,6 +5313,78 @@ func (ec *executionContext) fieldContext_Mutation_updateUser(ctx context.Context
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_updateUser_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateUserAdmin(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateUserAdmin(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateUserAdmin(rctx, fc.Args["input"].(graphql_models.UpdateUserAdminDto), fc.Args["userId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*graphql_models.User)
+	fc.Result = res
+	return ec.marshalOUser2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateUserAdmin(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "Id":
+				return ec.fieldContext_User_Id(ctx, field)
+			case "Name":
+				return ec.fieldContext_User_Name(ctx, field)
+			case "Status":
+				return ec.fieldContext_User_Status(ctx, field)
+			case "Email":
+				return ec.fieldContext_User_Email(ctx, field)
+			case "Roles":
+				return ec.fieldContext_User_Roles(ctx, field)
+			case "ChannelsSettings":
+				return ec.fieldContext_User_ChannelsSettings(ctx, field)
+			case "Workspaces":
+				return ec.fieldContext_User_Workspaces(ctx, field)
+			case "CreatedAt":
+				return ec.fieldContext_User_CreatedAt(ctx, field)
+			case "UpdatedAt":
+				return ec.fieldContext_User_UpdatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateUserAdmin_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -10363,8 +10497,8 @@ func (ec *executionContext) unmarshalInputUpdateChannelGroupInput(ctx context.Co
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputUpdateUserDTO(ctx context.Context, obj any) (graphql_models.UpdateUserDto, error) {
-	var it graphql_models.UpdateUserDto
+func (ec *executionContext) unmarshalInputUpdateUserAdminDTO(ctx context.Context, obj any) (graphql_models.UpdateUserAdminDto, error) {
+	var it graphql_models.UpdateUserAdminDto
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -10405,6 +10539,40 @@ func (ec *executionContext) unmarshalInputUpdateUserDTO(ctx context.Context, obj
 				return it, err
 			}
 			it.Workspaces = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputUpdateUserDTO(ctx context.Context, obj any) (graphql_models.UpdateUserDto, error) {
+	var it graphql_models.UpdateUserDto
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"Name", "Email"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "Name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Name"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "Email":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Email"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Email = data
 		}
 	}
 
@@ -10965,6 +11133,10 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "updateUser":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_updateUser(ctx, field)
+			})
+		case "updateUserAdmin":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateUserAdmin(ctx, field)
 			})
 		case "createWorkspace":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -12694,6 +12866,11 @@ func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel as
 
 func (ec *executionContext) unmarshalNUpdateChannelGroupInput2chatneyᚑbackendᚋgraphᚋmodelᚐUpdateChannelGroupInput(ctx context.Context, v any) (graphql_models.UpdateChannelGroupInput, error) {
 	res, err := ec.unmarshalInputUpdateChannelGroupInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNUpdateUserAdminDTO2chatneyᚑbackendᚋgraphᚋmodelᚐUpdateUserAdminDto(ctx context.Context, v any) (graphql_models.UpdateUserAdminDto, error) {
+	res, err := ec.unmarshalInputUpdateUserAdminDTO(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
