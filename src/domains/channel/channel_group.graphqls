@@ -21,3 +21,14 @@ input UpdateChannelGroupInput {
     Channels: [ID!]
     Order: Int
 }
+
+extend type Mutation {
+  createChannelGroup(input: CreateChannelGroupInput!): ChannelGroup!
+  updateChannelGroup(input: UpdateChannelGroupInput!): ChannelGroup!
+  deleteChannelGroup(UUID: ID!): Boolean!
+}
+
+extend type Query {
+  getChannelGroup(UUID: ID!): ChannelGroup
+  listChannelGroups(workspaceId: String!): [ChannelGroup!]!
+}

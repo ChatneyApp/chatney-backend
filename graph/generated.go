@@ -126,6 +126,7 @@ type ComplexityRoot struct {
 		UpdateMessage           func(childComplexity int, input graphql_models.MutateMessageDto, messageID string) int
 		UpdateSystemConfigValue func(childComplexity int, configName string, configValue string) int
 		UpdateUser              func(childComplexity int, input graphql_models.UpdateUserDto, userID string) int
+		UpdateUserAdmin         func(childComplexity int, input graphql_models.UpdateUserAdminDto, userID string) int
 		UpdateWorkspace         func(childComplexity int, input graphql_models.MutateWorkspaceDto, workspaceID string) int
 	}
 
@@ -139,16 +140,18 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		AuthorizeUser            func(childComplexity int, login string, password string) int
-		GetAllChannelTypesList   func(childComplexity int) int
-		GetChannelGroup          func(childComplexity int, uuid string) int
-		GetChannelUsersList      func(childComplexity int, channelID string) int
-		GetPermissionsList       func(childComplexity int) int
-		GetRolesList             func(childComplexity int) int
-		GetSystemConfig          func(childComplexity int) int
-		GetWorkspaceChannelsList func(childComplexity int, workspaceID string) int
-		GetWorkspacesList        func(childComplexity int) int
-		ListChannelGroups        func(childComplexity int, workspaceID string) int
+		AuthorizeUser             func(childComplexity int, login string, password string) int
+		GetAllChannelTypesList    func(childComplexity int) int
+		GetChannelGroup           func(childComplexity int, uuid string) int
+		GetChannelUsersList       func(childComplexity int, channelID string) int
+		GetMessagesList           func(childComplexity int) int
+		GetPermissionsList        func(childComplexity int) int
+		GetPresignedAttachmentURL func(childComplexity int, key string) int
+		GetRolesList              func(childComplexity int) int
+		GetSystemConfig           func(childComplexity int) int
+		GetWorkspaceChannelsList  func(childComplexity int, workspaceID string) int
+		GetWorkspacesList         func(childComplexity int) int
+		ListChannelGroups         func(childComplexity int, workspaceID string) int
 	}
 
 	Reaction struct {
@@ -214,40 +217,43 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
-	UpdateSystemConfigValue(ctx context.Context, configName string, configValue string) (*graphql_models.SystemConfigValue, error)
-	CreateRole(ctx context.Context, roleData graphql_models.CreateRoleDto) (*graphql_models.Role, error)
-	EditRole(ctx context.Context, roleData graphql_models.EditRoleDto) (*graphql_models.Role, error)
-	DeleteRole(ctx context.Context, roleID *string) (bool, error)
+	CreateChannel(ctx context.Context, input graphql_models.MutateChannelDto) (*graphql_models.Channel, error)
+	DeleteChannel(ctx context.Context, channelID string) (bool, error)
+	UpdateChannel(ctx context.Context, input graphql_models.MutateChannelDto, channelID string) (*graphql_models.Channel, error)
 	CreateChannelGroup(ctx context.Context, input graphql_models.CreateChannelGroupInput) (*graphql_models.ChannelGroup, error)
 	UpdateChannelGroup(ctx context.Context, input graphql_models.UpdateChannelGroupInput) (*graphql_models.ChannelGroup, error)
 	DeleteChannelGroup(ctx context.Context, uuid string) (bool, error)
 	CreateChannelType(ctx context.Context, input graphql_models.MutateChannelTypeDto) (*graphql_models.ChannelType, error)
 	UpdateChannelType(ctx context.Context, input graphql_models.MutateChannelTypeDto, channelTypeID string) (*graphql_models.ChannelType, error)
 	DeleteChannelType(ctx context.Context, channelTypeID string) (bool, error)
-	CreateChannel(ctx context.Context, input graphql_models.MutateChannelDto) (*graphql_models.Channel, error)
-	DeleteChannel(ctx context.Context, channelID string) (bool, error)
-	UpdateChannel(ctx context.Context, input graphql_models.MutateChannelDto, channelID string) (*graphql_models.Channel, error)
-	CreateWorkspace(ctx context.Context, input graphql_models.MutateWorkspaceDto) (*graphql_models.Workspace, error)
-	DeleteWorkspace(ctx context.Context, workspaceID string) (bool, error)
-	UpdateWorkspace(ctx context.Context, input graphql_models.MutateWorkspaceDto, workspaceID string) (*graphql_models.Workspace, error)
-	CreateUser(ctx context.Context, input graphql_models.CreateUserDto) (*graphql_models.User, error)
-	DeleteUser(ctx context.Context, userID string) (bool, error)
-	UpdateUser(ctx context.Context, input graphql_models.UpdateUserDto, userID string) (*graphql_models.User, error)
+	UpdateSystemConfigValue(ctx context.Context, configName string, configValue string) (*graphql_models.SystemConfigValue, error)
 	CreateMessage(ctx context.Context, input graphql_models.MutateMessageDto) (*graphql_models.Message, error)
 	UpdateMessage(ctx context.Context, input graphql_models.MutateMessageDto, messageID string) (*graphql_models.Message, error)
 	DeleteMessage(ctx context.Context, messageID string) (bool, error)
+	CreateRole(ctx context.Context, roleData graphql_models.CreateRoleDto) (*graphql_models.Role, error)
+	EditRole(ctx context.Context, roleData graphql_models.EditRoleDto) (*graphql_models.Role, error)
+	DeleteRole(ctx context.Context, roleID *string) (bool, error)
+	CreateUser(ctx context.Context, input graphql_models.CreateUserDto) (*graphql_models.User, error)
+	DeleteUser(ctx context.Context, userID string) (bool, error)
+	UpdateUser(ctx context.Context, input graphql_models.UpdateUserDto, userID string) (*graphql_models.User, error)
+	UpdateUserAdmin(ctx context.Context, input graphql_models.UpdateUserAdminDto, userID string) (*graphql_models.User, error)
+	CreateWorkspace(ctx context.Context, input graphql_models.MutateWorkspaceDto) (*graphql_models.Workspace, error)
+	DeleteWorkspace(ctx context.Context, workspaceID string) (bool, error)
+	UpdateWorkspace(ctx context.Context, input graphql_models.MutateWorkspaceDto, workspaceID string) (*graphql_models.Workspace, error)
 }
 type QueryResolver interface {
-	GetSystemConfig(ctx context.Context) ([]*graphql_models.SystemConfigValue, error)
-	GetRolesList(ctx context.Context) ([]*graphql_models.Role, error)
-	GetPermissionsList(ctx context.Context) (*graphql_models.PermissionsListReturn, error)
+	GetChannelUsersList(ctx context.Context, channelID string) ([]*graphql_models.User, error)
 	GetChannelGroup(ctx context.Context, uuid string) (*graphql_models.ChannelGroup, error)
 	ListChannelGroups(ctx context.Context, workspaceID string) ([]*graphql_models.ChannelGroup, error)
-	GetWorkspacesList(ctx context.Context) ([]*graphql_models.Workspace, error)
 	GetAllChannelTypesList(ctx context.Context) ([]*graphql_models.ChannelType, error)
 	GetWorkspaceChannelsList(ctx context.Context, workspaceID string) ([]*graphql_models.Channel, error)
-	GetChannelUsersList(ctx context.Context, channelID string) ([]*graphql_models.User, error)
+	GetSystemConfig(ctx context.Context) ([]*graphql_models.SystemConfigValue, error)
+	GetPresignedAttachmentURL(ctx context.Context, key string) (string, error)
+	GetMessagesList(ctx context.Context) ([]*graphql_models.Message, error)
+	GetPermissionsList(ctx context.Context) (*graphql_models.PermissionsListReturn, error)
+	GetRolesList(ctx context.Context) ([]*graphql_models.Role, error)
 	AuthorizeUser(ctx context.Context, login string, password string) (*graphql_models.UserAuthData, error)
+	GetWorkspacesList(ctx context.Context) ([]*graphql_models.Workspace, error)
 }
 
 type executableSchema struct {
@@ -766,6 +772,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.UpdateUser(childComplexity, args["input"].(graphql_models.UpdateUserDto), args["userId"].(string)), true
 
+	case "Mutation.updateUserAdmin":
+		if e.complexity.Mutation.UpdateUserAdmin == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateUserAdmin_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateUserAdmin(childComplexity, args["input"].(graphql_models.UpdateUserAdminDto), args["userId"].(string)), true
+
 	case "Mutation.updateWorkspace":
 		if e.complexity.Mutation.UpdateWorkspace == nil {
 			break
@@ -842,12 +860,31 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.GetChannelUsersList(childComplexity, args["channelId"].(string)), true
 
+	case "Query.getMessagesList":
+		if e.complexity.Query.GetMessagesList == nil {
+			break
+		}
+
+		return e.complexity.Query.GetMessagesList(childComplexity), true
+
 	case "Query.getPermissionsList":
 		if e.complexity.Query.GetPermissionsList == nil {
 			break
 		}
 
 		return e.complexity.Query.GetPermissionsList(childComplexity), true
+
+	case "Query.getPresignedAttachmentUrl":
+		if e.complexity.Query.GetPresignedAttachmentURL == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getPresignedAttachmentUrl_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetPresignedAttachmentURL(childComplexity, args["key"].(string)), true
 
 	case "Query.getRolesList":
 		if e.complexity.Query.GetRolesList == nil {
@@ -1151,6 +1188,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputReactionDTO,
 		ec.unmarshalInputRoleSettingsDTO,
 		ec.unmarshalInputUpdateChannelGroupInput,
+		ec.unmarshalInputUpdateUserAdminDTO,
 		ec.unmarshalInputUpdateUserDTO,
 	)
 	first := true
@@ -1274,6 +1312,16 @@ input MutateChannelDTO {
     Name: String!
     ChannelTypeId: String!
     WorkspaceId: String!
+}
+
+extend type Mutation {
+  createChannel(input: MutateChannelDTO!): Channel
+  deleteChannel(channelId: String!): Boolean!
+  updateChannel(input: MutateChannelDTO!, channelId: String!): Channel
+}
+
+extend type Query {
+  getChannelUsersList(channelId: String!): [User!]
 }`, BuiltIn: false},
 	{Name: "../src/domains/channel/channel_group.graphqls", Input: `type ChannelGroup {
     Id: ID!
@@ -1297,6 +1345,17 @@ input UpdateChannelGroupInput {
     Name: String
     Channels: [ID!]
     Order: Int
+}
+
+extend type Mutation {
+  createChannelGroup(input: CreateChannelGroupInput!): ChannelGroup!
+  updateChannelGroup(input: UpdateChannelGroupInput!): ChannelGroup!
+  deleteChannelGroup(UUID: ID!): Boolean!
+}
+
+extend type Query {
+  getChannelGroup(UUID: ID!): ChannelGroup
+  listChannelGroups(workspaceId: String!): [ChannelGroup!]!
 }`, BuiltIn: false},
 	{Name: "../src/domains/channel/channel_type.graphqls", Input: `type ChannelType {
     Id: ID!
@@ -1311,6 +1370,17 @@ input MutateChannelTypeDTO {
     Label: String!
     Key: String!
     BaseRoleId: String!
+}
+
+extend type Mutation {
+  createChannelType(input: MutateChannelTypeDTO!): ChannelType!
+  updateChannelType(input: MutateChannelTypeDTO!, channelTypeId: String!): ChannelType!
+  deleteChannelType(channelTypeId: String!): Boolean!
+}
+
+extend type Query {
+  getAllChannelTypesList: [ChannelType!]
+  getWorkspaceChannelsList(workspaceId: String!): [Channel!]
 }`, BuiltIn: false},
 	{Name: "../src/domains/config/config.graphqls", Input: `type SystemConfigValue {
     Name: String!
@@ -1318,6 +1388,14 @@ input MutateChannelTypeDTO {
     Type: String!
     CreatedAt: Time!
     UpdatedAt: Time!
+}
+
+extend type Mutation {
+  updateSystemConfigValue(configName: String!, configValue: String!): SystemConfigValue!
+}
+
+extend type Query {
+  getSystemConfig: [SystemConfigValue!]!
 }
 `, BuiltIn: false},
 	{Name: "../src/domains/message/message.graphqls", Input: `input ReactionDTO {
@@ -1349,6 +1427,17 @@ type Message {
   CreatedAt: Time!
   UpdatedAt: Time!
   Reactions: [Reaction!]
+}
+
+extend type Query {
+  getPresignedAttachmentUrl(key: String!): String!
+  getMessagesList: [Message!]
+}
+
+extend type Mutation {
+  createMessage(input: MutateMessageDTO!): Message!
+  updateMessage(input: MutateMessageDTO!, messageId: String!): Message!
+  deleteMessage(messageId: String!): Boolean!
 }`, BuiltIn: false},
 	{Name: "../src/domains/permissions/permissions.graphqls", Input: `# GraphQL schema example
 #
@@ -1361,6 +1450,10 @@ type PermissionsGroup {
 
 type PermissionsListReturn {
   groups: [PermissionsGroup!]!
+}
+
+extend type Query {
+  getPermissionsList: PermissionsListReturn!
 }
 `, BuiltIn: false},
 	{Name: "../src/domains/role/role.graphqls", Input: `input RoleSettingsDTO {
@@ -1391,6 +1484,16 @@ input EditRoleDTO {
 	Name:    String!
 	Permissions: [String!]
 	Settings: RoleSettingsDTO!
+}
+
+extend type Mutation {
+  createRole(RoleData: CreateRoleDTO!): Role!
+  editRole(RoleData: EditRoleDTO!): Role!
+  deleteRole(roleId: String): Boolean!
+}
+
+extend type Query {
+  getRolesList: [Role!]!
 }
 `, BuiltIn: false},
 	{Name: "../src/domains/user/user.graphqls", Input: `enum UserStatus {
@@ -1445,6 +1548,11 @@ type User {
 
 input UpdateUserDTO {
   Name: String!
+  Email: String!
+}
+
+input UpdateUserAdminDTO {
+  Name: String!
   Status: UserStatus!
   Email: String!
   Workspaces: [String!]
@@ -1457,6 +1565,17 @@ input CreateUserDTO {
   Email: String!
   Workspaces: [String!]
 }
+
+extend type Mutation {
+  createUser(input: CreateUserDTO!): User
+  deleteUser(userId: String!): Boolean!
+  updateUser(input: UpdateUserDTO!, userId: String!): User
+  updateUserAdmin(input: UpdateUserAdminDTO!, userId: String!): User
+}
+
+extend type Query {
+  AuthorizeUser(login: String!, password: String!): UserAuthData!
+}
 `, BuiltIn: false},
 	{Name: "../src/domains/workspace/workspace.graphqls", Input: `type Workspace {
     Id: String!
@@ -1467,6 +1586,16 @@ input CreateUserDTO {
 
 input MutateWorkspaceDTO {
     Name: String!
+}
+
+extend type Mutation {
+  createWorkspace(input: MutateWorkspaceDTO!): Workspace
+  deleteWorkspace(workspaceId: String!): Boolean!
+  updateWorkspace(input: MutateWorkspaceDTO!, workspaceId: String!): Workspace
+}
+
+extend type Query {
+  getWorkspacesList: [Workspace!]
 }`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -2007,6 +2136,47 @@ func (ec *executionContext) field_Mutation_updateSystemConfigValue_argsConfigVal
 	return zeroVal, nil
 }
 
+func (ec *executionContext) field_Mutation_updateUserAdmin_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_updateUserAdmin_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	arg1, err := ec.field_Mutation_updateUserAdmin_argsUserID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["userId"] = arg1
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_updateUserAdmin_argsInput(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (graphql_models.UpdateUserAdminDto, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNUpdateUserAdminDTO2chatneyᚑbackendᚋgraphᚋmodelᚐUpdateUserAdminDto(ctx, tmp)
+	}
+
+	var zeroVal graphql_models.UpdateUserAdminDto
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_updateUserAdmin_argsUserID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
+	if tmp, ok := rawArgs["userId"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
 func (ec *executionContext) field_Mutation_updateUser_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -2169,7 +2339,7 @@ func (ec *executionContext) field_Query_getChannelGroup_argsUUID(
 ) (string, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("UUID"))
 	if tmp, ok := rawArgs["UUID"]; ok {
-		return ec.unmarshalNString2string(ctx, tmp)
+		return ec.unmarshalNID2string(ctx, tmp)
 	}
 
 	var zeroVal string
@@ -2192,6 +2362,29 @@ func (ec *executionContext) field_Query_getChannelUsersList_argsChannelID(
 ) (string, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("channelId"))
 	if tmp, ok := rawArgs["channelId"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_getPresignedAttachmentUrl_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_getPresignedAttachmentUrl_argsKey(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["key"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_getPresignedAttachmentUrl_argsKey(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("key"))
+	if tmp, ok := rawArgs["key"]; ok {
 		return ec.unmarshalNString2string(ctx, tmp)
 	}
 
@@ -3885,8 +4078,8 @@ func (ec *executionContext) fieldContext_Message_Reactions(_ context.Context, fi
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_updateSystemConfigValue(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_updateSystemConfigValue(ctx, field)
+func (ec *executionContext) _Mutation_createChannel(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_createChannel(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -3899,91 +4092,21 @@ func (ec *executionContext) _Mutation_updateSystemConfigValue(ctx context.Contex
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateSystemConfigValue(rctx, fc.Args["configName"].(string), fc.Args["configValue"].(string))
+		return ec.resolvers.Mutation().CreateChannel(rctx, fc.Args["input"].(graphql_models.MutateChannelDto))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(*graphql_models.SystemConfigValue)
+	res := resTmp.(*graphql_models.Channel)
 	fc.Result = res
-	return ec.marshalNSystemConfigValue2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐSystemConfigValue(ctx, field.Selections, res)
+	return ec.marshalOChannel2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐChannel(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_updateSystemConfigValue(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "Name":
-				return ec.fieldContext_SystemConfigValue_Name(ctx, field)
-			case "Value":
-				return ec.fieldContext_SystemConfigValue_Value(ctx, field)
-			case "Type":
-				return ec.fieldContext_SystemConfigValue_Type(ctx, field)
-			case "CreatedAt":
-				return ec.fieldContext_SystemConfigValue_CreatedAt(ctx, field)
-			case "UpdatedAt":
-				return ec.fieldContext_SystemConfigValue_UpdatedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type SystemConfigValue", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_updateSystemConfigValue_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_createRole(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_createRole(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateRole(rctx, fc.Args["RoleData"].(graphql_models.CreateRoleDto))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*graphql_models.Role)
-	fc.Result = res
-	return ec.marshalNRole2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐRole(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_createRole(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_createChannel(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -3992,19 +4115,19 @@ func (ec *executionContext) fieldContext_Mutation_createRole(ctx context.Context
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "Id":
-				return ec.fieldContext_Role_Id(ctx, field)
+				return ec.fieldContext_Channel_Id(ctx, field)
 			case "Name":
-				return ec.fieldContext_Role_Name(ctx, field)
-			case "Permissions":
-				return ec.fieldContext_Role_Permissions(ctx, field)
-			case "Settings":
-				return ec.fieldContext_Role_Settings(ctx, field)
+				return ec.fieldContext_Channel_Name(ctx, field)
+			case "ChannelTypeId":
+				return ec.fieldContext_Channel_ChannelTypeId(ctx, field)
+			case "WorkspaceId":
+				return ec.fieldContext_Channel_WorkspaceId(ctx, field)
 			case "CreatedAt":
-				return ec.fieldContext_Role_CreatedAt(ctx, field)
+				return ec.fieldContext_Channel_CreatedAt(ctx, field)
 			case "UpdatedAt":
-				return ec.fieldContext_Role_UpdatedAt(ctx, field)
+				return ec.fieldContext_Channel_UpdatedAt(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Role", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Channel", field.Name)
 		},
 	}
 	defer func() {
@@ -4014,15 +4137,15 @@ func (ec *executionContext) fieldContext_Mutation_createRole(ctx context.Context
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_createRole_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_createChannel_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_editRole(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_editRole(ctx, field)
+func (ec *executionContext) _Mutation_deleteChannel(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deleteChannel(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -4035,76 +4158,7 @@ func (ec *executionContext) _Mutation_editRole(ctx context.Context, field graphq
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().EditRole(rctx, fc.Args["RoleData"].(graphql_models.EditRoleDto))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*graphql_models.Role)
-	fc.Result = res
-	return ec.marshalNRole2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐRole(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_editRole(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "Id":
-				return ec.fieldContext_Role_Id(ctx, field)
-			case "Name":
-				return ec.fieldContext_Role_Name(ctx, field)
-			case "Permissions":
-				return ec.fieldContext_Role_Permissions(ctx, field)
-			case "Settings":
-				return ec.fieldContext_Role_Settings(ctx, field)
-			case "CreatedAt":
-				return ec.fieldContext_Role_CreatedAt(ctx, field)
-			case "UpdatedAt":
-				return ec.fieldContext_Role_UpdatedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Role", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_editRole_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_deleteRole(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_deleteRole(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteRole(rctx, fc.Args["roleId"].(*string))
+		return ec.resolvers.Mutation().DeleteChannel(rctx, fc.Args["channelId"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4121,7 +4175,7 @@ func (ec *executionContext) _Mutation_deleteRole(ctx context.Context, field grap
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_deleteRole(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_deleteChannel(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -4138,7 +4192,73 @@ func (ec *executionContext) fieldContext_Mutation_deleteRole(ctx context.Context
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_deleteRole_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_deleteChannel_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateChannel(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateChannel(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateChannel(rctx, fc.Args["input"].(graphql_models.MutateChannelDto), fc.Args["channelId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*graphql_models.Channel)
+	fc.Result = res
+	return ec.marshalOChannel2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐChannel(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateChannel(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "Id":
+				return ec.fieldContext_Channel_Id(ctx, field)
+			case "Name":
+				return ec.fieldContext_Channel_Name(ctx, field)
+			case "ChannelTypeId":
+				return ec.fieldContext_Channel_ChannelTypeId(ctx, field)
+			case "WorkspaceId":
+				return ec.fieldContext_Channel_WorkspaceId(ctx, field)
+			case "CreatedAt":
+				return ec.fieldContext_Channel_CreatedAt(ctx, field)
+			case "UpdatedAt":
+				return ec.fieldContext_Channel_UpdatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Channel", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateChannel_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -4535,8 +4655,8 @@ func (ec *executionContext) fieldContext_Mutation_deleteChannelType(ctx context.
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_createChannel(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_createChannel(ctx, field)
+func (ec *executionContext) _Mutation_updateSystemConfigValue(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateSystemConfigValue(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -4549,73 +4669,7 @@ func (ec *executionContext) _Mutation_createChannel(ctx context.Context, field g
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateChannel(rctx, fc.Args["input"].(graphql_models.MutateChannelDto))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*graphql_models.Channel)
-	fc.Result = res
-	return ec.marshalOChannel2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐChannel(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_createChannel(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "Id":
-				return ec.fieldContext_Channel_Id(ctx, field)
-			case "Name":
-				return ec.fieldContext_Channel_Name(ctx, field)
-			case "ChannelTypeId":
-				return ec.fieldContext_Channel_ChannelTypeId(ctx, field)
-			case "WorkspaceId":
-				return ec.fieldContext_Channel_WorkspaceId(ctx, field)
-			case "CreatedAt":
-				return ec.fieldContext_Channel_CreatedAt(ctx, field)
-			case "UpdatedAt":
-				return ec.fieldContext_Channel_UpdatedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Channel", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_createChannel_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_deleteChannel(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_deleteChannel(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteChannel(rctx, fc.Args["channelId"].(string))
+		return ec.resolvers.Mutation().UpdateSystemConfigValue(rctx, fc.Args["configName"].(string), fc.Args["configValue"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4627,64 +4681,12 @@ func (ec *executionContext) _Mutation_deleteChannel(ctx context.Context, field g
 		}
 		return graphql.Null
 	}
-	res := resTmp.(bool)
+	res := resTmp.(*graphql_models.SystemConfigValue)
 	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+	return ec.marshalNSystemConfigValue2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐSystemConfigValue(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_deleteChannel(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_deleteChannel_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_updateChannel(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_updateChannel(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateChannel(rctx, fc.Args["input"].(graphql_models.MutateChannelDto), fc.Args["channelId"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*graphql_models.Channel)
-	fc.Result = res
-	return ec.marshalOChannel2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐChannel(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_updateChannel(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_updateSystemConfigValue(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -4692,20 +4694,18 @@ func (ec *executionContext) fieldContext_Mutation_updateChannel(ctx context.Cont
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "Id":
-				return ec.fieldContext_Channel_Id(ctx, field)
 			case "Name":
-				return ec.fieldContext_Channel_Name(ctx, field)
-			case "ChannelTypeId":
-				return ec.fieldContext_Channel_ChannelTypeId(ctx, field)
-			case "WorkspaceId":
-				return ec.fieldContext_Channel_WorkspaceId(ctx, field)
+				return ec.fieldContext_SystemConfigValue_Name(ctx, field)
+			case "Value":
+				return ec.fieldContext_SystemConfigValue_Value(ctx, field)
+			case "Type":
+				return ec.fieldContext_SystemConfigValue_Type(ctx, field)
 			case "CreatedAt":
-				return ec.fieldContext_Channel_CreatedAt(ctx, field)
+				return ec.fieldContext_SystemConfigValue_CreatedAt(ctx, field)
 			case "UpdatedAt":
-				return ec.fieldContext_Channel_UpdatedAt(ctx, field)
+				return ec.fieldContext_SystemConfigValue_UpdatedAt(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Channel", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type SystemConfigValue", field.Name)
 		},
 	}
 	defer func() {
@@ -4715,385 +4715,7 @@ func (ec *executionContext) fieldContext_Mutation_updateChannel(ctx context.Cont
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_updateChannel_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_createWorkspace(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_createWorkspace(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateWorkspace(rctx, fc.Args["input"].(graphql_models.MutateWorkspaceDto))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*graphql_models.Workspace)
-	fc.Result = res
-	return ec.marshalOWorkspace2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐWorkspace(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_createWorkspace(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "Id":
-				return ec.fieldContext_Workspace_Id(ctx, field)
-			case "Name":
-				return ec.fieldContext_Workspace_Name(ctx, field)
-			case "CreatedAt":
-				return ec.fieldContext_Workspace_CreatedAt(ctx, field)
-			case "UpdatedAt":
-				return ec.fieldContext_Workspace_UpdatedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Workspace", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_createWorkspace_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_deleteWorkspace(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_deleteWorkspace(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteWorkspace(rctx, fc.Args["workspaceId"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_deleteWorkspace(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_deleteWorkspace_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_updateWorkspace(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_updateWorkspace(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateWorkspace(rctx, fc.Args["input"].(graphql_models.MutateWorkspaceDto), fc.Args["workspaceId"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*graphql_models.Workspace)
-	fc.Result = res
-	return ec.marshalOWorkspace2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐWorkspace(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_updateWorkspace(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "Id":
-				return ec.fieldContext_Workspace_Id(ctx, field)
-			case "Name":
-				return ec.fieldContext_Workspace_Name(ctx, field)
-			case "CreatedAt":
-				return ec.fieldContext_Workspace_CreatedAt(ctx, field)
-			case "UpdatedAt":
-				return ec.fieldContext_Workspace_UpdatedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Workspace", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_updateWorkspace_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_createUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_createUser(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateUser(rctx, fc.Args["input"].(graphql_models.CreateUserDto))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*graphql_models.User)
-	fc.Result = res
-	return ec.marshalOUser2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_createUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "Id":
-				return ec.fieldContext_User_Id(ctx, field)
-			case "Name":
-				return ec.fieldContext_User_Name(ctx, field)
-			case "Status":
-				return ec.fieldContext_User_Status(ctx, field)
-			case "Email":
-				return ec.fieldContext_User_Email(ctx, field)
-			case "Roles":
-				return ec.fieldContext_User_Roles(ctx, field)
-			case "ChannelsSettings":
-				return ec.fieldContext_User_ChannelsSettings(ctx, field)
-			case "Workspaces":
-				return ec.fieldContext_User_Workspaces(ctx, field)
-			case "CreatedAt":
-				return ec.fieldContext_User_CreatedAt(ctx, field)
-			case "UpdatedAt":
-				return ec.fieldContext_User_UpdatedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_createUser_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_deleteUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_deleteUser(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteUser(rctx, fc.Args["userId"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_deleteUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_deleteUser_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_updateUser(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateUser(rctx, fc.Args["input"].(graphql_models.UpdateUserDto), fc.Args["userId"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*graphql_models.User)
-	fc.Result = res
-	return ec.marshalOUser2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_updateUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "Id":
-				return ec.fieldContext_User_Id(ctx, field)
-			case "Name":
-				return ec.fieldContext_User_Name(ctx, field)
-			case "Status":
-				return ec.fieldContext_User_Status(ctx, field)
-			case "Email":
-				return ec.fieldContext_User_Email(ctx, field)
-			case "Roles":
-				return ec.fieldContext_User_Roles(ctx, field)
-			case "ChannelsSettings":
-				return ec.fieldContext_User_ChannelsSettings(ctx, field)
-			case "Workspaces":
-				return ec.fieldContext_User_Workspaces(ctx, field)
-			case "CreatedAt":
-				return ec.fieldContext_User_CreatedAt(ctx, field)
-			case "UpdatedAt":
-				return ec.fieldContext_User_UpdatedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_updateUser_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_updateSystemConfigValue_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -5305,6 +4927,649 @@ func (ec *executionContext) fieldContext_Mutation_deleteMessage(ctx context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_createRole(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_createRole(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateRole(rctx, fc.Args["RoleData"].(graphql_models.CreateRoleDto))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*graphql_models.Role)
+	fc.Result = res
+	return ec.marshalNRole2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐRole(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createRole(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "Id":
+				return ec.fieldContext_Role_Id(ctx, field)
+			case "Name":
+				return ec.fieldContext_Role_Name(ctx, field)
+			case "Permissions":
+				return ec.fieldContext_Role_Permissions(ctx, field)
+			case "Settings":
+				return ec.fieldContext_Role_Settings(ctx, field)
+			case "CreatedAt":
+				return ec.fieldContext_Role_CreatedAt(ctx, field)
+			case "UpdatedAt":
+				return ec.fieldContext_Role_UpdatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Role", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createRole_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_editRole(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_editRole(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().EditRole(rctx, fc.Args["RoleData"].(graphql_models.EditRoleDto))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*graphql_models.Role)
+	fc.Result = res
+	return ec.marshalNRole2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐRole(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_editRole(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "Id":
+				return ec.fieldContext_Role_Id(ctx, field)
+			case "Name":
+				return ec.fieldContext_Role_Name(ctx, field)
+			case "Permissions":
+				return ec.fieldContext_Role_Permissions(ctx, field)
+			case "Settings":
+				return ec.fieldContext_Role_Settings(ctx, field)
+			case "CreatedAt":
+				return ec.fieldContext_Role_CreatedAt(ctx, field)
+			case "UpdatedAt":
+				return ec.fieldContext_Role_UpdatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Role", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_editRole_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteRole(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deleteRole(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteRole(rctx, fc.Args["roleId"].(*string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteRole(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteRole_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_createUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_createUser(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateUser(rctx, fc.Args["input"].(graphql_models.CreateUserDto))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*graphql_models.User)
+	fc.Result = res
+	return ec.marshalOUser2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "Id":
+				return ec.fieldContext_User_Id(ctx, field)
+			case "Name":
+				return ec.fieldContext_User_Name(ctx, field)
+			case "Status":
+				return ec.fieldContext_User_Status(ctx, field)
+			case "Email":
+				return ec.fieldContext_User_Email(ctx, field)
+			case "Roles":
+				return ec.fieldContext_User_Roles(ctx, field)
+			case "ChannelsSettings":
+				return ec.fieldContext_User_ChannelsSettings(ctx, field)
+			case "Workspaces":
+				return ec.fieldContext_User_Workspaces(ctx, field)
+			case "CreatedAt":
+				return ec.fieldContext_User_CreatedAt(ctx, field)
+			case "UpdatedAt":
+				return ec.fieldContext_User_UpdatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createUser_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deleteUser(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteUser(rctx, fc.Args["userId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteUser_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateUser(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateUser(rctx, fc.Args["input"].(graphql_models.UpdateUserDto), fc.Args["userId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*graphql_models.User)
+	fc.Result = res
+	return ec.marshalOUser2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "Id":
+				return ec.fieldContext_User_Id(ctx, field)
+			case "Name":
+				return ec.fieldContext_User_Name(ctx, field)
+			case "Status":
+				return ec.fieldContext_User_Status(ctx, field)
+			case "Email":
+				return ec.fieldContext_User_Email(ctx, field)
+			case "Roles":
+				return ec.fieldContext_User_Roles(ctx, field)
+			case "ChannelsSettings":
+				return ec.fieldContext_User_ChannelsSettings(ctx, field)
+			case "Workspaces":
+				return ec.fieldContext_User_Workspaces(ctx, field)
+			case "CreatedAt":
+				return ec.fieldContext_User_CreatedAt(ctx, field)
+			case "UpdatedAt":
+				return ec.fieldContext_User_UpdatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateUser_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateUserAdmin(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateUserAdmin(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateUserAdmin(rctx, fc.Args["input"].(graphql_models.UpdateUserAdminDto), fc.Args["userId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*graphql_models.User)
+	fc.Result = res
+	return ec.marshalOUser2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateUserAdmin(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "Id":
+				return ec.fieldContext_User_Id(ctx, field)
+			case "Name":
+				return ec.fieldContext_User_Name(ctx, field)
+			case "Status":
+				return ec.fieldContext_User_Status(ctx, field)
+			case "Email":
+				return ec.fieldContext_User_Email(ctx, field)
+			case "Roles":
+				return ec.fieldContext_User_Roles(ctx, field)
+			case "ChannelsSettings":
+				return ec.fieldContext_User_ChannelsSettings(ctx, field)
+			case "Workspaces":
+				return ec.fieldContext_User_Workspaces(ctx, field)
+			case "CreatedAt":
+				return ec.fieldContext_User_CreatedAt(ctx, field)
+			case "UpdatedAt":
+				return ec.fieldContext_User_UpdatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateUserAdmin_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_createWorkspace(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_createWorkspace(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateWorkspace(rctx, fc.Args["input"].(graphql_models.MutateWorkspaceDto))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*graphql_models.Workspace)
+	fc.Result = res
+	return ec.marshalOWorkspace2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐWorkspace(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createWorkspace(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "Id":
+				return ec.fieldContext_Workspace_Id(ctx, field)
+			case "Name":
+				return ec.fieldContext_Workspace_Name(ctx, field)
+			case "CreatedAt":
+				return ec.fieldContext_Workspace_CreatedAt(ctx, field)
+			case "UpdatedAt":
+				return ec.fieldContext_Workspace_UpdatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Workspace", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createWorkspace_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteWorkspace(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deleteWorkspace(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteWorkspace(rctx, fc.Args["workspaceId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteWorkspace(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteWorkspace_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateWorkspace(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateWorkspace(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateWorkspace(rctx, fc.Args["input"].(graphql_models.MutateWorkspaceDto), fc.Args["workspaceId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*graphql_models.Workspace)
+	fc.Result = res
+	return ec.marshalOWorkspace2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐWorkspace(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateWorkspace(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "Id":
+				return ec.fieldContext_Workspace_Id(ctx, field)
+			case "Name":
+				return ec.fieldContext_Workspace_Name(ctx, field)
+			case "CreatedAt":
+				return ec.fieldContext_Workspace_CreatedAt(ctx, field)
+			case "UpdatedAt":
+				return ec.fieldContext_Workspace_UpdatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Workspace", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateWorkspace_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _PermissionsGroup_label(ctx context.Context, field graphql.CollectedField, obj *graphql_models.PermissionsGroup) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PermissionsGroup_label(ctx, field)
 	if err != nil {
@@ -5443,8 +5708,8 @@ func (ec *executionContext) fieldContext_PermissionsListReturn_groups(_ context.
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_getSystemConfig(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_getSystemConfig(ctx, field)
+func (ec *executionContext) _Query_getChannelUsersList(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getChannelUsersList(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -5457,80 +5722,21 @@ func (ec *executionContext) _Query_getSystemConfig(ctx context.Context, field gr
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().GetSystemConfig(rctx)
+		return ec.resolvers.Query().GetChannelUsersList(rctx, fc.Args["channelId"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.([]*graphql_models.SystemConfigValue)
+	res := resTmp.([]*graphql_models.User)
 	fc.Result = res
-	return ec.marshalNSystemConfigValue2ᚕᚖchatneyᚑbackendᚋgraphᚋmodelᚐSystemConfigValueᚄ(ctx, field.Selections, res)
+	return ec.marshalOUser2ᚕᚖchatneyᚑbackendᚋgraphᚋmodelᚐUserᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_getSystemConfig(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "Name":
-				return ec.fieldContext_SystemConfigValue_Name(ctx, field)
-			case "Value":
-				return ec.fieldContext_SystemConfigValue_Value(ctx, field)
-			case "Type":
-				return ec.fieldContext_SystemConfigValue_Type(ctx, field)
-			case "CreatedAt":
-				return ec.fieldContext_SystemConfigValue_CreatedAt(ctx, field)
-			case "UpdatedAt":
-				return ec.fieldContext_SystemConfigValue_UpdatedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type SystemConfigValue", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_getRolesList(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_getRolesList(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().GetRolesList(rctx)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*graphql_models.Role)
-	fc.Result = res
-	return ec.marshalNRole2ᚕᚖchatneyᚑbackendᚋgraphᚋmodelᚐRoleᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_getRolesList(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_getChannelUsersList(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -5539,68 +5745,37 @@ func (ec *executionContext) fieldContext_Query_getRolesList(_ context.Context, f
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "Id":
-				return ec.fieldContext_Role_Id(ctx, field)
+				return ec.fieldContext_User_Id(ctx, field)
 			case "Name":
-				return ec.fieldContext_Role_Name(ctx, field)
-			case "Permissions":
-				return ec.fieldContext_Role_Permissions(ctx, field)
-			case "Settings":
-				return ec.fieldContext_Role_Settings(ctx, field)
+				return ec.fieldContext_User_Name(ctx, field)
+			case "Status":
+				return ec.fieldContext_User_Status(ctx, field)
+			case "Email":
+				return ec.fieldContext_User_Email(ctx, field)
+			case "Roles":
+				return ec.fieldContext_User_Roles(ctx, field)
+			case "ChannelsSettings":
+				return ec.fieldContext_User_ChannelsSettings(ctx, field)
+			case "Workspaces":
+				return ec.fieldContext_User_Workspaces(ctx, field)
 			case "CreatedAt":
-				return ec.fieldContext_Role_CreatedAt(ctx, field)
+				return ec.fieldContext_User_CreatedAt(ctx, field)
 			case "UpdatedAt":
-				return ec.fieldContext_Role_UpdatedAt(ctx, field)
+				return ec.fieldContext_User_UpdatedAt(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Role", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
 	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_getPermissionsList(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_getPermissionsList(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
 	defer func() {
 		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().GetPermissionsList(rctx)
-	})
-	if err != nil {
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_getChannelUsersList_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*graphql_models.PermissionsListReturn)
-	fc.Result = res
-	return ec.marshalNPermissionsListReturn2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐPermissionsListReturn(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_getPermissionsList(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "groups":
-				return ec.fieldContext_PermissionsListReturn_groups(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type PermissionsListReturn", field.Name)
-		},
+		return fc, err
 	}
 	return fc, nil
 }
@@ -5744,57 +5919,6 @@ func (ec *executionContext) fieldContext_Query_listChannelGroups(ctx context.Con
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_getWorkspacesList(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_getWorkspacesList(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().GetWorkspacesList(rctx)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.([]*graphql_models.Workspace)
-	fc.Result = res
-	return ec.marshalOWorkspace2ᚕᚖchatneyᚑbackendᚋgraphᚋmodelᚐWorkspaceᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_getWorkspacesList(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "Id":
-				return ec.fieldContext_Workspace_Id(ctx, field)
-			case "Name":
-				return ec.fieldContext_Workspace_Name(ctx, field)
-			case "CreatedAt":
-				return ec.fieldContext_Workspace_CreatedAt(ctx, field)
-			case "UpdatedAt":
-				return ec.fieldContext_Workspace_UpdatedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Workspace", field.Name)
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Query_getAllChannelTypesList(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_getAllChannelTypesList(ctx, field)
 	if err != nil {
@@ -5916,8 +6040,8 @@ func (ec *executionContext) fieldContext_Query_getWorkspaceChannelsList(ctx cont
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_getChannelUsersList(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_getChannelUsersList(ctx, field)
+func (ec *executionContext) _Query_getSystemConfig(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getSystemConfig(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -5930,21 +6054,24 @@ func (ec *executionContext) _Query_getChannelUsersList(ctx context.Context, fiel
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().GetChannelUsersList(rctx, fc.Args["channelId"].(string))
+		return ec.resolvers.Query().GetSystemConfig(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.([]*graphql_models.User)
+	res := resTmp.([]*graphql_models.SystemConfigValue)
 	fc.Result = res
-	return ec.marshalOUser2ᚕᚖchatneyᚑbackendᚋgraphᚋmodelᚐUserᚄ(ctx, field.Selections, res)
+	return ec.marshalNSystemConfigValue2ᚕᚖchatneyᚑbackendᚋgraphᚋmodelᚐSystemConfigValueᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_getChannelUsersList(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_getSystemConfig(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -5952,26 +6079,62 @@ func (ec *executionContext) fieldContext_Query_getChannelUsersList(ctx context.C
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "Id":
-				return ec.fieldContext_User_Id(ctx, field)
 			case "Name":
-				return ec.fieldContext_User_Name(ctx, field)
-			case "Status":
-				return ec.fieldContext_User_Status(ctx, field)
-			case "Email":
-				return ec.fieldContext_User_Email(ctx, field)
-			case "Roles":
-				return ec.fieldContext_User_Roles(ctx, field)
-			case "ChannelsSettings":
-				return ec.fieldContext_User_ChannelsSettings(ctx, field)
-			case "Workspaces":
-				return ec.fieldContext_User_Workspaces(ctx, field)
+				return ec.fieldContext_SystemConfigValue_Name(ctx, field)
+			case "Value":
+				return ec.fieldContext_SystemConfigValue_Value(ctx, field)
+			case "Type":
+				return ec.fieldContext_SystemConfigValue_Type(ctx, field)
 			case "CreatedAt":
-				return ec.fieldContext_User_CreatedAt(ctx, field)
+				return ec.fieldContext_SystemConfigValue_CreatedAt(ctx, field)
 			case "UpdatedAt":
-				return ec.fieldContext_User_UpdatedAt(ctx, field)
+				return ec.fieldContext_SystemConfigValue_UpdatedAt(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type SystemConfigValue", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_getPresignedAttachmentUrl(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getPresignedAttachmentUrl(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetPresignedAttachmentURL(rctx, fc.Args["key"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_getPresignedAttachmentUrl(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	defer func() {
@@ -5981,9 +6144,176 @@ func (ec *executionContext) fieldContext_Query_getChannelUsersList(ctx context.C
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_getChannelUsersList_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Query_getPresignedAttachmentUrl_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_getMessagesList(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getMessagesList(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetMessagesList(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*graphql_models.Message)
+	fc.Result = res
+	return ec.marshalOMessage2ᚕᚖchatneyᚑbackendᚋgraphᚋmodelᚐMessageᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_getMessagesList(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "Id":
+				return ec.fieldContext_Message_Id(ctx, field)
+			case "ChannelId":
+				return ec.fieldContext_Message_ChannelId(ctx, field)
+			case "UserId":
+				return ec.fieldContext_Message_UserId(ctx, field)
+			case "Content":
+				return ec.fieldContext_Message_Content(ctx, field)
+			case "Attachments":
+				return ec.fieldContext_Message_Attachments(ctx, field)
+			case "Status":
+				return ec.fieldContext_Message_Status(ctx, field)
+			case "CreatedAt":
+				return ec.fieldContext_Message_CreatedAt(ctx, field)
+			case "UpdatedAt":
+				return ec.fieldContext_Message_UpdatedAt(ctx, field)
+			case "Reactions":
+				return ec.fieldContext_Message_Reactions(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Message", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_getPermissionsList(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getPermissionsList(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetPermissionsList(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*graphql_models.PermissionsListReturn)
+	fc.Result = res
+	return ec.marshalNPermissionsListReturn2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐPermissionsListReturn(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_getPermissionsList(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "groups":
+				return ec.fieldContext_PermissionsListReturn_groups(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PermissionsListReturn", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_getRolesList(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getRolesList(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetRolesList(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*graphql_models.Role)
+	fc.Result = res
+	return ec.marshalNRole2ᚕᚖchatneyᚑbackendᚋgraphᚋmodelᚐRoleᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_getRolesList(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "Id":
+				return ec.fieldContext_Role_Id(ctx, field)
+			case "Name":
+				return ec.fieldContext_Role_Name(ctx, field)
+			case "Permissions":
+				return ec.fieldContext_Role_Permissions(ctx, field)
+			case "Settings":
+				return ec.fieldContext_Role_Settings(ctx, field)
+			case "CreatedAt":
+				return ec.fieldContext_Role_CreatedAt(ctx, field)
+			case "UpdatedAt":
+				return ec.fieldContext_Role_UpdatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Role", field.Name)
+		},
 	}
 	return fc, nil
 }
@@ -6043,6 +6373,57 @@ func (ec *executionContext) fieldContext_Query_AuthorizeUser(ctx context.Context
 	if fc.Args, err = ec.field_Query_AuthorizeUser_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_getWorkspacesList(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getWorkspacesList(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetWorkspacesList(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*graphql_models.Workspace)
+	fc.Result = res
+	return ec.marshalOWorkspace2ᚕᚖchatneyᚑbackendᚋgraphᚋmodelᚐWorkspaceᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_getWorkspacesList(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "Id":
+				return ec.fieldContext_Workspace_Id(ctx, field)
+			case "Name":
+				return ec.fieldContext_Workspace_Name(ctx, field)
+			case "CreatedAt":
+				return ec.fieldContext_Workspace_CreatedAt(ctx, field)
+			case "UpdatedAt":
+				return ec.fieldContext_Workspace_UpdatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Workspace", field.Name)
+		},
 	}
 	return fc, nil
 }
@@ -10116,8 +10497,8 @@ func (ec *executionContext) unmarshalInputUpdateChannelGroupInput(ctx context.Co
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputUpdateUserDTO(ctx context.Context, obj any) (graphql_models.UpdateUserDto, error) {
-	var it graphql_models.UpdateUserDto
+func (ec *executionContext) unmarshalInputUpdateUserAdminDTO(ctx context.Context, obj any) (graphql_models.UpdateUserAdminDto, error) {
+	var it graphql_models.UpdateUserAdminDto
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -10158,6 +10539,40 @@ func (ec *executionContext) unmarshalInputUpdateUserDTO(ctx context.Context, obj
 				return it, err
 			}
 			it.Workspaces = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputUpdateUserDTO(ctx context.Context, obj any) (graphql_models.UpdateUserDto, error) {
+	var it graphql_models.UpdateUserDto
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"Name", "Email"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "Name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Name"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "Email":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Email"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Email = data
 		}
 	}
 
@@ -10598,34 +11013,21 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
-		case "updateSystemConfigValue":
+		case "createChannel":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_updateSystemConfigValue(ctx, field)
+				return ec._Mutation_createChannel(ctx, field)
+			})
+		case "deleteChannel":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteChannel(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "createRole":
+		case "updateChannel":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_createRole(ctx, field)
+				return ec._Mutation_updateChannel(ctx, field)
 			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "editRole":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_editRole(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "deleteRole":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_deleteRole(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "createChannelGroup":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createChannelGroup(ctx, field)
@@ -10668,51 +11070,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "createChannel":
+		case "updateSystemConfigValue":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_createChannel(ctx, field)
-			})
-		case "deleteChannel":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_deleteChannel(ctx, field)
+				return ec._Mutation_updateSystemConfigValue(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "updateChannel":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_updateChannel(ctx, field)
-			})
-		case "createWorkspace":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_createWorkspace(ctx, field)
-			})
-		case "deleteWorkspace":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_deleteWorkspace(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "updateWorkspace":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_updateWorkspace(ctx, field)
-			})
-		case "createUser":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_createUser(ctx, field)
-			})
-		case "deleteUser":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_deleteUser(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "updateUser":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_updateUser(ctx, field)
-			})
 		case "createMessage":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createMessage(ctx, field)
@@ -10734,6 +11098,61 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "createRole":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createRole(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "editRole":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_editRole(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deleteRole":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteRole(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createUser":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createUser(ctx, field)
+			})
+		case "deleteUser":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteUser(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updateUser":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateUser(ctx, field)
+			})
+		case "updateUserAdmin":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateUserAdmin(ctx, field)
+			})
+		case "createWorkspace":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createWorkspace(ctx, field)
+			})
+		case "deleteWorkspace":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteWorkspace(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updateWorkspace":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateWorkspace(ctx, field)
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -10859,63 +11278,16 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Query")
-		case "getSystemConfig":
+		case "getChannelUsersList":
 			field := field
 
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
 				defer func() {
 					if r := recover(); r != nil {
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_getSystemConfig(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx,
-					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "getRolesList":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_getRolesList(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx,
-					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "getPermissionsList":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_getPermissionsList(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
+				res = ec._Query_getChannelUsersList(ctx, field)
 				return res
 			}
 
@@ -10966,25 +11338,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "getWorkspacesList":
-			field := field
-
-			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_getWorkspacesList(ctx, field)
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx,
-					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "getAllChannelTypesList":
 			field := field
 
@@ -11023,7 +11376,51 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "getChannelUsersList":
+		case "getSystemConfig":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getSystemConfig(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "getPresignedAttachmentUrl":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getPresignedAttachmentUrl(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "getMessagesList":
 			field := field
 
 			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
@@ -11032,7 +11429,51 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_getChannelUsersList(ctx, field)
+				res = ec._Query_getMessagesList(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "getPermissionsList":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getPermissionsList(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "getRolesList":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getRolesList(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
 				return res
 			}
 
@@ -11055,6 +11496,25 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "getWorkspacesList":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getWorkspacesList(ctx, field)
 				return res
 			}
 
@@ -12409,6 +12869,11 @@ func (ec *executionContext) unmarshalNUpdateChannelGroupInput2chatneyᚑbackend�
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNUpdateUserAdminDTO2chatneyᚑbackendᚋgraphᚋmodelᚐUpdateUserAdminDto(ctx context.Context, v any) (graphql_models.UpdateUserAdminDto, error) {
+	res, err := ec.unmarshalInputUpdateUserAdminDTO(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNUpdateUserDTO2chatneyᚑbackendᚋgraphᚋmodelᚐUpdateUserDto(ctx context.Context, v any) (graphql_models.UpdateUserDto, error) {
 	res, err := ec.unmarshalInputUpdateUserDTO(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -13058,6 +13523,53 @@ func (ec *executionContext) marshalOInt2ᚖint32(ctx context.Context, sel ast.Se
 	}
 	res := graphql.MarshalInt32(*v)
 	return res
+}
+
+func (ec *executionContext) marshalOMessage2ᚕᚖchatneyᚑbackendᚋgraphᚋmodelᚐMessageᚄ(ctx context.Context, sel ast.SelectionSet, v []*graphql_models.Message) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNMessage2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐMessage(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalOReaction2ᚕᚖchatneyᚑbackendᚋgraphᚋmodelᚐReactionᚄ(ctx context.Context, sel ast.SelectionSet, v []*graphql_models.Reaction) graphql.Marshaler {

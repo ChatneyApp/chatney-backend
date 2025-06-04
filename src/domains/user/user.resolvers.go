@@ -65,6 +65,18 @@ func (r *UserMutationsResolvers) CreateUser(ctx context.Context, userData graphq
 
 func (r *UserMutationsResolvers) UpdateUser(ctx context.Context, input graphql_models.UpdateUserDto, userId string) (*graphql_models.User, error) {
 	updatedUser, err := r.RootAggregate.updateUser(userId, &models.User{
+		Name:  input.Name,
+		Email: input.Email,
+	})
+	if err != nil {
+		LogError.LogError(LogError.MakeError("UR001", "User update failed", err))
+		return nil, err
+	}
+	return UserToDTO(*updatedUser), nil
+}
+
+func (r *UserMutationsResolvers) UpdateUserAdmin(ctx context.Context, input graphql_models.UpdateUserAdminDto, userId string) (*graphql_models.User, error) {
+	updatedUser, err := r.RootAggregate.updateUser(userId, &models.User{
 		Name:       input.Name,
 		Status:     models.UserStatus(input.Status),
 		Email:      input.Email,

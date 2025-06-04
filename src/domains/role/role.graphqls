@@ -27,3 +27,13 @@ input EditRoleDTO {
 	Permissions: [String!]
 	Settings: RoleSettingsDTO!
 }
+
+extend type Mutation {
+  createRole(RoleData: CreateRoleDTO!): Role!
+  editRole(RoleData: EditRoleDTO!): Role!
+  deleteRole(roleId: String): Boolean!
+}
+
+extend type Query {
+  getRolesList: [Role!]!
+}

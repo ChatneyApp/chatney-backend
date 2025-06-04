@@ -2,10 +2,12 @@ package message
 
 import (
 	graphql_models "chatney-backend/graph/model"
+	"chatney-backend/src/application"
 	LogError "chatney-backend/src/application/error_utils"
 	"chatney-backend/src/application/repository"
 	"chatney-backend/src/domains/message/models"
 	"context"
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -64,6 +66,7 @@ func (r *MessageMutationsResolvers) UpdateMessage(ctx context.Context, input gra
 
 type MessageQueryResolvers struct {
 	RootAggregate *MessageRootAggregate
+	Bucket        *application.Bucket
 }
 
 func (r *MessageQueryResolvers) GetMessagesList(ctx context.Context) ([]*graphql_models.Message, error) {
@@ -78,6 +81,17 @@ func (r *MessageQueryResolvers) GetMessagesList(ctx context.Context) ([]*graphql
 		out = append(out, MessageToDTO(msg))
 	}
 	return out, nil
+}
+
+func (r *MessageQueryResolvers) GetPresignedAttachmentURL(ctx context.Context, key string) (string, error) {
+	if key == "" {
+		return "", errors.New("missing key parameter")
+	}
+	url, err := r.Bucket.GetPresignedURL(key, 15*time.Minute)
+	if err != nil {
+		return "", err
+	}
+	return url, nil
 }
 
 func getMessageRootAggregate(DB *mongo.Database) *MessageRootAggregate {
@@ -96,8 +110,9 @@ func GetMessageMutationResolvers(DB *mongo.Database) MessageMutationsResolvers {
 	}
 }
 
-func GetMessageQueryResolvers(DB *mongo.Database) MessageQueryResolvers {
+func GetMessageQueryResolvers(DB *mongo.Database, bucket *application.Bucket) MessageQueryResolvers {
 	return MessageQueryResolvers{
 		RootAggregate: getMessageRootAggregate(DB),
+		Bucket:        bucket,
 	}
 }
