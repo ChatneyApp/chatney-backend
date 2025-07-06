@@ -7,11 +7,14 @@ import (
 	LogError "chatney-backend/src/application/error_utils"
 	"chatney-backend/src/application/repository"
 	"chatney-backend/src/domains/user/models"
+	workspace "chatney-backend/src/domains/workspace"
+
 	"context"
 	"crypto/md5"
 	"encoding/hex"
 
 	"github.com/google/uuid"
+	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
@@ -34,7 +37,8 @@ type UserMutationsResolvers struct {
 }
 
 type UserQueryResolvers struct {
-	RootAggregate *UserRootAggregate
+	RootAggregate      *UserRootAggregate
+	WorkspaceAggregate *workspace.WorkspaceRootAggregate
 }
 
 func (r *UserQueryResolvers) GetUser(ctx context.Context, userId string) (*graphql_models.User, error) {
@@ -61,6 +65,23 @@ func (r *UserQueryResolvers) GetChannelUsersList(ctx context.Context, channelId 
 		out = append(out, userToDTO(*user))
 	}
 	return out, nil
+}
+
+func (r *UserQueryResolvers) GetUserWorkspacesList(ctx context.Context) ([]*graphql_models.Workspace, error) {
+	userFromCtx := getUserFromContext(ctx)
+
+	workspaces, err := r.WorkspaceAggregate.GetFilteredWorkspaces(bson.M{
+		"_id": bson.M{
+			"$in": userFromCtx.Workspaces, // []string с ID рабочих пространств
+		},
+	})
+
+	if err != nil {
+		LogError.LogError(LogError.MakeError("UR004", "Getting channel failed", err))
+		return nil, err
+	}
+
+	return workspace.WorkspacesToDTO(workspaces), nil
 }
 
 func (r *UserMutationsResolvers) CreateUser(ctx context.Context, userData graphql_models.CreateUserDto) (*graphql_models.User, error) {

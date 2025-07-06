@@ -15,3 +15,15 @@ func WorkspaceToDTO(model *models.Workspace) *graphql_models.Workspace {
 		Name: model.Name,
 	}
 }
+
+func WorkspacesToDTO(models []*models.Workspace) []*graphql_models.Workspace {
+	if len(models) == 0 {
+		return []*graphql_models.Workspace{}
+	}
+
+	result := make([]*graphql_models.Workspace, 0, len(models))
+	for _, m := range models {
+		result = append(result, WorkspaceToDTO(m))
+	}
+	return result
+}

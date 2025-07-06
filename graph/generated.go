@@ -150,6 +150,7 @@ type ComplexityRoot struct {
 		GetRolesList              func(childComplexity int) int
 		GetSystemConfig           func(childComplexity int) int
 		GetUser                   func(childComplexity int, userID string) int
+		GetUserWorkspacesList     func(childComplexity int, userID string) int
 		GetWorkspaceChannelsList  func(childComplexity int, workspaceID string) int
 		GetWorkspacesList         func(childComplexity int) int
 		ListChannelGroups         func(childComplexity int, workspaceID string) int
@@ -254,6 +255,7 @@ type QueryResolver interface {
 	GetMessagesList(ctx context.Context) ([]*graphql_models.Message, error)
 	GetPermissionsList(ctx context.Context) (*graphql_models.PermissionsListReturn, error)
 	GetRolesList(ctx context.Context) ([]*graphql_models.Role, error)
+	GetUserWorkspacesList(ctx context.Context, userID string) ([]*graphql_models.Workspace, error)
 	GetUser(ctx context.Context, userID string) (*graphql_models.User, error)
 	AuthorizeUser(ctx context.Context, login string, password string) (*graphql_models.UserAuthData, error)
 	GetWorkspacesList(ctx context.Context) ([]*graphql_models.Workspace, error)
@@ -914,6 +916,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.GetUser(childComplexity, args["userId"].(string)), true
+
+	case "Query.GetUserWorkspacesList":
+		if e.complexity.Query.GetUserWorkspacesList == nil {
+			break
+		}
+
+		args, err := ec.field_Query_GetUserWorkspacesList_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetUserWorkspacesList(childComplexity, args["userId"].(string)), true
 
 	case "Query.getWorkspaceChannelsList":
 		if e.complexity.Query.GetWorkspaceChannelsList == nil {
@@ -1597,6 +1611,7 @@ extend type Mutation {
 }
 
 extend type Query {
+  GetUserWorkspacesList(userId: String!): [Workspace!] 
   GetUser(userId: String!): User
   AuthorizeUser(login: String!, password: String!): UserAuthData!
 }
@@ -2317,6 +2332,29 @@ func (ec *executionContext) field_Query_AuthorizeUser_argsPassword(
 ) (string, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
 	if tmp, ok := rawArgs["password"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_GetUserWorkspacesList_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_GetUserWorkspacesList_argsUserID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["userId"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_GetUserWorkspacesList_argsUserID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
+	if tmp, ok := rawArgs["userId"]; ok {
 		return ec.unmarshalNString2string(ctx, tmp)
 	}
 
@@ -6361,6 +6399,68 @@ func (ec *executionContext) fieldContext_Query_getRolesList(_ context.Context, f
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Role", field.Name)
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_GetUserWorkspacesList(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_GetUserWorkspacesList(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetUserWorkspacesList(rctx, fc.Args["userId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*graphql_models.Workspace)
+	fc.Result = res
+	return ec.marshalOWorkspace2ᚕᚖchatneyᚑbackendᚋgraphᚋmodelᚐWorkspaceᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_GetUserWorkspacesList(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "Id":
+				return ec.fieldContext_Workspace_Id(ctx, field)
+			case "Name":
+				return ec.fieldContext_Workspace_Name(ctx, field)
+			case "CreatedAt":
+				return ec.fieldContext_Workspace_CreatedAt(ctx, field)
+			case "UpdatedAt":
+				return ec.fieldContext_Workspace_UpdatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Workspace", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_GetUserWorkspacesList_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -11639,6 +11739,25 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "GetUserWorkspacesList":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_GetUserWorkspacesList(ctx, field)
 				return res
 			}
 
