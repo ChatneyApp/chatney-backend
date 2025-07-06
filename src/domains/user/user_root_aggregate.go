@@ -72,5 +72,6 @@ func (root *UserRootAggregate) authorizeUser(login string, password string) (*gr
 
 	return &graphql_models.UserAuthData{
 		Token: tokenString,
+		User:  UserToDTO(*userRow),
 	}, nil
 }
