@@ -3,6 +3,7 @@ package user
 import (
 	graphql_models "chatney-backend/graph/model"
 	"chatney-backend/src/application"
+	chatContext "chatney-backend/src/application/context"
 	LogError "chatney-backend/src/application/error_utils"
 	"chatney-backend/src/application/repository"
 	"chatney-backend/src/domains/user/models"
@@ -14,6 +15,20 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
+func getUserFromContext(ctx context.Context) *models.User {
+	val := ctx.Value(chatContext.CtxUserKey)
+	if val == nil {
+		return nil
+	}
+
+	userCtx, ok := val.(*chatContext.Ctx)
+	if !ok {
+		return nil
+	}
+
+	return userCtx.User
+}
+
 type UserMutationsResolvers struct {
 	RootAggregate *UserRootAggregate
 }
@@ -23,6 +38,9 @@ type UserQueryResolvers struct {
 }
 
 func (r *UserQueryResolvers) GetUser(ctx context.Context, userID string) (*graphql_models.User, error) {
+	userFromCtx := getUserFromContext(ctx)
+	println(userFromCtx.Name)
+
 	user, err := r.RootAggregate.UserRepo.GetByID(ctx, userID)
 	if err != nil {
 		LogError.LogError(LogError.MakeError("UR004", "Get User failed", err))

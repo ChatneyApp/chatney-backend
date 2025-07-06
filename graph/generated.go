@@ -149,6 +149,7 @@ type ComplexityRoot struct {
 		GetPresignedAttachmentURL func(childComplexity int, key string) int
 		GetRolesList              func(childComplexity int) int
 		GetSystemConfig           func(childComplexity int) int
+		GetUser                   func(childComplexity int, id string) int
 		GetWorkspaceChannelsList  func(childComplexity int, workspaceID string) int
 		GetWorkspacesList         func(childComplexity int) int
 		ListChannelGroups         func(childComplexity int, workspaceID string) int
@@ -252,6 +253,7 @@ type QueryResolver interface {
 	GetMessagesList(ctx context.Context) ([]*graphql_models.Message, error)
 	GetPermissionsList(ctx context.Context) (*graphql_models.PermissionsListReturn, error)
 	GetRolesList(ctx context.Context) ([]*graphql_models.Role, error)
+	GetUser(ctx context.Context, id string) (*graphql_models.User, error)
 	AuthorizeUser(ctx context.Context, login string, password string) (*graphql_models.UserAuthData, error)
 	GetWorkspacesList(ctx context.Context) ([]*graphql_models.Workspace, error)
 }
@@ -899,6 +901,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.GetSystemConfig(childComplexity), true
+
+	case "Query.GetUser":
+		if e.complexity.Query.GetUser == nil {
+			break
+		}
+
+		args, err := ec.field_Query_GetUser_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetUser(childComplexity, args["ID"].(string)), true
 
 	case "Query.getWorkspaceChannelsList":
 		if e.complexity.Query.GetWorkspaceChannelsList == nil {
@@ -1574,6 +1588,7 @@ extend type Mutation {
 }
 
 extend type Query {
+  GetUser(ID: String!): User
   AuthorizeUser(login: String!, password: String!): UserAuthData!
 }
 `, BuiltIn: false},
@@ -2293,6 +2308,29 @@ func (ec *executionContext) field_Query_AuthorizeUser_argsPassword(
 ) (string, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
 	if tmp, ok := rawArgs["password"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_GetUser_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_GetUser_argsID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["ID"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_GetUser_argsID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("ID"))
+	if tmp, ok := rawArgs["ID"]; ok {
 		return ec.unmarshalNString2string(ctx, tmp)
 	}
 
@@ -6314,6 +6352,78 @@ func (ec *executionContext) fieldContext_Query_getRolesList(_ context.Context, f
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Role", field.Name)
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_GetUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_GetUser(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetUser(rctx, fc.Args["ID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*graphql_models.User)
+	fc.Result = res
+	return ec.marshalOUser2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_GetUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "Id":
+				return ec.fieldContext_User_Id(ctx, field)
+			case "Name":
+				return ec.fieldContext_User_Name(ctx, field)
+			case "Status":
+				return ec.fieldContext_User_Status(ctx, field)
+			case "Email":
+				return ec.fieldContext_User_Email(ctx, field)
+			case "Roles":
+				return ec.fieldContext_User_Roles(ctx, field)
+			case "ChannelsSettings":
+				return ec.fieldContext_User_ChannelsSettings(ctx, field)
+			case "Workspaces":
+				return ec.fieldContext_User_Workspaces(ctx, field)
+			case "CreatedAt":
+				return ec.fieldContext_User_CreatedAt(ctx, field)
+			case "UpdatedAt":
+				return ec.fieldContext_User_UpdatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_GetUser_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -11474,6 +11584,25 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "GetUser":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_GetUser(ctx, field)
 				return res
 			}
 

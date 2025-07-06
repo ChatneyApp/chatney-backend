@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	chatContext "chatney-backend/src/application/context"
 	LogError "chatney-backend/src/application/error_utils"
 	"chatney-backend/src/domains/user"
 	"chatney-backend/src/domains/user/models"
@@ -11,17 +12,6 @@ import (
 
 	"github.com/golang-jwt/jwt"
 )
-
-type Ctx struct {
-	rawJson map[string]interface{}
-	user    *models.User
-}
-
-type CtxUserKeyType struct {
-	name string
-}
-
-var CtxUserKey = CtxUserKeyType{name: "user"}
 
 func SetUseAndContext(userRootAggr *user.UserRootAggregate) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -48,12 +38,12 @@ func SetUseAndContext(userRootAggr *user.UserRootAggregate) func(http.Handler) h
 				user = fetchedUser
 			}
 
-			ctx := &Ctx{
-				rawJson: map[string]interface{}{},
-				user:    user,
+			ctx := &chatContext.Ctx{
+				RawJson: map[string]interface{}{},
+				User:    user,
 			}
 
-			overrided_context := context.WithValue(r.Context(), CtxUserKey, &ctx)
+			overrided_context := context.WithValue(r.Context(), chatContext.CtxUserKey, &ctx)
 
 			// and call the next with our new context
 			r = r.WithContext(overrided_context)
