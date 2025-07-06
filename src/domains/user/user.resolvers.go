@@ -75,7 +75,7 @@ func (r *UserQueryResolvers) GetUserWorkspacesList(ctx context.Context, userId s
 		return nil, err
 	}
 
-	workspaces, err := r.WorkspaceAggregate.GetFilteredWorkspaces(bson.M{
+	workspaces, err := r.WorkspaceAggregate.GetFilteredWorkspaces(&bson.M{
 		"_id": bson.M{
 			"$in": user.Workspaces, // []string с ID рабочих пространств
 		},
