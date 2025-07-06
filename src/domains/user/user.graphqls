@@ -34,7 +34,7 @@ type ChannelSettings {
 
 type UserAuthData {
   Token: String!
-  User: User!
+  Id: String!
 }
 
 type User {

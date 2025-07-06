@@ -201,7 +201,7 @@ type User struct {
 
 type UserAuthData struct {
 	Token string `json:"Token"`
-	User  *User  `json:"User"`
+	ID    string `json:"Id"`
 }
 
 type UserRolesSettings struct {

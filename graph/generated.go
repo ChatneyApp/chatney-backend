@@ -194,8 +194,8 @@ type ComplexityRoot struct {
 	}
 
 	UserAuthData struct {
+		ID    func(childComplexity int) int
 		Token func(childComplexity int) int
-		User  func(childComplexity int) int
 	}
 
 	UserRolesSettings struct {
@@ -1107,19 +1107,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.Workspaces(childComplexity), true
 
+	case "UserAuthData.Id":
+		if e.complexity.UserAuthData.ID == nil {
+			break
+		}
+
+		return e.complexity.UserAuthData.ID(childComplexity), true
+
 	case "UserAuthData.Token":
 		if e.complexity.UserAuthData.Token == nil {
 			break
 		}
 
 		return e.complexity.UserAuthData.Token(childComplexity), true
-
-	case "UserAuthData.User":
-		if e.complexity.UserAuthData.User == nil {
-			break
-		}
-
-		return e.complexity.UserAuthData.User(childComplexity), true
 
 	case "UserRolesSettings.Channel":
 		if e.complexity.UserRolesSettings.Channel == nil {
@@ -1554,7 +1554,7 @@ type ChannelSettings {
 
 type UserAuthData {
   Token: String!
-  User: User!
+  Id: String!
 }
 
 type User {
@@ -6478,8 +6478,8 @@ func (ec *executionContext) fieldContext_Query_AuthorizeUser(ctx context.Context
 			switch field.Name {
 			case "Token":
 				return ec.fieldContext_UserAuthData_Token(ctx, field)
-			case "User":
-				return ec.fieldContext_UserAuthData_User(ctx, field)
+			case "Id":
+				return ec.fieldContext_UserAuthData_Id(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UserAuthData", field.Name)
 		},
@@ -7749,8 +7749,8 @@ func (ec *executionContext) fieldContext_UserAuthData_Token(_ context.Context, f
 	return fc, nil
 }
 
-func (ec *executionContext) _UserAuthData_User(ctx context.Context, field graphql.CollectedField, obj *graphql_models.UserAuthData) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UserAuthData_User(ctx, field)
+func (ec *executionContext) _UserAuthData_Id(ctx context.Context, field graphql.CollectedField, obj *graphql_models.UserAuthData) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAuthData_Id(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -7763,7 +7763,7 @@ func (ec *executionContext) _UserAuthData_User(ctx context.Context, field graphq
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.User, nil
+		return obj.ID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7775,39 +7775,19 @@ func (ec *executionContext) _UserAuthData_User(ctx context.Context, field graphq
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*graphql_models.User)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNUser2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_UserAuthData_User(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_UserAuthData_Id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "UserAuthData",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "Id":
-				return ec.fieldContext_User_Id(ctx, field)
-			case "Name":
-				return ec.fieldContext_User_Name(ctx, field)
-			case "Status":
-				return ec.fieldContext_User_Status(ctx, field)
-			case "Email":
-				return ec.fieldContext_User_Email(ctx, field)
-			case "Roles":
-				return ec.fieldContext_User_Roles(ctx, field)
-			case "ChannelsSettings":
-				return ec.fieldContext_User_ChannelsSettings(ctx, field)
-			case "Workspaces":
-				return ec.fieldContext_User_Workspaces(ctx, field)
-			case "CreatedAt":
-				return ec.fieldContext_User_CreatedAt(ctx, field)
-			case "UpdatedAt":
-				return ec.fieldContext_User_UpdatedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -12051,8 +12031,8 @@ func (ec *executionContext) _UserAuthData(ctx context.Context, sel ast.Selection
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "User":
-			out.Values[i] = ec._UserAuthData_User(ctx, field, obj)
+		case "Id":
+			out.Values[i] = ec._UserAuthData_Id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
