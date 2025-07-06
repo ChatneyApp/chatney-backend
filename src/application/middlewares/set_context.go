@@ -43,7 +43,7 @@ func SetUseAndContext(userRootAggr *user.UserRootAggregate) func(http.Handler) h
 				User:    user,
 			}
 
-			overrided_context := context.WithValue(r.Context(), chatContext.CtxUserKey, &ctx)
+			overrided_context := context.WithValue(r.Context(), chatContext.CtxUserKey, ctx)
 
 			// and call the next with our new context
 			r = r.WithContext(overrided_context)
