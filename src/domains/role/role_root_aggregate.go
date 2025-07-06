@@ -12,7 +12,7 @@ type RoleRootAggregateStruct struct {
 }
 
 func (root *RoleRootAggregateStruct) getAllRoles(ctx context.Context) ([]*models.Role, error) {
-	return root.roleRepo.GetAll(ctx, bson.M{})
+	return root.roleRepo.GetAll(ctx, &bson.M{})
 }
 
 func (root *RoleRootAggregateStruct) CreateNewRole(role *models.Role) (*models.Role, error) {

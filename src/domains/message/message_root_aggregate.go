@@ -24,5 +24,5 @@ func (root *MessageRootAggregate) UpdateMessage(messageId string, update *models
 }
 
 func (root *MessageRootAggregate) GetAllMessages() ([]*models.Message, error) {
-	return root.messageRepo.GetAll(context.TODO(), bson.M{})
+	return root.messageRepo.GetAll(context.TODO(), &bson.M{})
 }

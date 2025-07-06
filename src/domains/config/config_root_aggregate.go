@@ -12,7 +12,7 @@ type ConfigRootAggregateStruct struct {
 }
 
 func (root *ConfigRootAggregateStruct) getAllSystemConfigValues(ctx context.Context) ([]*models.SystemConfigValue, error) {
-	return root.SystemConfigRepo.GetAll(ctx, bson.M{})
+	return root.SystemConfigRepo.GetAll(ctx, &bson.M{})
 }
 
 func (root *ConfigRootAggregateStruct) UpdateSystemConfigValue(configName string, configValue string) (*models.SystemConfigValue, error) {

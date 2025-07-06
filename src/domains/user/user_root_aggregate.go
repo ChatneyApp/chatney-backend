@@ -40,7 +40,7 @@ func (root *UserRootAggregate) authorizeUser(login string, password string) (*gr
 	hash := md5.Sum([]byte(password + root.Config.PasswordSalt))
 
 	// find user by password and login
-	userRows, err := root.UserRepo.GetAll(context.TODO(), bson.M{
+	userRows, err := root.UserRepo.GetAll(context.TODO(), &bson.M{
 		"password": hex.EncodeToString(hash[:]),
 		"email":    login,
 	})

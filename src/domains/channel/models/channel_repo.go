@@ -12,7 +12,7 @@ type ChannelRepo struct {
 }
 
 func (repo *ChannelRepo) GetWorkspaceChannelsList(workspaceId string) ([]*Channel, error) {
-	return repo.GetAll(context.TODO(), bson.M{"workspaceId": workspaceId})
+	return repo.GetAll(context.TODO(), &bson.M{"workspaceId": workspaceId})
 }
 
 // ChangeChannelType - updates the channel's type

@@ -20,5 +20,5 @@ func (r *ChannelRootAggregate) DeleteChannelType(channelTypeId string) (bool, er
 }
 
 func (r *ChannelRootAggregate) GetChannelTypesList() ([]*models.ChannelType, error) {
-	return r.channelTypeRepo.GetAll(context.TODO(), bson.M{})
+	return r.channelTypeRepo.GetAll(context.TODO(), &bson.M{})
 }

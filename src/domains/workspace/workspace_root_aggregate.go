@@ -24,9 +24,9 @@ func (root *WorkspaceRootAggregate) UpdateWorkspace(workspaceId string, update *
 }
 
 func (root *WorkspaceRootAggregate) GetAllWorkspaces() ([]*models.Workspace, error) {
-	return root.workspaceRepo.GetAll(context.TODO(), bson.M{})
+	return root.workspaceRepo.GetAll(context.TODO(), &bson.M{})
 }
 
 func (root *WorkspaceRootAggregate) GetFilteredWorkspaces(filter bson.M) ([]*models.Workspace, error) {
-	return root.workspaceRepo.GetAll(context.TODO(), filter)
+	return root.workspaceRepo.GetAll(context.TODO(), &filter)
 }

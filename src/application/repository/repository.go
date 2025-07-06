@@ -28,7 +28,7 @@ func (r *BaseRepo[T]) Create(ctx context.Context, entity *T) (*T, error) {
 }
 
 func (r *BaseRepo[T]) GetOne(ctx context.Context, filter bson.M) (*T, error) {
-	entities, err := r.GetAll(ctx, filter)
+	entities, err := r.GetAll(ctx, &filter)
 
 	if err != nil {
 		return nil, err
@@ -68,9 +68,9 @@ func (r *BaseRepo[T]) Delete(ctx context.Context, id string) (bool, error) {
 	return true, nil
 }
 
-func (r *BaseRepo[T]) GetAll(ctx context.Context, filter bson.M) ([]*T, error) {
+func (r *BaseRepo[T]) GetAll(ctx context.Context, filter *bson.M) ([]*T, error) {
 	var entities []*T
-	cursor, err := r.Collection.Find(ctx, filter)
+	cursor, err := r.Collection.Find(ctx, *filter)
 	if err != nil {
 		return nil, err
 	}
