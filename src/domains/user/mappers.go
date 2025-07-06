@@ -5,7 +5,7 @@ import (
 	"chatney-backend/src/domains/user/models"
 )
 
-func UserToDTO(model models.User) *graphql_models.User {
+func userToDTO(model models.User) *graphql_models.User {
 	return &graphql_models.User{
 		ID:         model.Id,
 		Name:       model.Name,

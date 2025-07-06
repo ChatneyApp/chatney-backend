@@ -39,7 +39,7 @@ func main() {
 		AllowedOrigins:   []string{"*"},
 		AllowCredentials: true,
 		Debug:            true,
-		AllowedHeaders:   []string{"auth", "content-type"},
+		AllowedHeaders:   []string{"Authorization", "content-type"},
 	}).Handler)
 
 	db := database.NewDatabase(config)

@@ -77,6 +77,6 @@ extend type Mutation {
 }
 
 extend type Query {
-  GetUser(ID: String!): User
+  GetUser(userId: String!): User
   AuthorizeUser(login: String!, password: String!): UserAuthData!
 }

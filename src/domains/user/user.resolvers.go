@@ -37,16 +37,16 @@ type UserQueryResolvers struct {
 	RootAggregate *UserRootAggregate
 }
 
-func (r *UserQueryResolvers) GetUser(ctx context.Context, ID string) (*graphql_models.User, error) {
+func (r *UserQueryResolvers) GetUser(ctx context.Context, userId string) (*graphql_models.User, error) {
 	userFromCtx := getUserFromContext(ctx)
 	println(userFromCtx.Name)
 
-	user, err := r.RootAggregate.UserRepo.GetByID(ctx, ID)
+	user, err := r.RootAggregate.UserRepo.GetByID(ctx, userId)
 	if err != nil {
 		LogError.LogError(LogError.MakeError("UR004", "Get User failed", err))
 		return nil, err
 	}
-	return UserToDTO(*user), nil
+	return userToDTO(*user), nil
 }
 
 func (r *UserQueryResolvers) GetChannelUsersList(ctx context.Context, channelId string) ([]*graphql_models.User, error) {
@@ -58,7 +58,7 @@ func (r *UserQueryResolvers) GetChannelUsersList(ctx context.Context, channelId 
 
 	var out []*graphql_models.User
 	for _, user := range users {
-		out = append(out, UserToDTO(*user))
+		out = append(out, userToDTO(*user))
 	}
 	return out, nil
 }
@@ -78,7 +78,7 @@ func (r *UserMutationsResolvers) CreateUser(ctx context.Context, userData graphq
 		LogError.LogError(LogError.MakeError("UR002", "Error create failedg", err))
 		return nil, err
 	}
-	return UserToDTO(*newUser), nil
+	return userToDTO(*newUser), nil
 }
 
 func (r *UserMutationsResolvers) UpdateUser(ctx context.Context, input graphql_models.UpdateUserDto, userId string) (*graphql_models.User, error) {
@@ -90,7 +90,7 @@ func (r *UserMutationsResolvers) UpdateUser(ctx context.Context, input graphql_m
 		LogError.LogError(LogError.MakeError("UR001", "User update failed", err))
 		return nil, err
 	}
-	return UserToDTO(*updatedUser), nil
+	return userToDTO(*updatedUser), nil
 }
 
 func (r *UserMutationsResolvers) UpdateUserAdmin(ctx context.Context, input graphql_models.UpdateUserAdminDto, userId string) (*graphql_models.User, error) {
@@ -104,7 +104,7 @@ func (r *UserMutationsResolvers) UpdateUserAdmin(ctx context.Context, input grap
 		LogError.LogError(LogError.MakeError("UR001", "User update failed", err))
 		return nil, err
 	}
-	return UserToDTO(*updatedUser), nil
+	return userToDTO(*updatedUser), nil
 }
 
 func (r *UserMutationsResolvers) DeleteUser(ctx context.Context, userID string) (bool, error) {

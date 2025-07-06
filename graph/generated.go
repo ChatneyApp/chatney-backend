@@ -149,7 +149,7 @@ type ComplexityRoot struct {
 		GetPresignedAttachmentURL func(childComplexity int, key string) int
 		GetRolesList              func(childComplexity int) int
 		GetSystemConfig           func(childComplexity int) int
-		GetUser                   func(childComplexity int, id string) int
+		GetUser                   func(childComplexity int, userID string) int
 		GetWorkspaceChannelsList  func(childComplexity int, workspaceID string) int
 		GetWorkspacesList         func(childComplexity int) int
 		ListChannelGroups         func(childComplexity int, workspaceID string) int
@@ -254,7 +254,7 @@ type QueryResolver interface {
 	GetMessagesList(ctx context.Context) ([]*graphql_models.Message, error)
 	GetPermissionsList(ctx context.Context) (*graphql_models.PermissionsListReturn, error)
 	GetRolesList(ctx context.Context) ([]*graphql_models.Role, error)
-	GetUser(ctx context.Context, id string) (*graphql_models.User, error)
+	GetUser(ctx context.Context, userID string) (*graphql_models.User, error)
 	AuthorizeUser(ctx context.Context, login string, password string) (*graphql_models.UserAuthData, error)
 	GetWorkspacesList(ctx context.Context) ([]*graphql_models.Workspace, error)
 }
@@ -913,7 +913,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.GetUser(childComplexity, args["ID"].(string)), true
+		return e.complexity.Query.GetUser(childComplexity, args["userId"].(string)), true
 
 	case "Query.getWorkspaceChannelsList":
 		if e.complexity.Query.GetWorkspaceChannelsList == nil {
@@ -1597,7 +1597,7 @@ extend type Mutation {
 }
 
 extend type Query {
-  GetUser(ID: String!): User
+  GetUser(userId: String!): User
   AuthorizeUser(login: String!, password: String!): UserAuthData!
 }
 `, BuiltIn: false},
@@ -2327,19 +2327,19 @@ func (ec *executionContext) field_Query_AuthorizeUser_argsPassword(
 func (ec *executionContext) field_Query_GetUser_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := ec.field_Query_GetUser_argsID(ctx, rawArgs)
+	arg0, err := ec.field_Query_GetUser_argsUserID(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
-	args["ID"] = arg0
+	args["userId"] = arg0
 	return args, nil
 }
-func (ec *executionContext) field_Query_GetUser_argsID(
+func (ec *executionContext) field_Query_GetUser_argsUserID(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (string, error) {
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("ID"))
-	if tmp, ok := rawArgs["ID"]; ok {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
+	if tmp, ok := rawArgs["userId"]; ok {
 		return ec.unmarshalNString2string(ctx, tmp)
 	}
 
@@ -6379,7 +6379,7 @@ func (ec *executionContext) _Query_GetUser(ctx context.Context, field graphql.Co
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().GetUser(rctx, fc.Args["ID"].(string))
+		return ec.resolvers.Query().GetUser(rctx, fc.Args["userId"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
