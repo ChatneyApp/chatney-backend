@@ -37,11 +37,11 @@ type UserQueryResolvers struct {
 	RootAggregate *UserRootAggregate
 }
 
-func (r *UserQueryResolvers) GetUser(ctx context.Context, userID string) (*graphql_models.User, error) {
+func (r *UserQueryResolvers) GetUser(ctx context.Context, ID string) (*graphql_models.User, error) {
 	userFromCtx := getUserFromContext(ctx)
 	println(userFromCtx.Name)
 
-	user, err := r.RootAggregate.UserRepo.GetByID(ctx, userID)
+	user, err := r.RootAggregate.UserRepo.GetByID(ctx, ID)
 	if err != nil {
 		LogError.LogError(LogError.MakeError("UR004", "Get User failed", err))
 		return nil, err
