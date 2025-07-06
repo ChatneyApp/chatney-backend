@@ -67,17 +67,22 @@ func (r *UserQueryResolvers) GetChannelUsersList(ctx context.Context, channelId 
 	return out, nil
 }
 
-func (r *UserQueryResolvers) GetUserWorkspacesList(ctx context.Context) ([]*graphql_models.Workspace, error) {
-	userFromCtx := getUserFromContext(ctx)
+func (r *UserQueryResolvers) GetUserWorkspacesList(ctx context.Context, userId string) ([]*graphql_models.Workspace, error) {
+	user, err := r.RootAggregate.UserRepo.GetByID(context.TODO(), userId)
+
+	if err != nil {
+		LogError.LogError(LogError.MakeError("UR005", "Getting user failed", err))
+		return nil, err
+	}
 
 	workspaces, err := r.WorkspaceAggregate.GetFilteredWorkspaces(bson.M{
 		"_id": bson.M{
-			"$in": userFromCtx.Workspaces, // []string с ID рабочих пространств
+			"$in": user.Workspaces, // []string с ID рабочих пространств
 		},
 	})
 
 	if err != nil {
-		LogError.LogError(LogError.MakeError("UR004", "Getting channel failed", err))
+		LogError.LogError(LogError.MakeError("UR004", "Getting user workspaces failed", err))
 		return nil, err
 	}
 
