@@ -1,0 +1,21 @@
+{
+    "go.toolsManagement.autoUpdate": true,
+    "go.lintTool": "golangci-lint",
+
+    // adds nice suggestions behind vars and structs
+    "go.inlayHints.compositeLiteralFields": true,
+    "go.inlayHints.assignVariableTypes": true,
+    "go.inlayHints.constantValues": true,
+    "go.inlayHints.functionTypeParameters": true,
+    "go.inlayHints.rangeVariableTypes": true,
+    "go.inlayHints.parameterNames": true,
+    "go.inlayHints.compositeLiteralTypes": true,
+    "go.lintFlags": [
+        "--issues-exit-code=1"
+    ],
+    // turns off moving to dev pkg go when clicking on a local deps
+    "gopls": {
+        "importShortcut": "Definition"
+    },
+    "go.lintOnSave": "workspace",
+}
