@@ -58,7 +58,7 @@ func (r *WorkspaceMutationsResolvers) UpdateWorkspace(ctx context.Context, input
 
 func getRootAggregate(DB *mongo.Database) *WorkspaceRootAggregate {
 	return &WorkspaceRootAggregate{
-		workspaceRepo: &models.WorkspaceRepo{
+		WorkspaceRepo: &models.WorkspaceRepo{
 			BaseRepo: &repository.BaseRepo[models.Workspace]{
 				Collection: DB.Collection("workspaces"),
 			},

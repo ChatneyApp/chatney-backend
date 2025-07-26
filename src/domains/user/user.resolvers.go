@@ -8,6 +8,7 @@ import (
 	"chatney-backend/src/application/repository"
 	"chatney-backend/src/domains/user/models"
 	workspace "chatney-backend/src/domains/workspace"
+	wsModels "chatney-backend/src/domains/workspace/models"
 
 	"context"
 	"crypto/md5"
@@ -160,6 +161,13 @@ func GetMutationResolvers(DB *mongo.Database) UserMutationsResolvers {
 
 func GetQueryResolvers(DB *mongo.Database) UserQueryResolvers {
 	return UserQueryResolvers{
+		WorkspaceAggregate: &workspace.WorkspaceRootAggregate{
+			WorkspaceRepo: &wsModels.WorkspaceRepo{
+				BaseRepo: &repository.BaseRepo[wsModels.Workspace]{
+					Collection: DB.Collection("workspaces"),
+				},
+			}},
+
 		RootAggregate: GetUserRootAggregate(DB),
 	}
 }

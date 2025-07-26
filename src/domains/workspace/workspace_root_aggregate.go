@@ -8,25 +8,25 @@ import (
 )
 
 type WorkspaceRootAggregate struct {
-	workspaceRepo *models.WorkspaceRepo
+	WorkspaceRepo *models.WorkspaceRepo
 }
 
 func (root *WorkspaceRootAggregate) CreateWorkspace(ws *models.Workspace) (*models.Workspace, error) {
-	return root.workspaceRepo.Create(context.TODO(), ws)
+	return root.WorkspaceRepo.Create(context.TODO(), ws)
 }
 
 func (root *WorkspaceRootAggregate) DeleteWorkspace(workspaceId string) (bool, error) {
-	return root.workspaceRepo.Delete(context.TODO(), workspaceId)
+	return root.WorkspaceRepo.Delete(context.TODO(), workspaceId)
 }
 
 func (root *WorkspaceRootAggregate) UpdateWorkspace(workspaceId string, update *models.Workspace) (*models.Workspace, error) {
-	return root.workspaceRepo.Update(context.TODO(), workspaceId, update)
+	return root.WorkspaceRepo.Update(context.TODO(), workspaceId, update)
 }
 
 func (root *WorkspaceRootAggregate) GetAllWorkspaces() ([]*models.Workspace, error) {
-	return root.workspaceRepo.GetAll(context.TODO(), &bson.M{})
+	return root.WorkspaceRepo.GetAll(context.TODO(), &bson.M{})
 }
 
 func (root *WorkspaceRootAggregate) GetFilteredWorkspaces(filter *bson.M) ([]*models.Workspace, error) {
-	return root.workspaceRepo.GetAll(context.TODO(), filter)
+	return root.WorkspaceRepo.GetAll(context.TODO(), filter)
 }
