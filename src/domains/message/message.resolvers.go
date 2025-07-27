@@ -10,7 +10,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
@@ -18,28 +17,10 @@ type MessageMutationsResolvers struct {
 	RootAggregate *MessageRootAggregate
 }
 
-func (r *MessageMutationsResolvers) CreateMessage(ctx context.Context, input graphql_models.MutateMessageDto) (*graphql_models.Message, error) {
-	var reactions []models.Reaction
-	for _, react := range input.Reactions {
-		if react != nil {
-			reactions = append(reactions, models.Reaction{
-				UserId:   react.UserID,
-				Reaction: react.Reaction,
-			})
-		}
-	}
+func (r *MessageMutationsResolvers) CreateMessage(ctx context.Context, input graphql_models.CreateMessageDto) (*graphql_models.Message, error) {
+	message := CreateDTOToMessage(&input)
 
-	newMsg, err := r.RootAggregate.CreateMessage(&models.Message{
-		Id:          uuid.NewString(),
-		Content:     *input.Content,
-		Attachments: input.Attachments,
-		ChannelId:   input.ChannelID,
-		UserId:      input.UserID,
-		Reactions:   reactions,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-		Status:      "active",
-	})
+	newMsg, err := r.RootAggregate.CreateMessage(message)
 	if err != nil {
 		return nil, err
 	}
@@ -50,8 +31,8 @@ func (r *MessageMutationsResolvers) DeleteMessage(ctx context.Context, messageId
 	return r.RootAggregate.DeleteMessage(messageId)
 }
 
-func (r *MessageMutationsResolvers) UpdateMessage(ctx context.Context, input graphql_models.MutateMessageDto, messageId string) (*graphql_models.Message, error) {
-	message := DTOToMessage(&input)
+func (r *MessageMutationsResolvers) UpdateMessage(ctx context.Context, input graphql_models.UpdateMessageDto, messageId string) (*graphql_models.Message, error) {
+	message := UpdateDTOToMessage(&input)
 	if message == nil {
 		return nil, nil
 	}

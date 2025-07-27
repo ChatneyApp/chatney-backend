@@ -41,7 +41,7 @@ func (root *ChannelRootAggregate) validatePutChannelIntoGroup(channelId, groupId
 	return nil
 }
 
-func (root *ChannelRootAggregate) putChannelIntoChannelGroup(channelId, groupId string) (bool, error) {
+func (root *ChannelRootAggregate) PutChannelIntoChannelGroup(channelId, groupId string) (bool, error) {
 	err := root.validatePutChannelIntoGroup(channelId, groupId)
 	if err != nil {
 		return false, err

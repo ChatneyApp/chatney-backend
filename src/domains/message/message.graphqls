@@ -3,12 +3,20 @@ input ReactionDTO {
   Reaction: String!
 }
 
-input MutateMessageDTO {
+input UpdateMessageDTO {
   ChannelId: String!
   UserId: String!
   Content: String
   Attachments: [String!]
   Status: String!
+  Reactions: [ReactionDTO!]
+}
+
+input CreateMessageDTO {
+  ChannelId: String!
+  UserId: String!
+  Content: String
+  Attachments: [String!]
   Reactions: [ReactionDTO!]
 }
 
@@ -35,7 +43,7 @@ extend type Query {
 }
 
 extend type Mutation {
-  createMessage(input: MutateMessageDTO!): Message!
-  updateMessage(input: MutateMessageDTO!, messageId: String!): Message!
+  createMessage(input: CreateMessageDTO!): Message!
+  updateMessage(input: UpdateMessageDTO!, messageId: String!): Message!
   deleteMessage(messageId: String!): Boolean!
 }

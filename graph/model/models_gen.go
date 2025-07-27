@@ -60,6 +60,14 @@ type CreateChannelGroupInput struct {
 	Workspace string   `json:"Workspace"`
 }
 
+type CreateMessageDto struct {
+	ChannelID   string         `json:"ChannelId"`
+	UserID      string         `json:"UserId"`
+	Content     *string        `json:"Content,omitempty"`
+	Attachments []string       `json:"Attachments,omitempty"`
+	Reactions   []*ReactionDto `json:"Reactions,omitempty"`
+}
+
 type CreateRoleDto struct {
 	Name        string           `json:"Name"`
 	Permissions []string         `json:"Permissions"`
@@ -103,15 +111,6 @@ type MutateChannelTypeDto struct {
 	Label      string `json:"Label"`
 	Key        string `json:"Key"`
 	BaseRoleID string `json:"BaseRoleId"`
-}
-
-type MutateMessageDto struct {
-	ChannelID   string         `json:"ChannelId"`
-	UserID      string         `json:"UserId"`
-	Content     *string        `json:"Content,omitempty"`
-	Attachments []string       `json:"Attachments,omitempty"`
-	Status      string         `json:"Status"`
-	Reactions   []*ReactionDto `json:"Reactions,omitempty"`
 }
 
 type MutateWorkspaceDto struct {
@@ -173,6 +172,15 @@ type UpdateChannelGroupInput struct {
 	Name     *string  `json:"Name,omitempty"`
 	Channels []string `json:"Channels,omitempty"`
 	Order    *int32   `json:"Order,omitempty"`
+}
+
+type UpdateMessageDto struct {
+	ChannelID   string         `json:"ChannelId"`
+	UserID      string         `json:"UserId"`
+	Content     *string        `json:"Content,omitempty"`
+	Attachments []string       `json:"Attachments,omitempty"`
+	Status      string         `json:"Status"`
+	Reactions   []*ReactionDto `json:"Reactions,omitempty"`
 }
 
 type UpdateUserAdminDto struct {

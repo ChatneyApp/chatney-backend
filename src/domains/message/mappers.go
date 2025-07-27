@@ -31,7 +31,7 @@ func MessageToDTO(model *models.Message) *graphql_models.Message {
 	}
 }
 
-func DTOToMessage(dto *graphql_models.MutateMessageDto) *models.Message {
+func UpdateDTOToMessage(dto *graphql_models.UpdateMessageDto) *models.Message {
 	if dto == nil {
 		return nil
 	}
@@ -50,6 +50,28 @@ func DTOToMessage(dto *graphql_models.MutateMessageDto) *models.Message {
 		Content:     *dto.Content,
 		Attachments: dto.Attachments,
 		Status:      dto.Status,
+		Reactions:   reactions,
+	}
+}
+
+func CreateDTOToMessage(dto *graphql_models.CreateMessageDto) *models.Message {
+	if dto == nil {
+		return nil
+	}
+
+	var reactions []models.Reaction
+	for _, r := range dto.Reactions {
+		reactions = append(reactions, models.Reaction{
+			UserId:   r.UserID,
+			Reaction: r.Reaction,
+		})
+	}
+
+	return &models.Message{
+		ChannelId:   dto.ChannelID,
+		UserId:      dto.UserID,
+		Content:     *dto.Content,
+		Attachments: dto.Attachments,
 		Reactions:   reactions,
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"chatney-backend/src/application/repository"
 	"chatney-backend/src/domains/channel/models"
 	"context"
+
 	"github.com/google/uuid"
 
 	"go.mongodb.org/mongo-driver/v2/mongo"
