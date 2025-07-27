@@ -1,0 +1,10 @@
+﻿version: '3'
+
+tasks:
+  gqlgen:
+    cmds:
+      - go run github.com/99designs/gqlgen generate
+
+  dev:
+    cmds:
+      - env-cmd -f .env.test wgo run server.go
