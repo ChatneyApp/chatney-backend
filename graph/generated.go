@@ -142,6 +142,7 @@ type ComplexityRoot struct {
 	Query struct {
 		AuthorizeUser             func(childComplexity int, login string, password string) int
 		GetAllChannelTypesList    func(childComplexity int) int
+		GetChannel                func(childComplexity int, channelID string) int
 		GetChannelGroup           func(childComplexity int, uuid string) int
 		GetChannelUsersList       func(childComplexity int, channelID string) int
 		GetMessagesList           func(childComplexity int) int
@@ -246,6 +247,7 @@ type MutationResolver interface {
 }
 type QueryResolver interface {
 	GetChannelUsersList(ctx context.Context, channelID string) ([]*graphql_models.User, error)
+	GetChannel(ctx context.Context, channelID string) (*graphql_models.Channel, error)
 	GetChannelGroup(ctx context.Context, uuid string) (*graphql_models.ChannelGroup, error)
 	ListChannelGroups(ctx context.Context, workspaceID string) ([]*graphql_models.ChannelGroup, error)
 	GetAllChannelTypesList(ctx context.Context) ([]*graphql_models.ChannelType, error)
@@ -841,6 +843,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.GetAllChannelTypesList(childComplexity), true
 
+	case "Query.GetChannel":
+		if e.complexity.Query.GetChannel == nil {
+			break
+		}
+
+		args, err := ec.field_Query_GetChannel_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetChannel(childComplexity, args["channelId"].(string)), true
+
 	case "Query.getChannelGroup":
 		if e.complexity.Query.GetChannelGroup == nil {
 			break
@@ -1358,7 +1372,9 @@ extend type Mutation {
 
 extend type Query {
   getChannelUsersList(channelId: String!): [User!]
-}`, BuiltIn: false},
+  GetChannel(channelId: String!): Channel
+}
+`, BuiltIn: false},
 	{Name: "../src/domains/channel/channel_group.graphqls", Input: `type ChannelGroup {
     Id: ID!
     Name: String!
@@ -2332,6 +2348,29 @@ func (ec *executionContext) field_Query_AuthorizeUser_argsPassword(
 ) (string, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
 	if tmp, ok := rawArgs["password"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_GetChannel_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_GetChannel_argsChannelID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["channelId"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_GetChannel_argsChannelID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("channelId"))
+	if tmp, ok := rawArgs["channelId"]; ok {
 		return ec.unmarshalNString2string(ctx, tmp)
 	}
 
@@ -5859,6 +5898,72 @@ func (ec *executionContext) fieldContext_Query_getChannelUsersList(ctx context.C
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_getChannelUsersList_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_GetChannel(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_GetChannel(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetChannel(rctx, fc.Args["channelId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*graphql_models.Channel)
+	fc.Result = res
+	return ec.marshalOChannel2ᚖchatneyᚑbackendᚋgraphᚋmodelᚐChannel(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_GetChannel(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "Id":
+				return ec.fieldContext_Channel_Id(ctx, field)
+			case "Name":
+				return ec.fieldContext_Channel_Name(ctx, field)
+			case "ChannelTypeId":
+				return ec.fieldContext_Channel_ChannelTypeId(ctx, field)
+			case "WorkspaceId":
+				return ec.fieldContext_Channel_WorkspaceId(ctx, field)
+			case "CreatedAt":
+				return ec.fieldContext_Channel_CreatedAt(ctx, field)
+			case "UpdatedAt":
+				return ec.fieldContext_Channel_UpdatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Channel", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_GetChannel_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -11553,6 +11658,25 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_getChannelUsersList(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "GetChannel":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_GetChannel(ctx, field)
 				return res
 			}
 

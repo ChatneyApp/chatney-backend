@@ -21,4 +21,5 @@ extend type Mutation {
 
 extend type Query {
   getChannelUsersList(channelId: String!): [User!]
+  GetChannel(channelId: String!): Channel
 }

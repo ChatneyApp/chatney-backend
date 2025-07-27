@@ -41,6 +41,16 @@ func (r *ChannelQueryResolvers) ListChannelGroups(ctx context.Context, workspace
 	return out, nil
 }
 
+func (r *ChannelQueryResolvers) GetChannel(ctx context.Context, channelId string) (*graphql_models.Channel, error) {
+	res, err := r.rootAggregate.GetChannel(channelId)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return channelToDTO(*res), nil
+}
+
 func (r *ChannelMutationsResolvers) CreateChannelGroup(ctx context.Context, input graphql_models.CreateChannelGroupInput) (*graphql_models.ChannelGroup, error) {
 	res, err := r.rootAggregate.createChannelGroup(&models.ChannelGroup{
 		Id:          uuid.NewString(),

@@ -9,6 +9,10 @@ func (r *ChannelRootAggregate) CreateChannel(input *models.Channel) (*models.Cha
 	return r.channelRepo.Create(context.TODO(), input)
 }
 
+func (r *ChannelRootAggregate) GetChannel(channelId string) (*models.Channel, error) {
+	return r.channelRepo.GetByID(context.TODO(), channelId)
+}
+
 func (r *ChannelRootAggregate) UpdateChannel(input *models.Channel) (*models.Channel, error) {
 	return r.channelRepo.Update(context.TODO(), input.Id, input)
 }
