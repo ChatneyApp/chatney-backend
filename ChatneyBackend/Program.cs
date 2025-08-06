@@ -7,7 +7,12 @@ using ChatneyBackend.Domains.Channels;
 var builder = WebApplication.CreateBuilder(args);
 
 var connectionString = builder.Configuration.GetConnectionString("MongoDB");
-var dbName = "chatney";
+var dbName = builder.Configuration.GetConnectionString("dbName");
+
+if (dbName == null)
+{
+    throw new ArgumentException("dbName is empty");
+}
 builder.Services.AddDbContextFactory<ApplicationDbContext>(options => options.UseMongoDB(connectionString!, dbName));
 
 IDomainSetup[] endpoints = {
