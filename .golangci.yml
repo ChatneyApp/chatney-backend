@@ -1,8 +1,0 @@
-version: 2
-
-run:
-  timeout: 2m
-
-linters:
-  enable:
-    - exhaustruct
