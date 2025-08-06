@@ -1,7 +1,8 @@
 ﻿using ChatneyBackend.Models;
 
-namespace ChatneyBackend.Queries;
+namespace ChatneyBackend.Domains.Users;
 
+[ExtendObjectType("Query")]
 public class UserQueries
 {
     public string Hello() => "Hello from GraphQL!";

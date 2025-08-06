@@ -1,9 +1,9 @@
-﻿using MongoDB.Bson;
+using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
-namespace ChatneyBackend.Models;
+namespace ChatneyBackend.Domains.Channels;
 
-public class User
+public class Channel
 {
     [BsonElement("_id")]
     [BsonId]
