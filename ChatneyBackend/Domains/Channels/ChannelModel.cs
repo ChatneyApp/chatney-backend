@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
@@ -8,11 +9,18 @@ public class Channel
     [BsonElement("_id")]
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
-    public string Id { get; set; }
+    [MaxLength(36)]
+    public required string Id { get; set; }
 
     [BsonElement("name")]
-    public string Name { get; set; }
+    [MaxLength(255)]
+    public required string Name { get; set; }
 
-    [BsonElement("email")]
-    public string Email { get; set; }
+    [BsonElement("channelTypeId")]
+    [MaxLength(36)]
+    public required string ChannelTypeId { get; set; }
+
+    [BsonElement("workspaceId")]
+    [MaxLength(36)]
+    public required string WorkspaceId { get; set; }
 }
