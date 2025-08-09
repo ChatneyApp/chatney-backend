@@ -5,8 +5,6 @@ namespace ChatneyBackend.Domains.Users;
 [ExtendObjectType("Query")]
 public class UserQueries
 {
-    public string Hello() => "Hello from GraphQL!";
-
     public User GetUserById(ApplicationDbContext dbContext, string id)
         => dbContext.Users.First(u => u.Id == id);
 

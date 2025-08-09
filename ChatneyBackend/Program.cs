@@ -3,6 +3,11 @@ using Microsoft.EntityFrameworkCore;
 using ChatneyBackend.Models;
 using ChatneyBackend.Domains.Users;
 using ChatneyBackend.Domains.Channels;
+using ChatneyBackend.Domains.Messages;
+using ChatneyBackend.Domains.Roles;
+using ChatneyBackend.Domains.Configs;
+using ChatneyBackend.Domains.Workspaces;
+using ChatneyBackend.Domains.Permissions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,7 +22,12 @@ builder.Services.AddDbContextFactory<ApplicationDbContext>(options => options.Us
 
 IDomainSetup[] endpoints = {
     new UserDomainSetup(),
-    new ChannelDomainSetup()
+    new ChannelDomainSetup(),
+    new MessageDomainSetup(),
+    new RoleDomainSetup(),
+    new ConfigDomainSetup(),
+    new WorkspaceDomainSetup(),
+    new PermissionDomainSetup()
 };
 
 var endpointBuilder = builder.Services.AddGraphQLServer()
