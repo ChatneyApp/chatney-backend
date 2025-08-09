@@ -1,4 +1,4 @@
-using ChatneyBackend.Models;
+using ChatneyBackend.Setup;
 
 namespace ChatneyBackend.Domains.Permissions;
 

@@ -1,9 +1,8 @@
 ﻿using System.Diagnostics;
-using ChatneyBackend.Models;
+using ChatneyBackend.Setup;
 
 namespace ChatneyBackend.Domains.Users;
 
-[ExtendObjectType("Mutation")]
 public class UserMutations
 {
     public User AddUser(ApplicationDbContext dbContext, User user)

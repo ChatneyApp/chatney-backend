@@ -8,7 +8,7 @@ using ChatneyBackend.Domains.Configs;
 using ChatneyBackend.Domains.Workspaces;
 using ChatneyBackend.Domains.Permissions;
 
-namespace ChatneyBackend.Models;
+namespace ChatneyBackend.Setup;
 
 
 public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : DbContext(options)

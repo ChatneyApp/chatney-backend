@@ -1,5 +1,5 @@
 using System.Diagnostics;
-using ChatneyBackend.Models;
+using ChatneyBackend.Setup;
 
 namespace ChatneyBackend.Domains.Channels;
 

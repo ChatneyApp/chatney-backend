@@ -1,8 +1,7 @@
-﻿using ChatneyBackend.Models;
+﻿using ChatneyBackend.Setup;
 
 namespace ChatneyBackend.Domains.Users;
 
-[ExtendObjectType("Query")]
 public class UserQueries
 {
     public User GetUserById(ApplicationDbContext dbContext, string id)
@@ -11,6 +10,6 @@ public class UserQueries
     public User GetUserByName(ApplicationDbContext dbContext, string name)
         => dbContext.Users.First(u => u.Name == name);
 
-    public IQueryable<User> GetUsers(ApplicationDbContext dbContext)
+    public IQueryable<User> GetList(ApplicationDbContext dbContext)
         => dbContext.Users;
 }
