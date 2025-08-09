@@ -2,15 +2,8 @@ using ChatneyBackend.Setup;
 
 namespace ChatneyBackend.Domains.Permissions;
 
-[ExtendObjectType("Query")]
 public class PermissionQueries
 {
-    public Permission GetPermissionById(ApplicationDbContext dbContext, string id)
-        => dbContext.Permissions.First(p => p.Id == id);
-
-    public Permission GetPermissionByName(ApplicationDbContext dbContext, string name)
-        => dbContext.Permissions.First(p => p.Name == name);
-
-    public IQueryable<Permission> GetPermissions(ApplicationDbContext dbContext)
+    public IQueryable<Permission> GetList(ApplicationDbContext dbContext)
         => dbContext.Permissions;
 } 

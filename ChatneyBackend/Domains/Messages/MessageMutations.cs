@@ -3,7 +3,6 @@ using ChatneyBackend.Setup;
 
 namespace ChatneyBackend.Domains.Messages;
 
-[ExtendObjectType("Mutation")]
 public class MessageMutations
 {
     public Message AddMessage(ApplicationDbContext dbContext, Message message)

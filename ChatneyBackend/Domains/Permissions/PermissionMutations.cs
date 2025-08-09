@@ -3,7 +3,6 @@ using ChatneyBackend.Setup;
 
 namespace ChatneyBackend.Domains.Permissions;
 
-[ExtendObjectType("Mutation")]
 public class PermissionMutations
 {
     public Permission AddPermission(ApplicationDbContext dbContext, Permission permission)

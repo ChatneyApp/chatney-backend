@@ -3,7 +3,6 @@ using ChatneyBackend.Setup;
 
 namespace ChatneyBackend.Domains.Roles;
 
-[ExtendObjectType("Mutation")]
 public class RoleMutations
 {
     public Role AddRole(ApplicationDbContext dbContext, Role role)

@@ -2,7 +2,6 @@ using ChatneyBackend.Setup;
 
 namespace ChatneyBackend.Domains.Workspaces;
 
-[ExtendObjectType("Query")]
 public class WorkspaceQueries
 {
     public Workspace GetWorkspaceById(ApplicationDbContext dbContext, string id)
@@ -11,6 +10,6 @@ public class WorkspaceQueries
     public Workspace GetWorkspaceByName(ApplicationDbContext dbContext, string name)
         => dbContext.Workspaces.First(w => w.Name == name);
 
-    public IQueryable<Workspace> GetWorkspaces(ApplicationDbContext dbContext)
+    public IQueryable<Workspace> GetList(ApplicationDbContext dbContext)
         => dbContext.Workspaces;
 } 

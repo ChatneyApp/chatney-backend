@@ -3,7 +3,6 @@ using ChatneyBackend.Setup;
 
 namespace ChatneyBackend.Domains.Workspaces;
 
-[ExtendObjectType("Mutation")]
 public class WorkspaceMutations
 {
     public Workspace AddWorkspace(ApplicationDbContext dbContext, Workspace workspace)

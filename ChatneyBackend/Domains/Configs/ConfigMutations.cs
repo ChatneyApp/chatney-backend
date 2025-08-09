@@ -3,7 +3,6 @@ using ChatneyBackend.Setup;
 
 namespace ChatneyBackend.Domains.Configs;
 
-[ExtendObjectType("Mutation")]
 public class ConfigMutations
 {
     public Config AddConfig(ApplicationDbContext dbContext, Config config)

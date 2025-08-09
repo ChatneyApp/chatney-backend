@@ -3,7 +3,6 @@ using ChatneyBackend.Setup;
 
 namespace ChatneyBackend.Domains.Channels;
 
-[ExtendObjectType("Mutation")]
 public class ChannelMutations
 {
     public Channel AddChannel(ApplicationDbContext dbContext, Channel channel)
