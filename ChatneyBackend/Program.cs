@@ -1,7 +1,6 @@
 using HotChocolate.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 using ChatneyBackend.Setup;
-using ChatneyBackend.Domains.Users;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,12 +14,52 @@ if (dbName == null)
 
 builder.Services.AddDbContextFactory<ApplicationDbContext>(options => options.UseMongoDB(connectionString!, dbName));
 
-var endpointBuilder = builder.Services.AddGraphQLServer()
+// ---- CORS policies ----
+// Dev: open for local tooling; Prod: strict allow-list with credentials.
+const string DevOpenCors = "DevOpenCors";
+const string ProdCors = "ProdCors";
+
+string[] allowedProdOrigins =
+{
+    "http://localhost:3001",
+    "https://chatney.com"
+};
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(DevOpenCors, policy =>
+    {
+        // Do NOT call AllowCredentials with AllowAnyOrigin.
+        policy
+            .AllowAnyOrigin()
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+
+    options.AddPolicy(ProdCors, policy =>
+    {
+        policy
+            .WithOrigins(allowedProdOrigins)
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials(); // enable cookies/auth tokens if you need them
+    });
+});
+
+builder.Services.AddGraphQLServer()
     .RegisterDbContextFactory<ApplicationDbContext>()
     .AddQueryType<Query>()
     .AddMutationType<Mutation>();
 
 var app = builder.Build();
+if (app.Environment.IsDevelopment())
+{
+    app.UseCors(DevOpenCors);
+}
+else
+{
+    app.UseCors(ProdCors);
+}
 app.MapGraphQL("/query").WithOptions(new GraphQLServerOptions
 {
     EnableMultipartRequests = true,
