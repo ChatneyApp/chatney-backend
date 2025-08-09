@@ -1,9 +1,12 @@
+using ChatneyBackend.Domains.Channels;
 using ChatneyBackend.Setup;
 
 namespace ChatneyBackend.Domains.Permissions;
 
 public class PermissionQueries
 {
-    public IQueryable<Permission> GetList(ApplicationDbContext dbContext)
-        => dbContext.Permissions;
-} 
+    public string[] GetList(ApplicationDbContext dbContext)
+        => ChannelPermissions.All
+            .Select(k => $"channel.{k}")
+            .ToArray();
+}

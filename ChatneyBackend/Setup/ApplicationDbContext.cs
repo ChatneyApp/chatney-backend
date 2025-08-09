@@ -19,7 +19,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Role> Roles => Set<Role>();
     public DbSet<Config> Configs => Set<Config>();
     public DbSet<Workspace> Workspaces => Set<Workspace>();
-    public DbSet<Permission> Permissions => Set<Permission>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -28,11 +27,11 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         // general stuff
         modelBuilder.Entity<User>().ToCollection("users");
         modelBuilder.Entity<Channel>().ToCollection("channels");
+        modelBuilder.Entity<ChannelType>().ToCollection("channel_types");
         modelBuilder.Entity<Message>().ToCollection("messages");
         modelBuilder.Entity<Role>().ToCollection("roles");
-        modelBuilder.Entity<Config>().ToCollection("configs");
+        modelBuilder.Entity<Config>().ToCollection("system_configs");
         modelBuilder.Entity<Workspace>().ToCollection("workspaces");
-        modelBuilder.Entity<Permission>().ToCollection("permissions");
 
         // relationships
         // modelBuilder.Entity<User>().HasMany<Workspace>();
