@@ -58,7 +58,7 @@ public class RoleChannelType
     public required string RoleId { get; set; }
 }
 
-public class Role
+public class UserRole
 {
     [BsonElement("global")]
     public required string Global { get; set; }
@@ -107,7 +107,7 @@ public class User
     public required string Email { get; set; }
 
     [BsonElement("roles")]
-    public required Role Roles { get; set; }
+    public required UserRole Roles { get; set; }
 
     [BsonElement("channelsSettings")]
     public required List<ChannelSettings> ChannelsSettings { get; set; }
