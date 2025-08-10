@@ -1,14 +1,22 @@
-﻿namespace ChatneyBackend.Domains.Channels;
+﻿using System.Dynamic;
+using System.Reflection;
+using ChatneyBackend.Utils;
 
-public static class ChannelPermissions
+namespace ChatneyBackend.Domains.Channels;
+
+
+
+public class ChannelPermissions
 {
-    public const string Create = "create";
-    public const string List = "List";
-    public const string Update = "Update";
-    public const string Delete = "Delete";
+    private const string Domain = "channel";
 
-    public static readonly HashSet<string> All = new()
-    {
-        Create, List, Update, Delete
-    };
+    public const string DeleteMessage = Domain + ".deleteMessage";
+    public const string EditMessage   = Domain + ".editMessage";
+    public const string CreateMessage = Domain + ".createMessage";
+    public const string ReadMessage   = Domain + ".readMessage";
+
+    public const string DeleteChannel = Domain + ".deleteChannel";
+    public const string EditChannel   = Domain + ".editChannel";
+    public const string CreateChannel = Domain + ".createChannel";
+    public const string ReadChannel   = Domain + ".readChannel";
 }
