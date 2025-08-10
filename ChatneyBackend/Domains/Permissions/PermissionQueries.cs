@@ -3,16 +3,19 @@ using ChatneyBackend.Utils;
 
 namespace ChatneyBackend.Domains.Permissions;
 
+public record PermissionGroup(string Label, string[] List);
+
 public class PermissionQueries
 {
-    public string[] GetList()
+    public PermissionGroup[] GetList()
     {
-        return new[] {
-            PermissionsUtils.GetAllPermissions<ChannelPermissions>(),
-            PermissionsUtils.GetAllPermissions<SystemConfigPermissions>(),
-            PermissionsUtils.GetAllPermissions<RolePermissions>(),
-            PermissionsUtils.GetAllPermissions<UserPermissions>(),
-            PermissionsUtils.GetAllPermissions<WorkspacePermissions>()
-        }.SelectMany(inner => inner).ToArray();
+        return
+        [
+            new PermissionGroup("System config permissions", PermissionsUtils.GetAllPermissions<ChannelPermissions>()),
+            new PermissionGroup("Workspace permissions", PermissionsUtils.GetAllPermissions<SystemConfigPermissions>()),
+            new PermissionGroup("Channel permissions", PermissionsUtils.GetAllPermissions<RolePermissions>()),
+            new PermissionGroup("User permissions", PermissionsUtils.GetAllPermissions<UserPermissions>()),
+            new PermissionGroup("Role permissions", PermissionsUtils.GetAllPermissions<WorkspacePermissions>())
+        ];
     }
 }
