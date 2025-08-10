@@ -15,4 +15,4 @@ public class Workspace
     [BsonElement("name")]
     [MaxLength(255)]
     public required string Name { get; set; }
-} 
+}

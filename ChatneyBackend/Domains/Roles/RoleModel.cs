@@ -4,19 +4,26 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace ChatneyBackend.Domains.Roles;
 
+public class RoleSettings
+{
+    [BsonElement("base")]
+    public bool Base { get; set; }
+}
+
 public class Role
 {
     [BsonElement("_id")]
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     [MaxLength(36)]
-    public required string Id { get; set; }
-
+    public string? Id { get; set; }
     [BsonElement("name")]
     [MaxLength(255)]
-    public required string Name { get; set; }
+    public string? Name { get; set; }
 
-    [BsonElement("description")]
-    [MaxLength(1024)]
-    public string? Description { get; set; }
-} 
+    [BsonElement("settings")]
+    public RoleSettings? Settings { get; set; }
+
+    [BsonElement("permissions")]
+    public List<string>? Permissions { get; set; }
+}

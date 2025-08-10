@@ -1,10 +1,4 @@
-﻿using System.Dynamic;
-using System.Reflection;
-using ChatneyBackend.Utils;
-
-namespace ChatneyBackend.Domains.Channels;
-
-
+﻿namespace ChatneyBackend.Domains.Channels;
 
 public class ChannelPermissions
 {
