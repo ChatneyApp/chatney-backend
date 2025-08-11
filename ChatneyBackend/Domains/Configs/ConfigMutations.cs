@@ -1,41 +1,20 @@
-using System.Diagnostics;
-using ChatneyBackend.Setup;
+using MongoDB.Driver;
 
 namespace ChatneyBackend.Domains.Configs;
 
 public class ConfigMutations
 {
-    public Config AddConfig(ApplicationDbContext dbContext, Config config)
+    public Config AddConfig(IMongoDatabase mongoDatabase, Config config)
     {
-        dbContext.Configs.Add(config);
-        try
-        {
-            dbContext.SaveChanges();
-            return config;
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"something went wrong {ex}");
-        }
-
-        return null;
+        var collection = mongoDatabase.GetCollection<Config>("system_config");
+        collection.InsertOne(config);
+        return config;
     }
 
-    public bool DeleteConfig(ApplicationDbContext dbContext, string id)
+    public bool DeleteConfig(IMongoDatabase mongoDatabase, string id)
     {
-        var config = dbContext.Configs.First(config => config.Id == id);
-
-        try
-        {
-            dbContext.Configs.Remove(config);
-            dbContext.SaveChanges();
-            return true;
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"something went wrong {ex}");
-        }
-
-        return false;
+        var collection = mongoDatabase.GetCollection<Config>("system_config");
+        var result = collection.DeleteOne(c => c.Id == id);
+        return result.DeletedCount > 0;
     }
-} 
+}

@@ -1,18 +1,21 @@
 using HotChocolate.AspNetCore;
-using Microsoft.EntityFrameworkCore;
 using ChatneyBackend.Setup;
+using MongoDB.Driver;
 
 var builder = WebApplication.CreateBuilder(args);
 
 var connectionString = builder.Configuration.GetConnectionString("MongoDB");
 var dbName = builder.Configuration.GetConnectionString("dbName");
 
-if (dbName == null)
+if (connectionString == null || dbName == null)
 {
     throw new ArgumentException("dbName is empty");
 }
 
-builder.Services.AddDbContextFactory<ApplicationDbContext>(options => options.UseMongoDB(connectionString!, dbName));
+var url = new MongoUrl(connectionString);
+var settings = MongoClientSettings.FromUrl(url);
+var mongoClient = new MongoClient(settings);
+builder.Services.AddSingleton<IMongoDatabase>((sp) => mongoClient.GetDatabase(dbName));
 
 // ---- CORS policies ----
 // Dev: open for local tooling; Prod: strict allow-list with credentials.
@@ -47,7 +50,6 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddGraphQLServer()
-    .RegisterDbContextFactory<ApplicationDbContext>()
     .AddQueryType<Query>()
     .AddMutationType<Mutation>();
 

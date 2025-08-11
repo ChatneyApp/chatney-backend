@@ -1,12 +1,12 @@
-using ChatneyBackend.Setup;
+using MongoDB.Driver;
 
 namespace ChatneyBackend.Domains.Messages;
 
 public class MessageQueries
 {
-    public Message GetMessageById(ApplicationDbContext dbContext, string id)
-        => dbContext.Messages.First(m => m.Id == id);
+    public Message GetMessageById(IMongoDatabase mongoDatabase, string id)
+        => mongoDatabase.GetCollection<Message>("messages").Find(m => m.Id == id).First();
 
-    public IQueryable<Message> GetList(ApplicationDbContext dbContext, string channelId)
-        => dbContext.Messages.Where(m => m.ChannelId == channelId);
-} 
+    public List<Message> GetList(IMongoDatabase mongoDatabase, string channelId)
+        => mongoDatabase.GetCollection<Message>("messages").Find(m => m.ChannelId == channelId).ToList();
+}

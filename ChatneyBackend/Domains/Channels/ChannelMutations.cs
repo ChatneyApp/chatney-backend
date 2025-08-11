@@ -1,41 +1,20 @@
-using System.Diagnostics;
-using ChatneyBackend.Setup;
+using MongoDB.Driver;
 
 namespace ChatneyBackend.Domains.Channels;
 
 public class ChannelMutations
 {
-    public Channel AddChannel(ApplicationDbContext dbContext, Channel channel)
+    public Channel AddChannel(IMongoDatabase mongoDatabase, Channel channel)
     {
-        dbContext.Channels.Add(channel);
-        try
-        {
-            dbContext.SaveChanges();
-            return channel;
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"something went wrong {ex}");
-        }
-
-        return null;
+        var collection = mongoDatabase.GetCollection<Channel>("channels");
+        collection.InsertOne(channel);
+        return channel;
     }
 
-    public bool DeleteChannel(ApplicationDbContext dbContext, string id)
+    public bool DeleteChannel(IMongoDatabase mongoDatabase, string id)
     {
-        var user = dbContext.Channels.First(user => user.Id == id);
-
-        try
-        {
-            dbContext.Channels.Remove(user);
-            dbContext.SaveChanges();
-            return true;
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"something went wrong {ex}");
-        }
-
-        return false;
+        var collection = mongoDatabase.GetCollection<Channel>("channels");
+        var result = collection.DeleteOne(c => c.Id == id);
+        return result.DeletedCount > 0;
     }
 }

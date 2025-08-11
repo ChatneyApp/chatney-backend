@@ -1,15 +1,18 @@
-using ChatneyBackend.Setup;
+using MongoDB.Driver;
 
 namespace ChatneyBackend.Domains.Roles;
 
 public class RoleQueries
 {
-    public Role GetRoleById(ApplicationDbContext dbContext, string id)
-        => dbContext.Roles.First(r => r.Id == id);
+    public Role GetRoleById(IMongoDatabase mongoDatabase, string id)
+        => mongoDatabase.GetCollection<Role>("roles").Find(r => r.Id == id).First();
 
-    public Role GetRoleByName(ApplicationDbContext dbContext, string name)
-        => dbContext.Roles.First(r => r.Name == name);
+    public Role GetRoleByName(IMongoDatabase mongoDatabase, string name)
+        => mongoDatabase.GetCollection<Role>("roles").Find(r => r.Name == name).First();
 
-    public IQueryable<Role> GetList(ApplicationDbContext dbContext)
-        => dbContext.Roles;
-} 
+    public List<Role> GetList(IMongoDatabase mongoDatabase)
+        => mongoDatabase
+            .GetCollection<Role>("roles")
+            .Find(Builders<Role>.Filter.Empty)
+            .ToList();
+}

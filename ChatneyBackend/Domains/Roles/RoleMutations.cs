@@ -1,41 +1,20 @@
-using System.Diagnostics;
-using ChatneyBackend.Setup;
+using MongoDB.Driver;
 
 namespace ChatneyBackend.Domains.Roles;
 
 public class RoleMutations
 {
-    public Role AddRole(ApplicationDbContext dbContext, Role role)
+    public Role AddRole(IMongoDatabase mongoDatabase, Role role)
     {
-        dbContext.Roles.Add(role);
-        try
-        {
-            dbContext.SaveChanges();
-            return role;
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"something went wrong {ex}");
-        }
-
-        return null;
+        var collection = mongoDatabase.GetCollection<Role>("roles");
+        collection.InsertOne(role);
+        return role;
     }
 
-    public bool DeleteRole(ApplicationDbContext dbContext, string id)
+    public bool DeleteRole(IMongoDatabase mongoDatabase, string id)
     {
-        var role = dbContext.Roles.First(role => role.Id == id);
-
-        try
-        {
-            dbContext.Roles.Remove(role);
-            dbContext.SaveChanges();
-            return true;
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"something went wrong {ex}");
-        }
-
-        return false;
+        var collection = mongoDatabase.GetCollection<Role>("roles");
+        var result = collection.DeleteOne(r => r.Id == id);
+        return result.DeletedCount > 0;
     }
-} 
+}

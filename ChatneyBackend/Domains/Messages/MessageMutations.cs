@@ -1,41 +1,20 @@
-using System.Diagnostics;
-using ChatneyBackend.Setup;
+using MongoDB.Driver;
 
 namespace ChatneyBackend.Domains.Messages;
 
 public class MessageMutations
 {
-    public Message AddMessage(ApplicationDbContext dbContext, Message message)
+    public Message AddMessage(IMongoDatabase mongoDatabase, Message message)
     {
-        dbContext.Messages.Add(message);
-        try
-        {
-            dbContext.SaveChanges();
-            return message;
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"something went wrong {ex}");
-        }
-
-        return null;
+        var collection = mongoDatabase.GetCollection<Message>("messages");
+        collection.InsertOne(message);
+        return message;
     }
 
-    public bool DeleteMessage(ApplicationDbContext dbContext, string id)
+    public bool DeleteMessage(IMongoDatabase mongoDatabase, string id)
     {
-        var message = dbContext.Messages.First(message => message.Id == id);
-
-        try
-        {
-            dbContext.Messages.Remove(message);
-            dbContext.SaveChanges();
-            return true;
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"something went wrong {ex}");
-        }
-
-        return false;
+        var collection = mongoDatabase.GetCollection<Message>("messages");
+        var result = collection.DeleteOne(m => m.Id == id);
+        return result.DeletedCount > 0;
     }
-} 
+}

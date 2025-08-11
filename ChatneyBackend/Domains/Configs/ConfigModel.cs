@@ -12,15 +12,15 @@ public class Config
     [MaxLength(36)]
     public required string Id { get; set; }
 
-    [BsonElement("key")]
+    [BsonElement("name")]
     [MaxLength(255)]
-    public required string Key { get; set; }
+    public required string Name { get; set; }
 
     [BsonElement("value")]
     [MaxLength(2048)]
     public required string Value { get; set; }
 
-    [BsonElement("workspaceId")]
-    [MaxLength(36)]
-    public string? WorkspaceId { get; set; }
+    [BsonElement("type")]
+    [MaxLength(255)]
+    public string? Type { get; set; }
 } 

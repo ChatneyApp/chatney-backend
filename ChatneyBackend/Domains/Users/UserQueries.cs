@@ -1,15 +1,15 @@
-﻿using ChatneyBackend.Setup;
+﻿using MongoDB.Driver;
 
 namespace ChatneyBackend.Domains.Users;
 
 public class UserQueries
 {
-    public User GetUserById(ApplicationDbContext dbContext, string id)
-        => dbContext.Users.First(u => u.Id == id);
+    public User GetUserById(IMongoDatabase mongoDatabase, string id)
+        => mongoDatabase.GetCollection<User>("users").Find(u => u.Id == id).First();
 
-    public User GetUserByName(ApplicationDbContext dbContext, string name)
-        => dbContext.Users.First(u => u.Name == name);
+    public User GetUserByName(IMongoDatabase mongoDatabase, string name)
+        => mongoDatabase.GetCollection<User>("users").Find(u => u.Name == name).First();
 
-    public IQueryable<User> GetList(ApplicationDbContext dbContext)
-        => dbContext.Users;
+    public List<User> GetList(IMongoDatabase mongoDatabase)
+        => mongoDatabase.GetCollection<User>("users").Find(Builders<User>.Filter.Empty).ToList();
 }

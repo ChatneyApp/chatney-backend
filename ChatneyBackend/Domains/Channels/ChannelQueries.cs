@@ -1,15 +1,15 @@
-using ChatneyBackend.Setup;
+using MongoDB.Driver;
 
 namespace ChatneyBackend.Domains.Channels;
 
 public class ChannelQueries
 {
-    public Channel GetChannelById(ApplicationDbContext dbContext, string id)
-        => dbContext.Channels.First(u => u.Id == id);
+    public Channel GetChannelById(IMongoDatabase mongoDatabase, string id)
+        => mongoDatabase.GetCollection<Channel>("channels").Find(u => u.Id == id).First();
 
-    public Channel GetChannelByName(ApplicationDbContext dbContext, string name)
-        => dbContext.Channels.First(u => u.Name == name);
+    public Channel GetChannelByName(IMongoDatabase mongoDatabase, string name)
+        => mongoDatabase.GetCollection<Channel>("channels").Find(u => u.Name == name).First();
 
-    public IQueryable<Channel> GetList(ApplicationDbContext dbContext)
-        => dbContext.Channels;
+    public List<Channel> GetList(IMongoDatabase mongoDatabase)
+        => mongoDatabase.GetCollection<Channel>("channels").Find(Builders<Channel>.Filter.Empty).ToList();
 }

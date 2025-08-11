@@ -1,15 +1,15 @@
-using ChatneyBackend.Setup;
+using MongoDB.Driver;
 
 namespace ChatneyBackend.Domains.Configs;
 
 public class ConfigQueries
 {
-    public Config GetConfigById(ApplicationDbContext dbContext, string id)
-        => dbContext.Configs.First(c => c.Id == id);
+    public Config GetConfigById(IMongoDatabase mongoDatabase, string id)
+        => mongoDatabase.GetCollection<Config>("system_config").Find(c => c.Id == id).First();
 
-    public Config GetConfigByKey(ApplicationDbContext dbContext, string key)
-        => dbContext.Configs.First(c => c.Key == key);
+    public Config GetConfigByName(IMongoDatabase mongoDatabase, string name)
+        => mongoDatabase.GetCollection<Config>("system_config").Find(c => c.Name == name).First();
 
-    public IQueryable<Config> GetList(ApplicationDbContext dbContext)
-        => dbContext.Configs;
+    public List<Config> GetList(IMongoDatabase mongoDatabase)
+        => mongoDatabase.GetCollection<Config>("system_config").Find(Builders<Config>.Filter.Empty).ToList();
 }

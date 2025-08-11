@@ -1,41 +1,20 @@
-using System.Diagnostics;
-using ChatneyBackend.Setup;
+using MongoDB.Driver;
 
 namespace ChatneyBackend.Domains.Workspaces;
 
 public class WorkspaceMutations
 {
-    public Workspace AddWorkspace(ApplicationDbContext dbContext, Workspace workspace)
+    public Workspace AddWorkspace(IMongoDatabase mongoDatabase, Workspace workspace)
     {
-        dbContext.Workspaces.Add(workspace);
-        try
-        {
-            dbContext.SaveChanges();
-            return workspace;
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"something went wrong {ex}");
-        }
-
-        return null;
+        var collection = mongoDatabase.GetCollection<Workspace>("workspaces");
+        collection.InsertOne(workspace);
+        return workspace;
     }
 
-    public bool DeleteWorkspace(ApplicationDbContext dbContext, string id)
+    public bool DeleteWorkspace(IMongoDatabase mongoDatabase, string id)
     {
-        var workspace = dbContext.Workspaces.First(workspace => workspace.Id == id);
-
-        try
-        {
-            dbContext.Workspaces.Remove(workspace);
-            dbContext.SaveChanges();
-            return true;
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"something went wrong {ex}");
-        }
-
-        return false;
+        var collection = mongoDatabase.GetCollection<Workspace>("workspaces");
+        var result = collection.DeleteOne(w => w.Id == id);
+        return result.DeletedCount > 0;
     }
-} 
+}

@@ -1,15 +1,15 @@
-using ChatneyBackend.Setup;
+using MongoDB.Driver;
 
 namespace ChatneyBackend.Domains.Workspaces;
 
 public class WorkspaceQueries
 {
-    public Workspace GetWorkspaceById(ApplicationDbContext dbContext, string id)
-        => dbContext.Workspaces.First(w => w.Id == id);
+    public Workspace GetWorkspaceById(IMongoDatabase mongoDatabase, string id)
+        => mongoDatabase.GetCollection<Workspace>("workspaces").Find(w => w.Id == id).First();
 
-    public Workspace GetWorkspaceByName(ApplicationDbContext dbContext, string name)
-        => dbContext.Workspaces.First(w => w.Name == name);
+    public Workspace GetWorkspaceByName(IMongoDatabase mongoDatabase, string name)
+        => mongoDatabase.GetCollection<Workspace>("workspaces").Find(w => w.Name == name).First();
 
-    public IQueryable<Workspace> GetList(ApplicationDbContext dbContext)
-        => dbContext.Workspaces;
-} 
+    public List<Workspace> GetList(IMongoDatabase mongoDatabase)
+        => mongoDatabase.GetCollection<Workspace>("workspaces").Find(Builders<Workspace>.Filter.Empty).ToList();
+}

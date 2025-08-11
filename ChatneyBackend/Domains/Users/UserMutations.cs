@@ -1,41 +1,20 @@
-﻿using System.Diagnostics;
-using ChatneyBackend.Setup;
+﻿using MongoDB.Driver;
 
 namespace ChatneyBackend.Domains.Users;
 
 public class UserMutations
 {
-    public User AddUser(ApplicationDbContext dbContext, User user)
+    public User AddUser(IMongoDatabase mongoDatabase, User user)
     {
-        dbContext.Users.Add(user);
-        try
-        {
-            dbContext.SaveChanges();
-            return user;
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"something went wrong {ex}");
-        }
-
-        return null;
+        var collection = mongoDatabase.GetCollection<User>("users");
+        collection.InsertOne(user);
+        return user;
     }
 
-    public bool DeleteUser(ApplicationDbContext dbContext, string id)
+    public bool DeleteUser(IMongoDatabase mongoDatabase, string id)
     {
-        var user = dbContext.Users.First(user => user.Id == id);
-
-        try
-        {
-            dbContext.Users.Remove(user);
-            dbContext.SaveChanges();
-            return true;
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"something went wrong {ex}");
-        }
-
-        return false;
+        var collection = mongoDatabase.GetCollection<User>("users");
+        var result = collection.DeleteOne(u => u.Id == id);
+        return result.DeletedCount > 0;
     }
 }
