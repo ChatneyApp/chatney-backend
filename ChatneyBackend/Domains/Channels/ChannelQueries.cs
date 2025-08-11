@@ -10,6 +10,12 @@ public class ChannelQueries
     public Channel GetChannelByName(IMongoDatabase mongoDatabase, string name)
         => mongoDatabase.GetCollection<Channel>("channels").Find(u => u.Name == name).First();
 
-    public List<Channel> GetList(IMongoDatabase mongoDatabase)
-        => mongoDatabase.GetCollection<Channel>("channels").Find(Builders<Channel>.Filter.Empty).ToList();
+    public List<Channel> GetWorkspaceChannelList(IMongoDatabase mongoDatabase, string workspaceId)
+        => mongoDatabase.GetCollection<Channel>("channels").Find(channel => channel.WorkspaceId == workspaceId).ToList();
+
+    public List<ChannelType> GetChannelTypeList(IMongoDatabase mongoDatabase)
+        => mongoDatabase.GetCollection<ChannelType>("channel_types").Find(Builders<ChannelType>.Filter.Empty).ToList();
+
+    public List<ChannelGroup> GetChannelGroupList(IMongoDatabase mongoDatabase, string workspaceId)
+        => mongoDatabase.GetCollection<ChannelGroup>("channel_groups").Find(channel => channel.WorkspaceId == workspaceId).ToList();
 }
