@@ -21,7 +21,6 @@ public class ChannelType
     public required string Key { get; set; }
 
     [BsonElement("baseRoleId")]
-    [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     [MaxLength(36)]
     public required string BaseRoleId { get; set; }

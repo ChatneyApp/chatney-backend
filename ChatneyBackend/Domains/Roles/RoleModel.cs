@@ -16,14 +16,15 @@ public class Role
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     [MaxLength(36)]
-    public string? Id { get; set; }
+    public string Id { get; set; }
+
     [BsonElement("name")]
     [MaxLength(255)]
-    public string? Name { get; set; }
+    public string Name { get; set; }
 
     [BsonElement("settings")]
-    public RoleSettings? Settings { get; set; }
+    public RoleSettings Settings { get; set; }
 
     [BsonElement("permissions")]
-    public List<string>? Permissions { get; set; }
+    public List<string> Permissions { get; set; }
 }

@@ -6,7 +6,6 @@ using ChatneyBackend.Domains.Messages;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Domains.Configs;
 using ChatneyBackend.Domains.Workspaces;
-using ChatneyBackend.Domains.Permissions;
 
 namespace ChatneyBackend.Setup;
 

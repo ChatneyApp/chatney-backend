@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
@@ -15,77 +16,53 @@ public enum UserStatus
 
 public class RoleWorkspace
 {
-    [BsonElement("workspaceId")]
-    [BsonId]
-    [BsonRepresentation(BsonType.ObjectId)]
-    [MaxLength(36)]
-    public required string WorkspaceId { get; set; }
-
     [BsonElement("roleId")]
-    [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     [MaxLength(36)]
-    public required string RoleId { get; set; }
+    public string RoleId { get; set; }
 }
 
 public class RoleChannel
 {
-    [BsonElement("channelId")]
-    [BsonId]
-    [BsonRepresentation(BsonType.ObjectId)]
-    [MaxLength(36)]
-    public required string ChannelId { get; set; }
-
     [BsonElement("roleId")]
-    [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     [MaxLength(36)]
-    public required string RoleId { get; set; }
+    public string RoleId { get; set; }
 }
 
 public class RoleChannelType
 {
-    [BsonElement("channelTypeId")]
-    [BsonId]
-    [BsonRepresentation(BsonType.ObjectId)]
-    [MaxLength(36)]
-    public required string ChannelTypeId { get; set; }
-
     [BsonElement("roleId")]
-    [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     [MaxLength(36)]
-    public required string RoleId { get; set; }
+    public string RoleId { get; set; }
 }
 
 public class UserRole
 {
     [BsonElement("global")]
-    public required string Global { get; set; }
+    public string Global { get; set; }
 
     [BsonElement("workspace")]
-    public required List<RoleWorkspace> Workspace { get; set; }
+    [NotMapped]
+    public Dictionary<string, RoleWorkspace> Workspace { get; set; }
 
     [BsonElement("channel")]
-    public required List<RoleChannel> Channel { get; set; }
+    [NotMapped]
+    public Dictionary<string, RoleChannel> Channel { get; set; }
 
     [BsonElement("channel_types")]
-    public required List<RoleChannelType> ChannelTypes { get; set; }
+    [NotMapped]
+    public Dictionary<string, RoleChannelType> ChannelTypes { get; set; }
 }
 
 public class ChannelSettings
 {
-    [BsonElement("channelId")]
-    [BsonId]
-    [BsonRepresentation(BsonType.ObjectId)]
-    [MaxLength(36)]
-    public required string ChannelId { get; set; }
-
     [BsonElement("lastSeenMessage")]
-    public required string LastSeenMessage { get; set; }
+    public string LastSeenMessage { get; set; }
 
     [BsonElement("muted")]
-    public required bool Muted { get; set; }
+    public bool Muted { get; set; }
 }
 
 public class User
@@ -94,27 +71,28 @@ public class User
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     [MaxLength(36)]
-    public required string Id { get; set; }
+    public string Id { get; set; }
 
     [BsonElement("name")]
-    public required string Name { get; set; }
+    public string Name { get; set; }
 
     [BsonElement("status")]
     [BsonRepresentation(BsonType.String)]
-    public required UserStatus Status { get; set; }
+    public UserStatus Status { get; set; }
 
     [BsonElement("email")]
-    public required string Email { get; set; }
+    public string Email { get; set; }
 
     [BsonElement("roles")]
-    public required UserRole Roles { get; set; }
+    public UserRole Roles { get; set; }
 
     [BsonElement("channelsSettings")]
-    public required List<ChannelSettings> ChannelsSettings { get; set; }
+    [NotMapped]
+    public Dictionary<string, ChannelSettings>? ChannelsSettings { get; set; }
 
     [BsonElement("workspaces")]
-    public required List<string> Workspaces { get; set; }
+    public List<string> Workspaces { get; set; }
 
     [BsonElement("password")]
-    public required string Password { get; set; }
+    public string Password { get; set; }
 }

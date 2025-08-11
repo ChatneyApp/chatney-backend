@@ -24,13 +24,11 @@ public class Message
     public required string Id { get; set; }
 
     [BsonElement("channelId")]
-    [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     [MaxLength(36)]
     public required string ChannelId { get; set; }
 
     [BsonElement("userId")]
-    [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     [MaxLength(36)]
     public required string UserId { get; set; }
@@ -56,7 +54,6 @@ public class Message
     public required List<Reaction> Reactions { get; set; }
 
     [BsonElement("parentId")]
-    [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     [MaxLength(36)]
     public string? ParentId { get; set; }
