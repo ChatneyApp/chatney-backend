@@ -14,10 +14,6 @@
         <PackageReference Include="HotChocolate.AspNetCore.CommandLine" Version="15.1.8" />
         <PackageReference Include="HotChocolate.Types.Analyzers" Version="15.1.8" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.7"/>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.7">
-          <PrivateAssets>all</PrivateAssets>
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
         <PackageReference Include="MongoDB.Driver" Version="3.4.2" />
     </ItemGroup>
 
