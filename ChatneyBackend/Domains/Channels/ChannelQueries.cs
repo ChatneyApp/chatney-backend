@@ -16,6 +16,6 @@ public class ChannelQueries
     public List<ChannelType> GetChannelTypeList(IMongoDatabase mongoDatabase)
         => mongoDatabase.GetCollection<ChannelType>("channel_types").Find(Builders<ChannelType>.Filter.Empty).ToList();
 
-    public List<ChannelGroup> GetChannelGroupList(IMongoDatabase mongoDatabase, string workspaceId)
+    public List<ChannelGroup> GetWorkspaceChannelGroupList(IMongoDatabase mongoDatabase, string workspaceId)
         => mongoDatabase.GetCollection<ChannelGroup>("channel_groups").Find(channel => channel.WorkspaceId == workspaceId).ToList();
 }
