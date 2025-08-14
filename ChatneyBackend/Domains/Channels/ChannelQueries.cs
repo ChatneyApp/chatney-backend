@@ -7,15 +7,19 @@ public class ChannelQueries
     public async Task<Channel?> GetChannelById(IMongoDatabase mongoDatabase, string id)
     {
         var collection = mongoDatabase.GetCollection<Channel>("channels");
-        var records = await collection.FindAsync(u => u.Id == id);
-        return records.First() ?? null;
+        var records = (await collection.FindAsync(u => u.Id == id)).ToList();
+        return records.Count > 0
+            ? records[0]
+            : null;
     }
 
     public async Task<Channel?> GetChannelByName(IMongoDatabase mongoDatabase, string name)
     {
         var collection = mongoDatabase.GetCollection<Channel>("channels");
-        var records = await collection.FindAsync(u => u.Name == name);
-        return records.First() ?? null;
+        var records = (await collection.FindAsync(u => u.Name == name)).ToList();
+        return records.Count > 0
+            ? records[0]
+            : null;
     }
 
     public async Task<List<Channel>> GetWorkspaceChannelList(IMongoDatabase mongoDatabase, string workspaceId)
