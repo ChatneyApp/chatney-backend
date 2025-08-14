@@ -8,7 +8,6 @@ public class Config
 {
     [BsonElement("_id")]
     [BsonId]
-    [BsonRepresentation(BsonType.ObjectId)]
     [MaxLength(36)]
     public required string Id { get; set; }
 

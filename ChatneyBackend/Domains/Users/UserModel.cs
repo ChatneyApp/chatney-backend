@@ -17,7 +17,6 @@ public enum UserStatus
 public class RoleWorkspace
 {
     [BsonElement("roleId")]
-    [BsonRepresentation(BsonType.ObjectId)]
     [MaxLength(36)]
     public string RoleId { get; set; }
 }
@@ -25,7 +24,6 @@ public class RoleWorkspace
 public class RoleChannel
 {
     [BsonElement("roleId")]
-    [BsonRepresentation(BsonType.ObjectId)]
     [MaxLength(36)]
     public string RoleId { get; set; }
 }
@@ -33,7 +31,6 @@ public class RoleChannel
 public class RoleChannelType
 {
     [BsonElement("roleId")]
-    [BsonRepresentation(BsonType.ObjectId)]
     [MaxLength(36)]
     public string RoleId { get; set; }
 }
@@ -69,7 +66,6 @@ public class User
 {
     [BsonElement("_id")]
     [BsonId]
-    [BsonRepresentation(BsonType.ObjectId)]
     [MaxLength(36)]
     public string Id { get; set; }
 
