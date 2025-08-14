@@ -4,18 +4,38 @@ namespace ChatneyBackend.Domains.Channels;
 
 public class ChannelQueries
 {
-    public Channel GetChannelById(IMongoDatabase mongoDatabase, string id)
-        => mongoDatabase.GetCollection<Channel>("channels").Find(u => u.Id == id).First();
+    public async Task<Channel?> GetChannelById(IMongoDatabase mongoDatabase, string id)
+    {
+        var collection = mongoDatabase.GetCollection<Channel>("channels");
+        var records = await collection.FindAsync(u => u.Id == id);
+        return records.First() ?? null;
+    }
 
-    public Channel GetChannelByName(IMongoDatabase mongoDatabase, string name)
-        => mongoDatabase.GetCollection<Channel>("channels").Find(u => u.Name == name).First();
+    public async Task<Channel?> GetChannelByName(IMongoDatabase mongoDatabase, string name)
+    {
+        var collection = mongoDatabase.GetCollection<Channel>("channels");
+        var records = await collection.FindAsync(u => u.Name == name);
+        return records.First() ?? null;
+    }
 
-    public List<Channel> GetWorkspaceChannelList(IMongoDatabase mongoDatabase, string workspaceId)
-        => mongoDatabase.GetCollection<Channel>("channels").Find(channel => channel.WorkspaceId == workspaceId).ToList();
+    public async Task<List<Channel>> GetWorkspaceChannelList(IMongoDatabase mongoDatabase, string workspaceId)
+    {
+        var collection = mongoDatabase.GetCollection<Channel>("channels");
+        var records = await collection.FindAsync(channel => channel.WorkspaceId == workspaceId);
+        return records.ToList();
+    }
 
-    public List<ChannelType> GetChannelTypeList(IMongoDatabase mongoDatabase)
-        => mongoDatabase.GetCollection<ChannelType>("channel_types").Find(Builders<ChannelType>.Filter.Empty).ToList();
+    public async Task<List<ChannelType>> GetChannelTypeList(IMongoDatabase mongoDatabase)
+    {
+        var collection = mongoDatabase.GetCollection<ChannelType>("channel_types");
+        var records = await collection.FindAsync(Builders<ChannelType>.Filter.Empty);
+        return records.ToList();
+    }
 
-    public List<ChannelGroup> GetWorkspaceChannelGroupList(IMongoDatabase mongoDatabase, string workspaceId)
-        => mongoDatabase.GetCollection<ChannelGroup>("channel_groups").Find(channel => channel.WorkspaceId == workspaceId).ToList();
+    public async Task<List<ChannelGroup>> GetWorkspaceChannelGroupList(IMongoDatabase mongoDatabase, string workspaceId)
+    {
+        var collection = mongoDatabase.GetCollection<ChannelGroup>("channel_groups");
+        var records = await collection.FindAsync(channel => channel.WorkspaceId == workspaceId);
+        return records.ToList();
+    }
 }
