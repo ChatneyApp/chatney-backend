@@ -4,15 +4,30 @@ namespace ChatneyBackend.Domains.Roles;
 
 public class RoleQueries
 {
-    public Role GetRoleById(IMongoDatabase mongoDatabase, string id)
-        => mongoDatabase.GetCollection<Role>("roles").Find(r => r.Id == id).First();
+    public async Task<Role?> GetRoleById(IMongoDatabase mongoDatabase, string id)
+    {
+        var collection = mongoDatabase.GetCollection<Role>("roles");
+        var records = (await collection.FindAsync(r => r.Id == id)).ToList();
+        return records.Count > 0
+            ? records[0]
+            : null;
+    }
 
-    public Role GetRoleByName(IMongoDatabase mongoDatabase, string name)
-        => mongoDatabase.GetCollection<Role>("roles").Find(r => r.Name == name).First();
+    public async Task<Role?> GetRoleByName(IMongoDatabase mongoDatabase, string name)
+    {
+        var collection = mongoDatabase.GetCollection<Role>("roles");
+        var records = (await collection.FindAsync(r => r.Name == name)).ToList();
+        return records.Count > 0
+            ? records[0]
+            : null;
 
-    public List<Role> GetList(IMongoDatabase mongoDatabase)
-        => mongoDatabase
-            .GetCollection<Role>("roles")
-            .Find(Builders<Role>.Filter.Empty)
-            .ToList();
+    }
+
+    public async Task<List<Role>> GetList(IMongoDatabase mongoDatabase)
+    {
+        var collection = mongoDatabase.GetCollection<Role>("roles");
+        var records = await collection.FindAsync(Builders<Role>.Filter.Empty);
+        return records.ToList();
+
+    }
 }

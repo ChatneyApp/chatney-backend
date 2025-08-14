@@ -46,7 +46,7 @@ public class ChannelMutations
     public async Task<bool> DeleteChannel(IMongoDatabase mongoDatabase, string id)
     {
         var collection = mongoDatabase.GetCollection<Channel>("channels");
-        var result = collection.DeleteOne(c => c.Id == id);
+        var result = await collection.DeleteOneAsync(c => c.Id == id);
         return result.DeletedCount > 0;
     }
 
