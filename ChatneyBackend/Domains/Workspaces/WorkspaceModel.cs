@@ -14,4 +14,20 @@ public class Workspace
     [BsonElement("name")]
     [MaxLength(255)]
     public required string Name { get; set; }
+
+    public static Workspace FromDTO(WorkspaceDTO workspace)
+    {
+        return new Workspace()
+        {
+            Id = Guid.NewGuid().ToString(),
+            Name = workspace.Name,
+        };
+    }
+}
+
+public class WorkspaceDTO
+{
+    [BsonElement("name")]
+    [MaxLength(255)]
+    public required string Name { get; set; }
 }

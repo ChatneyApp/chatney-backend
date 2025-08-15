@@ -4,17 +4,26 @@ namespace ChatneyBackend.Domains.Workspaces;
 
 public class WorkspaceMutations
 {
-    public Workspace AddWorkspace(IMongoDatabase mongoDatabase, Workspace workspace)
+    public async Task<Workspace> AddWorkspace(IMongoDatabase mongoDatabase, WorkspaceDTO workspaceDto)
     {
         var collection = mongoDatabase.GetCollection<Workspace>("workspaces");
-        collection.InsertOne(workspace);
+        Workspace workspace = Workspace.FromDTO(workspaceDto);
+        await collection.InsertOneAsync(workspace);
         return workspace;
     }
 
-    public bool DeleteWorkspace(IMongoDatabase mongoDatabase, string id)
+    public async Task<Workspace?> UpdateWorkspace(IMongoDatabase mongoDatabase, Workspace workspace)
     {
         var collection = mongoDatabase.GetCollection<Workspace>("workspaces");
-        var result = collection.DeleteOne(w => w.Id == id);
+        var filter = Builders<Workspace>.Filter.Eq("_id", workspace.Id);
+        var result = await collection.ReplaceOneAsync(filter, workspace);
+        return result.ModifiedCount > 0 ? workspace : null;
+    }
+
+    public async Task<bool> DeleteWorkspace(IMongoDatabase mongoDatabase, string id)
+    {
+        var collection = mongoDatabase.GetCollection<Workspace>("workspaces");
+        var result = await collection.DeleteOneAsync(c => c.Id == id);
         return result.DeletedCount > 0;
     }
 }
