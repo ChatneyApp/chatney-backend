@@ -8,11 +8,11 @@ public class Reaction
 {
     [BsonElement("userId")]
     [MaxLength(36)]
-    public required string UserId { get; set; }
+    public string UserId { get; set; }
 
     [BsonElement("reaction")]
     [MaxLength(255)]
-    public required string ReactionText { get; set; }
+    public string ReactionText { get; set; }
 }
 
 public class Message
@@ -20,35 +20,35 @@ public class Message
     [BsonElement("_id")]
     [BsonId]
     [MaxLength(36)]
-    public required string Id { get; set; }
+    public string Id { get; set; }
 
     [BsonElement("channelId")]
     [MaxLength(36)]
-    public required string ChannelId { get; set; }
+    public string ChannelId { get; set; }
 
     [BsonElement("userId")]
     [MaxLength(36)]
-    public required string UserId { get; set; }
+    public string UserId { get; set; }
 
     [BsonElement("content")]
     [MaxLength(4096)]
-    public required string Content { get; set; }
+    public string Content { get; set; }
 
     [BsonElement("attachments")]
-    public required List<string> Attachments { get; set; }
+    public List<string> Attachments { get; set; }
 
     [BsonElement("status")]
     [MaxLength(50)]
-    public required string Status { get; set; }
+    public string Status { get; set; }
 
     [BsonElement("createdAt")]
-    public required DateTime CreatedAt { get; set; }
+    public DateTime CreatedAt { get; set; }
 
     [BsonElement("updatedAt")]
-    public required DateTime UpdatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
 
     [BsonElement("reactions")]
-    public required List<Reaction> Reactions { get; set; }
+    public List<Reaction> Reactions { get; set; }
 
     [BsonElement("parentId")]
     [MaxLength(36)]

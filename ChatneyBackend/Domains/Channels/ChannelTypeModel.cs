@@ -9,19 +9,19 @@ public class ChannelType
     [BsonElement("_id")]
     [BsonId]
     [MaxLength(36)]
-    public required string Id { get; set; }
+    public string Id { get; set; }
 
     [BsonElement("label")]
     [MaxLength(255)]
-    public required string Label { get; set; }
+    public string Label { get; set; }
 
     [BsonElement("key")]
     [MaxLength(255)]
-    public required string Key { get; set; }
+    public string Key { get; set; }
 
     [BsonElement("baseRoleId")]
     [MaxLength(36)]
-    public required string BaseRoleId { get; set; }
+    public string BaseRoleId { get; set; }
 
     public static ChannelType FromDTO(ChannelTypeDTO channelType)
     {
@@ -39,14 +39,14 @@ public class ChannelTypeDTO
 {
     [BsonElement("label")]
     [MaxLength(255)]
-    public required string Label { get; set; }
+    public string Label { get; set; }
 
     [BsonElement("key")]
     [MaxLength(255)]
-    public required string Key { get; set; }
+    public string Key { get; set; }
 
     [BsonElement("baseRoleId")]
     [MaxLength(36)]
-    public required string BaseRoleId { get; set; }
+    public string BaseRoleId { get; set; }
 
 }

@@ -9,11 +9,11 @@ public class Workspace
     [BsonElement("_id")]
     [BsonId]
     [MaxLength(36)]
-    public required string Id { get; set; }
+    public string Id { get; set; }
 
     [BsonElement("name")]
     [MaxLength(255)]
-    public required string Name { get; set; }
+    public string Name { get; set; }
 
     public static Workspace FromDTO(WorkspaceDTO workspace)
     {
@@ -29,5 +29,5 @@ public class WorkspaceDTO
 {
     [BsonElement("name")]
     [MaxLength(255)]
-    public required string Name { get; set; }
+    public string Name { get; set; }
 }

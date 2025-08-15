@@ -9,19 +9,19 @@ public class Channel
     [BsonElement("_id")]
     [BsonId]
     [MaxLength(36)]
-    public required string Id { get; set; }
+    public string Id { get; set; }
 
     [BsonElement("name")]
     [MaxLength(255)]
-    public required string Name { get; set; }
+    public string Name { get; set; }
 
     [BsonElement("channelTypeId")]
     [MaxLength(36)]
-    public required string ChannelTypeId { get; set; }
+    public string ChannelTypeId { get; set; }
 
     [BsonElement("workspaceId")]
     [MaxLength(36)]
-    public required string WorkspaceId { get; set; }
+    public string WorkspaceId { get; set; }
 
     public static Channel FromDTO(ChannelDTO channel)
     {
@@ -39,13 +39,13 @@ public class ChannelDTO
 {
     [BsonElement("name")]
     [MaxLength(255)]
-    public required string Name { get; set; }
+    public string Name { get; set; }
 
     [BsonElement("channelTypeId")]
     [MaxLength(36)]
-    public required string ChannelTypeId { get; set; }
+    public string ChannelTypeId { get; set; }
 
     [BsonElement("workspaceId")]
     [MaxLength(36)]
-    public required string WorkspaceId { get; set; }
+    public string WorkspaceId { get; set; }
 }
