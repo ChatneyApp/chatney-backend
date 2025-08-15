@@ -4,17 +4,27 @@ namespace ChatneyBackend.Domains.Configs;
 
 public class ConfigMutations
 {
-    public Config AddConfig(IMongoDatabase mongoDatabase, Config config)
+    public async Task<Config> AddConfig(IMongoDatabase mongoDatabase, ConfigDTO configDto)
     {
         var collection = mongoDatabase.GetCollection<Config>("system_config");
-        collection.InsertOne(config);
+        Config config = Config.FromDTO(configDto);
+        await collection.InsertOneAsync(config);
         return config;
     }
 
-    public bool DeleteConfig(IMongoDatabase mongoDatabase, string id)
+    // TODO: ignore type field - it's constant for system config
+    public async Task<Config?> UpdateConfig(IMongoDatabase mongoDatabase, Config config)
     {
         var collection = mongoDatabase.GetCollection<Config>("system_config");
-        var result = collection.DeleteOne(c => c.Id == id);
+        var filter = Builders<Config>.Filter.Eq("_id", config.Id);
+        var result = await collection.ReplaceOneAsync(filter, config);
+        return result.ModifiedCount > 0 ? config : null;
+    }
+
+    public async Task<bool> DeleteConfig(IMongoDatabase mongoDatabase, string id)
+    {
+        var collection = mongoDatabase.GetCollection<Config>("system_config");
+        var result = await collection.DeleteOneAsync(c => c.Id == id);
         return result.DeletedCount > 0;
     }
 }

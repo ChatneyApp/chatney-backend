@@ -4,12 +4,29 @@ namespace ChatneyBackend.Domains.Configs;
 
 public class ConfigQueries
 {
-    public Config GetConfigById(IMongoDatabase mongoDatabase, string id)
-        => mongoDatabase.GetCollection<Config>("system_config").Find(c => c.Id == id).First();
+    public async Task<Config?> GetConfigById(IMongoDatabase mongoDatabase, string id)
+    {
+        var collection = mongoDatabase.GetCollection<Config>("system_config");
+        var records = (await collection.FindAsync(r => r.Id == id)).ToList();
+        return records.Count > 0
+            ? records[0]
+            : null;
+    }
 
-    public Config GetConfigByName(IMongoDatabase mongoDatabase, string name)
-        => mongoDatabase.GetCollection<Config>("system_config").Find(c => c.Name == name).First();
+    public async Task<Config?> GetConfigByName(IMongoDatabase mongoDatabase, string name)
+    {
+        var collection = mongoDatabase.GetCollection<Config>("system_config");
+        var records = (await collection.FindAsync(r => r.Name == name)).ToList();
+        return records.Count > 0
+            ? records[0]
+            : null;
 
-    public List<Config> GetList(IMongoDatabase mongoDatabase)
-        => mongoDatabase.GetCollection<Config>("system_config").Find(Builders<Config>.Filter.Empty).ToList();
+    }
+
+    public async Task<List<Config>> GetList(IMongoDatabase mongoDatabase)
+    {
+        var collection = mongoDatabase.GetCollection<Config>("system_config");
+        var records = await collection.FindAsync(Builders<Config>.Filter.Empty);
+        return records.ToList();
+    }
 }
