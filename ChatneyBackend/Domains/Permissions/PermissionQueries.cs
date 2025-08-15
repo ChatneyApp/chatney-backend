@@ -14,6 +14,7 @@ public class PermissionQueries
             new PermissionGroup("System config permissions", PermissionsUtils.GetAllPermissions<ChannelPermissions>()),
             new PermissionGroup("Workspace permissions", PermissionsUtils.GetAllPermissions<SystemConfigPermissions>()),
             new PermissionGroup("Channel permissions", PermissionsUtils.GetAllPermissions<RolePermissions>()),
+            new PermissionGroup("Message permissions", PermissionsUtils.GetAllPermissions<MessagePermissions>()),
             new PermissionGroup("User permissions", PermissionsUtils.GetAllPermissions<UserPermissions>()),
             new PermissionGroup("Role permissions", PermissionsUtils.GetAllPermissions<WorkspacePermissions>())
         ];
