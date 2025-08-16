@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using ChatneyBackend.Utils;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
@@ -91,4 +92,68 @@ public class User
 
     [BsonElement("password")]
     public string Password { get; set; }
+}
+
+public class UserRegisterDTO : IDTO<User>
+{
+    [BsonElement("name")]
+    public string Name { get; set; }
+
+    [BsonElement("email")]
+    public string Email { get; set; }
+
+    [BsonElement("password")]
+    public string Password { get; set; }
+
+    public User ToModel()
+    {
+        return new User
+        {
+            Id = Guid.NewGuid().ToString(),
+            Name = Name,
+            Email = Email,
+            Password = Password,
+        };
+    }
+}
+
+public class CreateUserDTO: IDTO<User>
+{
+    [BsonElement("name")]
+    public string Name { get; set; }
+
+    [BsonElement("status")]
+    [BsonRepresentation(BsonType.String)]
+    public UserStatus Status { get; set; }
+
+    [BsonElement("email")]
+    public string Email { get; set; }
+
+    [BsonElement("roles")]
+    public UserRole Roles { get; set; }
+
+    [BsonElement("channelsSettings")]
+    [NotMapped]
+    public Dictionary<string, ChannelSettings>? ChannelsSettings { get; set; }
+
+    [BsonElement("workspaces")]
+    public List<string> Workspaces { get; set; }
+
+    [BsonElement("password")]
+    public string Password { get; set; }
+
+    public User ToModel()
+    {
+        return new User
+        {
+            Id = Guid.NewGuid().ToString(),
+            Name = Name,
+            Email = Email,
+            Password = Password,
+            Workspaces = Workspaces,
+            Roles = Roles,
+            Status = Status,
+            ChannelsSettings = ChannelsSettings
+        };
+    }
 }

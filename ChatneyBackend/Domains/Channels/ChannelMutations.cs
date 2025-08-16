@@ -30,7 +30,7 @@ public class ChannelMutations
     public async Task<Channel> AddChannel(IMongoDatabase mongoDatabase, ChannelDTO channelDto)
     {
         var collection = mongoDatabase.GetCollection<Channel>(DomainSettings.ChannelCollectionName);
-        Channel channel = Channel.FromDTO(channelDto);
+        Channel channel = channelDto.ToModel();
         await collection.InsertOneAsync(channel);
         return channel;
     }

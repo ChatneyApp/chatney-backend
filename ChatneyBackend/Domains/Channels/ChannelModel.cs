@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using ChatneyBackend.Utils;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
@@ -22,20 +23,9 @@ public class Channel
     [BsonElement("workspaceId")]
     [MaxLength(36)]
     public string WorkspaceId { get; set; }
-
-    public static Channel FromDTO(ChannelDTO channel)
-    {
-        return new Channel()
-        {
-            Id = Guid.NewGuid().ToString(),
-            Name = channel.Name,
-            WorkspaceId = channel.WorkspaceId,
-            ChannelTypeId = channel.ChannelTypeId,
-        };
-    }
 }
 
-public class ChannelDTO
+public class ChannelDTO : IDTO<Channel>
 {
     [BsonElement("name")]
     [MaxLength(255)]
@@ -48,4 +38,15 @@ public class ChannelDTO
     [BsonElement("workspaceId")]
     [MaxLength(36)]
     public string WorkspaceId { get; set; }
+
+    public Channel ToModel()
+    {
+        return new Channel()
+        {
+            Id = Guid.NewGuid().ToString(),
+            Name = Name,
+            WorkspaceId = WorkspaceId,
+            ChannelTypeId = ChannelTypeId,
+        };
+    }
 }
