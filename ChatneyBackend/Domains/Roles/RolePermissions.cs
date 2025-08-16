@@ -1,9 +1,9 @@
+namespace ChatneyBackend.Domains.Roles;
+
 public class RolePermissions
 {
-    private const string Domain = "role";
-
-    public const string DeleteRole = Domain + ".deleteRole";
-    public const string EditRole   = Domain + ".editRole";
-    public const string CreateRole = Domain + ".createRole";
-    public const string ReadRole   = Domain + ".readRole";
+    public const string DeleteRole = DomainSettings.PermissionsPrefix + ".deleteRole";
+    public const string EditRole   = DomainSettings.PermissionsPrefix + ".editRole";
+    public const string CreateRole = DomainSettings.PermissionsPrefix + ".createRole";
+    public const string ReadRole   = DomainSettings.PermissionsPrefix + ".readRole";
 }

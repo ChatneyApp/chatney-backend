@@ -1,9 +1,9 @@
+namespace ChatneyBackend.Domains.Workspaces;
+
 public class WorkspacePermissions
 {
-    private const string Domain = "workspace";
-
-    public const string CreateWorkspace = Domain + ".createWorkspace";
-    public const string DeleteWorkspace = Domain + ".deleteWorkspace";
-    public const string UpdateWorkspace = Domain + ".updateWorkspace";
-    public const string ReadWorkspace   = Domain + ".readWorkspace";
+    public const string CreateWorkspace = DomainSettings.PermissionsPrefix + ".createWorkspace";
+    public const string DeleteWorkspace = DomainSettings.PermissionsPrefix + ".deleteWorkspace";
+    public const string UpdateWorkspace = DomainSettings.PermissionsPrefix + ".updateWorkspace";
+    public const string ReadWorkspace   = DomainSettings.PermissionsPrefix + ".readWorkspace";
 }

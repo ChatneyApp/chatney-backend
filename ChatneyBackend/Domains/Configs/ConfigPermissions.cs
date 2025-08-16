@@ -1,6 +1,6 @@
+namespace ChatneyBackend.Domains.Configs;
+
 public class SystemConfigPermissions
 {
-    private const string Domain = "systemConfig";
-
-    public const string UpdateValue = Domain + ".updateValue";
+    public const string UpdateValue = DomainSettings.PermissionsPrefix + ".updateValue";
 }
