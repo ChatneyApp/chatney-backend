@@ -2,15 +2,13 @@
 
 public class ChannelPermissions
 {
-    private const string Domain = "channel";
+    public const string DeleteMessage = DomainSettings.PermissionsPrefix + ".deleteMessage";
+    public const string EditMessage   = DomainSettings.PermissionsPrefix + ".editMessage";
+    public const string CreateMessage = DomainSettings.PermissionsPrefix + ".createMessage";
+    public const string ReadMessage   = DomainSettings.PermissionsPrefix + ".readMessage";
 
-    public const string DeleteMessage = Domain + ".deleteMessage";
-    public const string EditMessage   = Domain + ".editMessage";
-    public const string CreateMessage = Domain + ".createMessage";
-    public const string ReadMessage   = Domain + ".readMessage";
-
-    public const string DeleteChannel = Domain + ".deleteChannel";
-    public const string EditChannel   = Domain + ".editChannel";
-    public const string CreateChannel = Domain + ".createChannel";
-    public const string ReadChannel   = Domain + ".readChannel";
+    public const string DeleteChannel = DomainSettings.PermissionsPrefix + ".deleteChannel";
+    public const string EditChannel   = DomainSettings.PermissionsPrefix + ".editChannel";
+    public const string CreateChannel = DomainSettings.PermissionsPrefix + ".createChannel";
+    public const string ReadChannel   = DomainSettings.PermissionsPrefix + ".readChannel";
 }
