@@ -4,5 +4,5 @@ namespace ChatneyBackend.Utils;
 
 interface IDTO<T>
 {
-    public T ToModel();
+    T ToModel();
 }

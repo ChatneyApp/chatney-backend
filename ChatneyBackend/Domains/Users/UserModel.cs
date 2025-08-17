@@ -63,7 +63,25 @@ public class ChannelSettings
     public bool Muted { get; set; }
 }
 
-public class User
+public class UserResponse
+{
+    public string Id { get; set; }
+
+    public string Name { get; set; }
+
+    public UserStatus Status { get; set; }
+
+    public string Email { get; set; }
+
+    public UserRole Roles { get; set; }
+
+    [NotMapped] // hot chocolate attribute
+    public Dictionary<string, ChannelSettings>? ChannelsSettings { get; set; }
+
+    public List<string> Workspaces { get; set; }
+}
+
+public class User : IModel<UserResponse>
 {
     [BsonElement("_id")]
     [BsonId]
@@ -92,6 +110,20 @@ public class User
 
     [BsonElement("password")]
     public string Password { get; set; }
+
+    public UserResponse ToResponse()
+    {
+        return new UserResponse
+        {
+            Status = Status,
+            Email = Email,
+            Workspaces = Workspaces,
+            Roles = Roles,
+            ChannelsSettings = ChannelsSettings,
+            Name = Name,
+            Id = Id
+        };
+    }
 }
 
 public class UserRegisterDTO : IDTO<User>
@@ -156,4 +188,11 @@ public class CreateUserDTO: IDTO<User>
             ChannelsSettings = ChannelsSettings
         };
     }
+}
+
+public class UserLoginResponse
+{
+    public string Id { get; set; }
+
+    public string Token { get; set; }
 }

@@ -1,21 +1,25 @@
 using HotChocolate.AspNetCore;
 using ChatneyBackend.Setup;
 using MongoDB.Driver;
+using ChatneyBackend.Utils;
 
 var builder = WebApplication.CreateBuilder(args);
 
 var connectionString = builder.Configuration.GetConnectionString("MongoDB");
 var dbName = builder.Configuration.GetConnectionString("dbName");
+var UserPasswordSalt = builder.Configuration.GetSection("UserPasswordSalt").Value;
+var JwtSecret = builder.Configuration.GetSection("JwtSecret").Value;
 
-if (connectionString == null || dbName == null)
+if (connectionString == null || dbName == null || UserPasswordSalt == null || JwtSecret == null)
 {
-    throw new ArgumentException("dbName is empty");
+    throw new ArgumentException("appsettings are invalid");
 }
 
 var url = new MongoUrl(connectionString);
 var settings = MongoClientSettings.FromUrl(url);
 var mongoClient = new MongoClient(settings);
-builder.Services.AddSingleton<IMongoDatabase>((sp) => mongoClient.GetDatabase(dbName));
+builder.Services.AddSingleton((sp) => mongoClient.GetDatabase(dbName));
+builder.Services.AddSingleton((sp) => new AppConfig{ UserPasswordSalt = UserPasswordSalt });
 
 // ---- CORS policies ----
 // Dev: open for local tooling; Prod: strict allow-list with credentials.
