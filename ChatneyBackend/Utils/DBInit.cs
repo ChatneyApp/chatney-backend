@@ -13,9 +13,14 @@ public static class DbInit
         var usersCollection = db.GetCollection<User>(UsersDomainSettings.UserCollectionName);
         // Create unique index on email field
         var emailIndex = Builders<User>.IndexKeys.Ascending(u => u.Email);
-        var indexOptions = new CreateIndexOptions { Unique = true };
-        var indexModel = new CreateIndexModel<User>(emailIndex, indexOptions);
-        usersCollection.Indexes.CreateOne(indexModel);
+        var emailIndexOptions = new CreateIndexOptions { Unique = true };
+        var emailIndexModel = new CreateIndexModel<User>(emailIndex, emailIndexOptions);
+        // usersCollection.Indexes.CreateOne(emailIndexModel);
+
+        var nameIndex = Builders<User>.IndexKeys.Ascending(u => u.Name);
+        var nameIndexOptions = new CreateIndexOptions { Unique = true };
+        var nameIndexModel = new CreateIndexModel<User>(nameIndex, nameIndexOptions);
+        usersCollection.Indexes.CreateMany([nameIndexModel, emailIndexModel]);
 
         // TODO: add default system_config values
     }
