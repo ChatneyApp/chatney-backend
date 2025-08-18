@@ -20,7 +20,7 @@ var settings = MongoClientSettings.FromUrl(url);
 var mongoClient = new MongoClient(settings);
 DbInit.Init(mongoClient, dbName);
 builder.Services.AddSingleton((sp) => mongoClient.GetDatabase(dbName));
-builder.Services.AddSingleton((sp) => new AppConfig{ UserPasswordSalt = UserPasswordSalt });
+builder.Services.AddSingleton((sp) => new AppConfig{ UserPasswordSalt = UserPasswordSalt, JwtSecret= JwtSecret });
 
 // ---- CORS policies ----
 // Dev: open for local tooling; Prod: strict allow-list with credentials.

@@ -15,13 +15,10 @@ public static class DbInit
         var emailIndex = Builders<User>.IndexKeys.Ascending(u => u.Email);
         var emailIndexOptions = new CreateIndexOptions { Unique = true };
         var emailIndexModel = new CreateIndexModel<User>(emailIndex, emailIndexOptions);
-        // usersCollection.Indexes.CreateOne(emailIndexModel);
 
         var nameIndex = Builders<User>.IndexKeys.Ascending(u => u.Name);
         var nameIndexOptions = new CreateIndexOptions { Unique = true };
         var nameIndexModel = new CreateIndexModel<User>(nameIndex, nameIndexOptions);
         usersCollection.Indexes.CreateMany([nameIndexModel, emailIndexModel]);
-
-        // TODO: add default system_config values
     }
 }
