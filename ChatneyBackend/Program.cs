@@ -18,6 +18,7 @@ if (connectionString == null || dbName == null || UserPasswordSalt == null || Jw
 var url = new MongoUrl(connectionString);
 var settings = MongoClientSettings.FromUrl(url);
 var mongoClient = new MongoClient(settings);
+DbInit.Init(mongoClient, dbName);
 builder.Services.AddSingleton((sp) => mongoClient.GetDatabase(dbName));
 builder.Services.AddSingleton((sp) => new AppConfig{ UserPasswordSalt = UserPasswordSalt });
 
