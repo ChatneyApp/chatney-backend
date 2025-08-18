@@ -1,27 +1,30 @@
 ﻿using System.Text;
 using ChatneyBackend.Utils;
 using MongoDB.Driver;
-using System;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Text;
-
+using Microsoft.IdentityModel.Tokens;
 
 namespace ChatneyBackend.Domains.Users;
 
 public class UserMutations
 {
-    public async Task<UserResponse> CreateUser(IMongoDatabase mongoDatabase, CreateUserDTO userDTO)
+    public async Task<UserResponse> CreateUser(AppConfig appConfig, IMongoDatabase mongoDatabase, CreateUserDTO userDTO)
     {
         var collection = mongoDatabase.GetCollection<User>(DomainSettings.UserCollectionName);
         var user = userDTO.ToModel();
+        user.Password = Helpers.GetMd5Hash(user.Password + appConfig.UserPasswordSalt);
+
         await collection.InsertOneAsync(user);
         return user.ToResponse();
     }
 
-    public async Task<UserResponse> Register(IMongoDatabase mongoDatabase, UserRegisterDTO userDTO)
+    public async Task<UserResponse> Register(AppConfig appConfig, IMongoDatabase mongoDatabase, UserRegisterDTO userDTO)
     {
         var collection = mongoDatabase.GetCollection<User>(DomainSettings.UserCollectionName);
         var user = userDTO.ToModel();
+        user.Password = Helpers.GetMd5Hash(user.Password + appConfig.UserPasswordSalt);
+
         await collection.InsertOneAsync(user);
         return user.ToResponse();
     }
@@ -48,8 +51,29 @@ public class UserMutations
             return new UserLoginResponse
             {
                 Id = users[0].Id,
-                Token = "sfsdfds"
+                Token = GetJwtToken(users[0].Email, users[0].Id, appConfig.JwtSecret)
             };
         }
     }
+
+    private string GetJwtToken(string email, string id, string jwtSalt)
+    {
+        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSalt));
+        var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+
+        var claims = new[]
+        {
+            new Claim(JwtRegisteredClaimNames.Sub, id),
+            new Claim(JwtRegisteredClaimNames.Email, email),
+        };
+
+        var token = new JwtSecurityToken(
+            claims: claims,
+            expires: DateTime.UtcNow.AddDays(7),
+            signingCredentials: credentials
+        );
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
 }

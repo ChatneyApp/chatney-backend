@@ -13,8 +13,9 @@
         <PackageReference Include="HotChocolate.AspNetCore" Version="15.1.8" />
         <PackageReference Include="HotChocolate.AspNetCore.CommandLine" Version="15.1.8" />
         <PackageReference Include="HotChocolate.Types.Analyzers" Version="15.1.8" />
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.7"/>
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.7" />
         <PackageReference Include="MongoDB.Driver" Version="3.4.2" />
+        <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.14.0" />
     </ItemGroup>
 
     <ItemGroup>

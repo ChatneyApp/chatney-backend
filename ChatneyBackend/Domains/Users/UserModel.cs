@@ -6,15 +6,6 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace ChatneyBackend.Domains.Users;
 
-public enum UserStatus
-{
-    [BsonRepresentation(BsonType.String)]
-    Active,
-    Inactive,
-    Banned,
-    Muted
-}
-
 public class RoleWorkspace
 {
     [BsonElement("roleId")]
@@ -69,7 +60,10 @@ public class UserResponse
 
     public string Name { get; set; }
 
-    public UserStatus Status { get; set; }
+    public bool Active { get; set; }
+    public bool Verified { get; set; }
+    public bool Banned { get; set; }
+    public bool Muted { get; set; }
 
     public string Email { get; set; }
 
@@ -91,9 +85,22 @@ public class User : IModel<UserResponse>
     [BsonElement("name")]
     public string Name { get; set; }
 
-    [BsonElement("status")]
-    [BsonRepresentation(BsonType.String)]
-    public UserStatus Status { get; set; }
+
+    [BsonElement("active")]
+    [BsonRepresentation(BsonType.Boolean)]
+    public bool Active { get; set; }
+
+    [BsonElement("verified")]
+    [BsonRepresentation(BsonType.Boolean)]
+    public bool Verified { get; set; }
+
+    [BsonElement("banned")]
+    [BsonRepresentation(BsonType.Boolean)]
+    public bool Banned { get; set; }
+    
+    [BsonElement("muted")]
+    [BsonRepresentation(BsonType.Boolean)]
+    public bool Muted { get; set; }
 
     [BsonElement("email")]
     public string Email { get; set; }
@@ -115,7 +122,10 @@ public class User : IModel<UserResponse>
     {
         return new UserResponse
         {
-            Status = Status,
+            Active = Active,
+            Muted = Muted,
+            Banned = Banned,
+            Verified = Verified,
             Email = Email,
             Workspaces = Workspaces,
             Roles = Roles,
@@ -145,6 +155,12 @@ public class UserRegisterDTO : IDTO<User>
             Name = Name,
             Email = Email,
             Password = Password,
+            Active = false,
+            Muted = false,
+            Banned = false,
+            Verified = false,
+            Workspaces = [],
+            ChannelsSettings = new Dictionary<string, ChannelSettings>()
         };
     }
 }
@@ -154,9 +170,21 @@ public class CreateUserDTO: IDTO<User>
     [BsonElement("name")]
     public string Name { get; set; }
 
-    [BsonElement("status")]
-    [BsonRepresentation(BsonType.String)]
-    public UserStatus Status { get; set; }
+    [BsonElement("active")]
+    [BsonRepresentation(BsonType.Boolean)]
+    public bool Active { get; set; }
+
+    [BsonElement("verified")]
+    [BsonRepresentation(BsonType.Boolean)]
+    public bool Verified { get; set; }
+
+    [BsonElement("banned")]
+    [BsonRepresentation(BsonType.Boolean)]
+    public bool Banned { get; set; }
+    
+    [BsonElement("muted")]
+    [BsonRepresentation(BsonType.Boolean)]
+    public bool Muted { get; set; }
 
     [BsonElement("email")]
     public string Email { get; set; }
@@ -184,8 +212,11 @@ public class CreateUserDTO: IDTO<User>
             Password = Password,
             Workspaces = Workspaces,
             Roles = Roles,
-            Status = Status,
-            ChannelsSettings = ChannelsSettings
+            ChannelsSettings = ChannelsSettings,
+            Active = Active,
+            Banned = Banned,
+            Verified = Verified,
+            Muted = Muted,
         };
     }
 }
