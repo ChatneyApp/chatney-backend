@@ -2,6 +2,7 @@ using HotChocolate.AspNetCore;
 using ChatneyBackend.Setup;
 using MongoDB.Driver;
 using ChatneyBackend.Utils;
+using ChatneyBackend.Infra.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -55,10 +56,16 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddGraphQLServer()
+    .AddAuthorization()
     .AddQueryType<Query>()
     .AddMutationType<Mutation>();
 
+builder.Services.AddHttpContextAccessor();
+
 var app = builder.Build();
+
+app.UseMiddleware<AuthMiddleware>();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseCors(DevOpenCors);
