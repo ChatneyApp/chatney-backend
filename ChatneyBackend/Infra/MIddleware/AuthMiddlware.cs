@@ -1,9 +1,20 @@
-using System.Diagnostics.Tracing;
-using System.Security.Authentication;
 using System.Security.Claims;
 using ChatneyBackend.Utils;
 
 namespace ChatneyBackend.Infra.Middleware;
+
+public static class ClaimsPincipalExtensions
+{
+    public static string? GetUserId(this ClaimsPrincipal user)
+    {
+        return user?.Claims?.First(claim => claim.Type == ClaimTypes.Sid)?.Value;
+    }
+
+    public static string? GetUserEmail(this ClaimsPrincipal user)
+    {
+        return user?.Claims?.First(claim => claim.Type == ClaimTypes.Email)?.Value;
+    }
+}
 
 public class AuthMiddleware
 {
@@ -39,7 +50,6 @@ public class AuthMiddleware
                 }, "CustomAuth");
 
                         context.User = new ClaimsPrincipal(identity);
-
                     }
                 }
             }

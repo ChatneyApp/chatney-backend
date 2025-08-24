@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Security.Claims;
+using ChatneyBackend.Infra.Middleware;
 using HotChocolate.Authorization;
 using MongoDB.Driver;
 
@@ -10,7 +11,7 @@ public class UserQueries
     [Authorize]
     public User GetUserById(ClaimsPrincipal user, IMongoDatabase mongoDatabase, string id)
     {
-        Console.WriteLine(user.Identity.Name);
+        Console.WriteLine($"userId: {user.GetUserId()}");
         return mongoDatabase.GetCollection<User>(DomainSettings.UserCollectionName).Find(u => u.Id == id).First();
     }
 
