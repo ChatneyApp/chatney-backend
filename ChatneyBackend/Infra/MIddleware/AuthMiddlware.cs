@@ -29,12 +29,10 @@ public class AuthMiddleware
     {
         try
         {
-            Console.WriteLine("MIddleware hit");
             if (context.Request.Headers.TryGetValue("Authorization", out var authHeader))
             {
                 var token = authHeader.ToString().Replace("Bearer ", "");
                 var identityValid = JwtHelpers.ValidateJwtToken(token, config.JwtSecret);
-                Console.WriteLine(identityValid.Identity.IsAuthenticated);
 
                 if (identityValid != null)
                 {
@@ -45,9 +43,9 @@ public class AuthMiddleware
                     {
                         var identity = new ClaimsIdentity(new[]
                         {
-                    new Claim(ClaimTypes.Sid, sub.Value),
-                    new Claim(ClaimTypes.Email, email.Value)
-                }, "CustomAuth");
+                            new Claim(ClaimTypes.Sid, sub.Value),
+                            new Claim(ClaimTypes.Email, email.Value)
+                        }, "CustomAuth");
 
                         context.User = new ClaimsPrincipal(identity);
                     }
