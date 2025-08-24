@@ -51,29 +51,8 @@ public class UserMutations
             return new UserLoginResponse
             {
                 Id = users[0].Id,
-                Token = GetJwtToken(users[0].Email, users[0].Id, appConfig.JwtSecret)
+                Token = JwtHelpers.GetJwtToken(users[0].Email, users[0].Id, appConfig.JwtSecret)
             };
         }
     }
-
-    private string GetJwtToken(string email, string id, string jwtSalt)
-    {
-        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSalt));
-        var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-
-        var claims = new[]
-        {
-            new Claim(JwtRegisteredClaimNames.Sub, id),
-            new Claim(JwtRegisteredClaimNames.Email, email),
-        };
-
-        var token = new JwtSecurityToken(
-            claims: claims,
-            expires: DateTime.UtcNow.AddDays(7),
-            signingCredentials: credentials
-        );
-
-        return new JwtSecurityTokenHandler().WriteToken(token);
-    }
-
 }

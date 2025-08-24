@@ -1,4 +1,7 @@
+using System.Diagnostics.Tracing;
+using System.Security.Authentication;
 using System.Security.Claims;
+using ChatneyBackend.Utils;
 
 namespace ChatneyBackend.Infra.Middleware;
 
@@ -11,26 +14,43 @@ public class AuthMiddleware
         _next = next;
     }
 
-    public async Task InvokeAsync(HttpContext context)
+    public async Task InvokeAsync(HttpContext context, AppConfig config)
     {
-        Console.WriteLine("MIddleware hit");
-        if (context.Request.Headers.TryGetValue("Authorization", out var authHeader))
+        try
         {
-            var token = authHeader.ToString().Replace("Bearer ", "");
-
-            if (token == "secret")
+            Console.WriteLine("MIddleware hit");
+            if (context.Request.Headers.TryGetValue("Authorization", out var authHeader))
             {
-                Console.WriteLine("sdfsdfsdfds");
-                var identity = new ClaimsIdentity(new[]
+                var token = authHeader.ToString().Replace("Bearer ", "");
+                var identityValid = JwtHelpers.ValidateJwtToken(token, config.JwtSecret);
+                Console.WriteLine(identityValid.Identity.IsAuthenticated);
+
+                if (identityValid != null)
                 {
-                    new Claim(ClaimTypes.Name, "TestUser"),
-                    new Claim(ClaimTypes.Role, "admin")
+                    var email = identityValid.Claims.First(c => c.Type == ClaimTypes.Name);
+                    var sub = identityValid.Claims.First(c => c.Type == "sub");
+
+                    if (email != null && sub != null)
+                    {
+                        var identity = new ClaimsIdentity(new[]
+                        {
+                    new Claim(ClaimTypes.Sid, sub.Value),
+                    new Claim(ClaimTypes.Email, email.Value)
                 }, "CustomAuth");
 
-                context.User = new ClaimsPrincipal(identity);
-            }
-        }
+                        context.User = new ClaimsPrincipal(identity);
 
-        await _next(context);
+                    }
+                }
+            }
+
+            await _next(context);
+        }
+        catch (Exception error)
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsync($@"{{""error"":401,""reason"":""Auth error""}}");
+        }
     }
 }

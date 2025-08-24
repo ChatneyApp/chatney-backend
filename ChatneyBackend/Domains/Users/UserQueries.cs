@@ -10,7 +10,7 @@ public class UserQueries
     [Authorize]
     public User GetUserById(ClaimsPrincipal user, IMongoDatabase mongoDatabase, string id)
     {
-        Console.WriteLine(user);
+        Console.WriteLine(user.Identity.Name);
         return mongoDatabase.GetCollection<User>(DomainSettings.UserCollectionName).Find(u => u.Id == id).First();
     }
 
