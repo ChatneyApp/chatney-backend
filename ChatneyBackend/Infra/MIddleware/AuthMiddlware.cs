@@ -27,8 +27,8 @@ public class AuthMiddleware
 
                 if (identityValid != null)
                 {
-                    var email = identityValid.Claims.First(c => c.Type == ClaimTypes.Name);
-                    var sub = identityValid.Claims.First(c => c.Type == "sub");
+                    var email = identityValid.Claims.First(c => c.Type == ClaimTypes.Email);
+                    var sub = identityValid.Claims.First(c => c.Type == ClaimTypes.NameIdentifier);
 
                     if (email != null && sub != null)
                     {
