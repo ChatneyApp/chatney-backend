@@ -3,6 +3,8 @@ using ChatneyBackend.Setup;
 using MongoDB.Driver;
 using ChatneyBackend.Utils;
 using ChatneyBackend.Infra.Middleware;
+using ChatneyBackend.Infra;
+using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,9 +21,11 @@ if (connectionString == null || dbName == null || UserPasswordSalt == null || Jw
 var url = new MongoUrl(connectionString);
 var settings = MongoClientSettings.FromUrl(url);
 var mongoClient = new MongoClient(settings);
+var db = mongoClient.GetDatabase(dbName);
 DbInit.Init(mongoClient, dbName);
-builder.Services.AddSingleton((sp) => mongoClient.GetDatabase(dbName));
-builder.Services.AddSingleton((sp) => new AppConfig{ UserPasswordSalt = UserPasswordSalt, JwtSecret= JwtSecret });
+builder.Services.AddSingleton((sp) => db);
+builder.Services.AddSingleton((sp) => new AppConfig { UserPasswordSalt = UserPasswordSalt, JwtSecret = JwtSecret });
+builder.Services.AddSingleton((sp) => new RoleManager(db));
 
 // ---- CORS policies ----
 // Dev: open for local tooling; Prod: strict allow-list with credentials.

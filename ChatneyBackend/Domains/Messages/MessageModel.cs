@@ -74,11 +74,6 @@ public class Message
 
 public class MessageDTO
 {
-    [BsonElement("_id")]
-    [BsonId]
-    [MaxLength(36)]
-    public string Id { get; set; }
-
     [BsonElement("channelId")]
     [MaxLength(36)]
     public string ChannelId { get; set; }

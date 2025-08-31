@@ -11,9 +11,9 @@ public class ChannelType
     [MaxLength(36)]
     public string Id { get; set; }
 
-    [BsonElement("label")]
+    [BsonElement("name")]
     [MaxLength(255)]
-    public string Label { get; set; }
+    public string Name { get; set; }
 
     [BsonElement("key")]
     [MaxLength(255)]
@@ -28,7 +28,7 @@ public class ChannelType
         return new ChannelType()
         {
             Id = Guid.NewGuid().ToString(),
-            Label = channelType.Label,
+            Name = channelType.Name,
             Key = channelType.Key,
             BaseRoleId = channelType.BaseRoleId,
         };
@@ -37,9 +37,9 @@ public class ChannelType
 
 public class ChannelTypeDTO
 {
-    [BsonElement("label")]
+    [BsonElement("name")]
     [MaxLength(255)]
-    public string Label { get; set; }
+    public string Name { get; set; }
 
     [BsonElement("key")]
     [MaxLength(255)]
