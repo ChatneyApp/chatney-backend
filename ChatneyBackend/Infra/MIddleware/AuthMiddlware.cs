@@ -1,7 +1,18 @@
 using System.Security.Claims;
+using ChatneyBackend.Domains.Users;
 using ChatneyBackend.Utils;
+using MongoDB.Driver;
 
 namespace ChatneyBackend.Infra.Middleware;
+
+public static class HttpContextExtensions
+{
+    public static User GetCurrentUser(this HttpContext ctx)
+    {
+        return ctx.Items["CurrentUser"] as User;
+    }
+
+}
 
 public static class ClaimsPincipalExtensions
 {
@@ -25,7 +36,7 @@ public class AuthMiddleware
         _next = next;
     }
 
-    public async Task InvokeAsync(HttpContext context, AppConfig config)
+    public async Task InvokeAsync(HttpContext context, AppConfig config, IMongoDatabase mongo)
     {
         try
         {
@@ -48,6 +59,8 @@ public class AuthMiddleware
                         }, "CustomAuth");
 
                         context.User = new ClaimsPrincipal(identity);
+                        var user = (await mongo.GetCollection<User>(DomainSettings.UserCollectionName).FindAsync(u => u.Id == sub.Value)).ToList();
+                        context.Items["CurrentUser"] = user[0];
                     }
                 }
             }

@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using ChannelsNamespaces = ChatneyBackend.Domains.Channels;
 using ChatneyBackend.Infra.Middleware;
 using HotChocolate.Authorization;
 using MongoDB.Driver;
@@ -8,12 +9,33 @@ namespace ChatneyBackend.Domains.Messages;
 public class MessageMutations
 {
     [Authorize]
-    public async Task<Message> AddMessage(ClaimsPrincipal user, IMongoDatabase mongoDatabase, MessageDTO messageDto)
+    public async Task<Message> AddMessage(HttpContext ctx, RoleManager roleManager, ClaimsPrincipal user,
+        IMongoDatabase mongoDatabase, MessageDTO messageDto)
     {
-        var collection = mongoDatabase.GetCollection<Message>(DomainSettings.MessageCollectionName);
         Message message = Message.FromDTO(messageDto, user.GetUserId());
-        await collection.InsertOneAsync(message);
-        return message;
+
+        var channel = mongoDatabase
+            .GetCollection<ChannelsNamespaces.Channel>(ChannelsNamespaces.DomainSettings.ChannelCollectionName)
+            .Find(c => c.Id == message.ChannelId).FirstOrDefault();
+
+        var currentRole = roleManager.GetRelevantRole(ctx.GetCurrentUser(), new RoleScope(
+            WorkspaceId: channel.WorkspaceId,
+            ChannelId: channel.Id,
+            ChannelTypeId: channel.ChannelTypeId
+        ));
+
+        if (currentRole.Permissions.Contains(MessagePermissions.CreateMessage))
+        {
+            var collection = mongoDatabase.GetCollection<Message>(DomainSettings.MessageCollectionName);
+            await collection.InsertOneAsync(message);
+            return message;
+        }
+
+        throw new GraphQLException(
+            ErrorBuilder.New()
+                .SetMessage(ErrorCodes.ForbiddenAction)
+                .SetCode(ErrorCodes.ForbiddenAction)
+                .Build());
     }
 
     public async Task<Message?> UpdateMessage(IMongoDatabase mongoDatabase, Message message)

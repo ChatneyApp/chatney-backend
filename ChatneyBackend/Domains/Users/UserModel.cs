@@ -32,15 +32,15 @@ public class UserRole
     [BsonElement("global")]
     public string Global { get; set; }
 
-    [BsonElement("workspace")]
+    [BsonElement("workspaces")]
     [NotMapped]
     public Dictionary<string, RoleWorkspace> Workspace { get; set; }
 
-    [BsonElement("channel")]
+    [BsonElement("channels")]
     [NotMapped]
     public Dictionary<string, RoleChannel> Channel { get; set; }
 
-    [BsonElement("channel_types")]
+    [BsonElement("channelTypes")]
     [NotMapped]
     public Dictionary<string, RoleChannelType> ChannelTypes { get; set; }
 }

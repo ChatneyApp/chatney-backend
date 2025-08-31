@@ -25,7 +25,7 @@ public class Role
     public RoleSettings Settings { get; set; }
 
     [BsonElement("permissions")]
-    public List<string> Permissions { get; set; }
+    public HashSet<string> Permissions { get; set; }
 
     public static Role FromDTO(RoleDTO role)
     {
@@ -52,5 +52,5 @@ public class RoleDTO
     public RoleSettings Settings { get; set; }
 
     [BsonElement("permissions")]
-    public List<string> Permissions { get; set; }
+    public HashSet<string> Permissions { get; set; }
 }
