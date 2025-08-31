@@ -9,7 +9,8 @@ namespace ChatneyBackend.Domains.Messages;
 public class MessageMutations
 {
     [Authorize]
-    public async Task<Message> AddMessage(HttpContext ctx, RoleManager roleManager, ClaimsPrincipal user, IMongoDatabase mongoDatabase, MessageDTO messageDto)
+    public async Task<Message> AddMessage(HttpContext ctx, RoleManager roleManager, ClaimsPrincipal user,
+        IMongoDatabase mongoDatabase, MessageDTO messageDto)
     {
         Message message = Message.FromDTO(messageDto, user.GetUserId());
 
@@ -29,13 +30,12 @@ public class MessageMutations
             await collection.InsertOneAsync(message);
             return message;
         }
-        else
-        {
-            throw new GraphQLException(
-                ErrorBuilder.New()
-                    .SetCode(ErrorCodes.ForbiddenAction)
-                    .Build());
-        }
+
+        throw new GraphQLException(
+            ErrorBuilder.New()
+                .SetMessage(ErrorCodes.ForbiddenAction)
+                .SetCode(ErrorCodes.ForbiddenAction)
+                .Build());
     }
 
     public async Task<Message?> UpdateMessage(IMongoDatabase mongoDatabase, Message message)

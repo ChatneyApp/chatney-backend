@@ -3,8 +3,6 @@ using ChatneyBackend.Setup;
 using MongoDB.Driver;
 using ChatneyBackend.Utils;
 using ChatneyBackend.Infra.Middleware;
-using ChatneyBackend.Infra;
-using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -59,7 +57,8 @@ builder.Services.AddCors(options =>
     });
 });
 
-builder.Services.AddGraphQLServer()
+builder.Services
+    .AddGraphQLServer()
     .AddAuthorization()
     .AddQueryType<Query>()
     .AddMutationType<Mutation>();
