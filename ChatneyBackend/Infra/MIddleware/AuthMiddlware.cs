@@ -5,14 +5,14 @@ namespace ChatneyBackend.Infra.Middleware;
 
 public static class ClaimsPincipalExtensions
 {
-    public static string? GetUserId(this ClaimsPrincipal user)
+    public static string GetUserId(this ClaimsPrincipal user)
     {
-        return user?.Claims?.First(claim => claim.Type == ClaimTypes.Sid)?.Value;
+        return user.Claims.First(claim => claim.Type == ClaimTypes.Sid).Value;
     }
 
-    public static string? GetUserEmail(this ClaimsPrincipal user)
+    public static string GetUserEmail(this ClaimsPrincipal user)
     {
-        return user?.Claims?.First(claim => claim.Type == ClaimTypes.Email)?.Value;
+        return user.Claims.First(claim => claim.Type == ClaimTypes.Email).Value;
     }
 }
 

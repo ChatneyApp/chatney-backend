@@ -1,13 +1,17 @@
+using System.Security.Claims;
+using ChatneyBackend.Infra.Middleware;
+using HotChocolate.Authorization;
 using MongoDB.Driver;
 
 namespace ChatneyBackend.Domains.Messages;
 
 public class MessageMutations
 {
-    public async Task<Message> AddMessage(IMongoDatabase mongoDatabase, MessageDTO messageDto)
+    [Authorize]
+    public async Task<Message> AddMessage(ClaimsPrincipal user, IMongoDatabase mongoDatabase, MessageDTO messageDto)
     {
         var collection = mongoDatabase.GetCollection<Message>(DomainSettings.MessageCollectionName);
-        Message message = Message.FromDTO(messageDto);
+        Message message = Message.FromDTO(messageDto, user.GetUserId());
         await collection.InsertOneAsync(message);
         return message;
     }

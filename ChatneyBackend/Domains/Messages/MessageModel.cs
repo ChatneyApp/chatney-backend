@@ -54,13 +54,13 @@ public class Message
     [MaxLength(36)]
     public string? ParentId { get; set; }
 
-    public static Message FromDTO(MessageDTO message)
+    public static Message FromDTO(MessageDTO message, string userId)
     {
         return new Message()
         {
             Id = Guid.NewGuid().ToString(),
             ChannelId = message.ChannelId,
-            UserId = message.UserId,
+            UserId = userId,
             Content = message.Content,
             Attachments = message.Attachments,
             Status = "sent", // TODO: Define status constants
@@ -82,10 +82,6 @@ public class MessageDTO
     [BsonElement("channelId")]
     [MaxLength(36)]
     public string ChannelId { get; set; }
-
-    [BsonElement("userId")]
-    [MaxLength(36)]
-    public string UserId { get; set; }
 
     [BsonElement("content")]
     [MaxLength(4096)]
