@@ -4,7 +4,7 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace ChatneyBackend.Domains.Channels;
 
-public class ChannelGroup
+public class ChannelGroup : DatabaseItem
 {
     [BsonElement("_id")]
     [BsonId]
@@ -25,6 +25,12 @@ public class ChannelGroup
     [BsonElement("order")]
     public int Order { get; set; }
 
+    [BsonElement("createdAt")]
+    public DateTime CreatedAt { get; set; }
+
+    [BsonElement("updatedAt")]
+    public DateTime UpdatedAt { get; set; }
+
     public static ChannelGroup FromDTO(ChannelGroupDTO channelGroup)
     {
         return new ChannelGroup()
@@ -33,7 +39,9 @@ public class ChannelGroup
             Name = channelGroup.Name,
             WorkspaceId = channelGroup.WorkspaceId,
             ChannelIds = channelGroup.ChannelIds,
-            Order = channelGroup.Order
+            Order = channelGroup.Order,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
         };
     }
 }

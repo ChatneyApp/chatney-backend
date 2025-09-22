@@ -1,8 +1,20 @@
+using ChatneyBackend.Domains.Channels;
+using ChatneyBackend.Domains.Configs;
+using ChatneyBackend.Domains.Messages;
+using ChatneyBackend.Domains.Roles;
+using ChatneyBackend.Domains.Users;
+using ChatneyBackend.Domains.Workspaces;
 using HotChocolate.AspNetCore;
 using ChatneyBackend.Setup;
 using MongoDB.Driver;
 using ChatneyBackend.Utils;
 using ChatneyBackend.Infra.Middleware;
+using ChannelDomainSettings = ChatneyBackend.Domains.Channels.DomainSettings;
+using ConfigsDomainSettings = ChatneyBackend.Domains.Configs.DomainSettings;
+using MessagesDomainSettings = ChatneyBackend.Domains.Messages.DomainSettings;
+using RolesDomainSettings = ChatneyBackend.Domains.Roles.DomainSettings;
+using UserDomainSettings = ChatneyBackend.Domains.Users.DomainSettings;
+using WorkspacesDomainSettings = ChatneyBackend.Domains.Workspaces.DomainSettings;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +36,14 @@ DbInit.Init(mongoClient, dbName);
 builder.Services.AddSingleton((sp) => db);
 builder.Services.AddSingleton((sp) => new AppConfig { UserPasswordSalt = UserPasswordSalt, JwtSecret = JwtSecret });
 builder.Services.AddSingleton((sp) => new RoleManager(db));
+builder.Services.AddSingleton((sp) => new Repo<User>(db, UserDomainSettings.UserCollectionName));
+builder.Services.AddSingleton((sp) => new Repo<Channel>(db, ChannelDomainSettings.ChannelCollectionName));
+builder.Services.AddSingleton((sp) => new Repo<ChannelType>(db, ChannelDomainSettings.ChannelTypeCollectionName));
+builder.Services.AddSingleton((sp) => new Repo<ChannelGroup>(db, ChannelDomainSettings.ChannelGroupCollectionName));
+builder.Services.AddSingleton((sp) => new Repo<Config>(db, ConfigsDomainSettings.ConfigCollectionName));
+builder.Services.AddSingleton((sp) => new Repo<Message>(db, MessagesDomainSettings.MessageCollectionName));
+builder.Services.AddSingleton((sp) => new Repo<Role>(db, RolesDomainSettings.RoleCollectionName));
+builder.Services.AddSingleton((sp) => new Repo<Workspace>(db, WorkspacesDomainSettings.WorkspaceCollectionName));
 
 // ---- CORS policies ----
 // Dev: open for local tooling; Prod: strict allow-list with credentials.

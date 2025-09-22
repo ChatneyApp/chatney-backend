@@ -4,7 +4,7 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace ChatneyBackend.Domains.Channels;
 
-public class ChannelType
+public class ChannelType : DatabaseItem
 {
     [BsonElement("_id")]
     [BsonId]
@@ -23,6 +23,12 @@ public class ChannelType
     [MaxLength(36)]
     public string BaseRoleId { get; set; }
 
+    [BsonElement("createdAt")]
+    public DateTime CreatedAt { get; set; }
+
+    [BsonElement("updatedAt")]
+    public DateTime UpdatedAt { get; set; }
+
     public static ChannelType FromDTO(ChannelTypeDTO channelType)
     {
         return new ChannelType()
@@ -31,6 +37,8 @@ public class ChannelType
             Name = channelType.Name,
             Key = channelType.Key,
             BaseRoleId = channelType.BaseRoleId,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
         };
     }
 }

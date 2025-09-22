@@ -75,7 +75,7 @@ public class UserResponse
     public List<string> Workspaces { get; set; }
 }
 
-public class User : IModel<UserResponse>
+public class User : IModel<UserResponse>, DatabaseItem
 {
     [BsonElement("_id")]
     [BsonId]
@@ -118,6 +118,12 @@ public class User : IModel<UserResponse>
     [BsonElement("password")]
     public string Password { get; set; }
 
+    [BsonElement("createdAt")]
+    public DateTime CreatedAt { get; set; }
+
+    [BsonElement("updatedAt")]
+    public DateTime UpdatedAt { get; set; }
+
     public UserResponse ToResponse()
     {
         return new UserResponse
@@ -136,6 +142,9 @@ public class User : IModel<UserResponse>
     }
 }
 
+/// <summary>
+/// User registers themselves
+/// </summary>
 public class UserRegisterDTO : IDTO<User>
 {
     [BsonElement("name")]
@@ -160,11 +169,16 @@ public class UserRegisterDTO : IDTO<User>
             Banned = false,
             Verified = false,
             Workspaces = [],
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
             ChannelsSettings = new Dictionary<string, ChannelSettings>()
         };
     }
 }
 
+/// <summary>
+/// Admin creates a user
+/// </summary>
 public class CreateUserDTO: IDTO<User>
 {
     [BsonElement("name")]
@@ -211,6 +225,8 @@ public class CreateUserDTO: IDTO<User>
             Email = Email,
             Password = Password,
             Workspaces = Workspaces,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
             Roles = Roles,
             ChannelsSettings = ChannelsSettings,
             Active = Active,

@@ -15,7 +15,7 @@ public class Reaction
     public string ReactionText { get; set; }
 }
 
-public class Message
+public class Message : DatabaseItem
 {
     [BsonElement("_id")]
     [BsonId]

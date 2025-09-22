@@ -1,9 +1,10 @@
 using System.ComponentModel.DataAnnotations;
+using System.Reflection.Metadata;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace ChatneyBackend.Domains.Configs;
 
-public class Config
+public class Config : DatabaseItem
 {
     [BsonElement("_id")]
     [BsonId]
@@ -22,6 +23,12 @@ public class Config
     [MaxLength(255)]
     public string? Type { get; set; }
 
+    [BsonElement("createdAt")]
+    public DateTime CreatedAt { get; set; }
+
+    [BsonElement("updatedAt")]
+    public DateTime UpdatedAt { get; set; }
+
     public static Config FromDTO(ConfigDTO role)
     {
         return new Config()
@@ -29,7 +36,9 @@ public class Config
             Id = Guid.NewGuid().ToString(),
             Name = role.Name,
             Value = role.Value,
-            Type = role.Type
+            Type = role.Type,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
         };
     }
 }

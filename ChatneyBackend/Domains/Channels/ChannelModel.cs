@@ -5,7 +5,7 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace ChatneyBackend.Domains.Channels;
 
-public class Channel
+public class Channel : DatabaseItem
 {
     [BsonElement("_id")]
     [BsonId]
@@ -23,6 +23,12 @@ public class Channel
     [BsonElement("workspaceId")]
     [MaxLength(36)]
     public string WorkspaceId { get; set; }
+
+    [BsonElement("createdAt")]
+    public DateTime CreatedAt { get; set; }
+
+    [BsonElement("updatedAt")]
+    public DateTime UpdatedAt { get; set; }
 }
 
 public class ChannelDTO : IDTO<Channel>

@@ -10,7 +10,7 @@ public class RoleSettings
     public bool Base { get; set; }
 }
 
-public class Role
+public class Role : DatabaseItem
 {
     [BsonElement("_id")]
     [BsonId]
@@ -27,6 +27,12 @@ public class Role
     [BsonElement("permissions")]
     public HashSet<string> Permissions { get; set; }
 
+    [BsonElement("createdAt")]
+    public DateTime CreatedAt { get; set; }
+
+    [BsonElement("updatedAt")]
+    public DateTime UpdatedAt { get; set; }
+
     public static Role FromDTO(RoleDTO role)
     {
         return new Role()
@@ -34,6 +40,8 @@ public class Role
             Id = Guid.NewGuid().ToString(),
             Name = role.Name,
             Permissions = role.Permissions,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
             Settings = new RoleSettings()
             {
                 Base = role.Settings.Base

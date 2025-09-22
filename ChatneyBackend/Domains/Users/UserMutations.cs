@@ -9,32 +9,25 @@ namespace ChatneyBackend.Domains.Users;
 
 public class UserMutations
 {
-    public async Task<UserResponse> CreateUser(AppConfig appConfig, IMongoDatabase mongoDatabase, CreateUserDTO userDTO)
+    public async Task<UserResponse> CreateUser(AppConfig appConfig, Repo<User> repo, CreateUserDTO userDTO)
     {
-        var collection = mongoDatabase.GetCollection<User>(DomainSettings.UserCollectionName);
         var user = userDTO.ToModel();
         user.Password = Helpers.GetMd5Hash(user.Password + appConfig.UserPasswordSalt);
 
-        await collection.InsertOneAsync(user);
+        await repo.InsertOne(user);
         return user.ToResponse();
     }
 
-    public async Task<UserResponse> Register(AppConfig appConfig, IMongoDatabase mongoDatabase, UserRegisterDTO userDTO)
+    public async Task<UserResponse> Register(AppConfig appConfig, Repo<User> repo, UserRegisterDTO userDTO)
     {
-        var collection = mongoDatabase.GetCollection<User>(DomainSettings.UserCollectionName);
         var user = userDTO.ToModel();
         user.Password = Helpers.GetMd5Hash(user.Password + appConfig.UserPasswordSalt);
 
-        await collection.InsertOneAsync(user);
+        await repo.InsertOne(user);
         return user.ToResponse();
     }
 
-    public async Task<bool> DeleteUser(IMongoDatabase mongoDatabase, string id)
-    {
-        var collection = mongoDatabase.GetCollection<User>(DomainSettings.UserCollectionName);
-        var result = await collection.DeleteOneAsync(u => u.Id == id);
-        return result.DeletedCount > 0;
-    }
+    public Task<bool> DeleteUser(Repo<User> repo, string id) => repo.DeleteById(id);
 
     public async Task<UserLoginResponse?> Login(AppConfig appConfig, IMongoDatabase mongoDatabase, string login, string password)
     {

@@ -3,7 +3,7 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace ChatneyBackend.Domains.Workspaces;
 
-public class Workspace
+public class Workspace : DatabaseItem
 {
     [BsonElement("_id")]
     [BsonId]
@@ -14,12 +14,20 @@ public class Workspace
     [MaxLength(255)]
     public string Name { get; set; }
 
+    [BsonElement("createdAt")]
+    public DateTime CreatedAt { get; set; }
+
+    [BsonElement("updatedAt")]
+    public DateTime UpdatedAt { get; set; }
+
     public static Workspace FromDTO(WorkspaceDTO workspace)
     {
         return new Workspace()
         {
             Id = Guid.NewGuid().ToString(),
             Name = workspace.Name,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
         };
     }
 }
