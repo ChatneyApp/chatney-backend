@@ -1,9 +1,11 @@
+using HotChocolate.Authorization;
 using MongoDB.Driver;
 
 namespace ChatneyBackend.Domains.Workspaces;
 
 public class WorkspaceQueries
 {
+    [Authorize]
     public async Task<Workspace?> GetWorkspaceById(IMongoDatabase mongoDatabase, string id)
     {
         var collection = mongoDatabase.GetCollection<Workspace>(DomainSettings.WorkspaceCollectionName);
@@ -13,6 +15,7 @@ public class WorkspaceQueries
             : null;
     }
 
+    [Authorize]
     public async Task<Workspace?> GetWorkspaceByName(IMongoDatabase mongoDatabase, string name)
     {
         var collection = mongoDatabase.GetCollection<Workspace>(DomainSettings.WorkspaceCollectionName);
@@ -23,6 +26,7 @@ public class WorkspaceQueries
 
     }
 
+    [Authorize]
     public async Task<List<Workspace>> GetList(IMongoDatabase mongoDatabase)
     {
         var collection = mongoDatabase.GetCollection<Workspace>(DomainSettings.WorkspaceCollectionName);
