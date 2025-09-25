@@ -16,8 +16,10 @@ public class UserQueries
     [Authorize]
     public async Task<UserResponse?> GetUserById(Repo<User> repo, string id) => (await repo.GetById(id))?.ToResponse();
 
+    [Authorize]
     public async Task<UserResponse?> GetUserByName(Repo<User> repo, string name) => (await repo.GetOne(u => u.Name == name))?.ToResponse();
 
+    [Authorize]
     public async Task<List<UserResponse>> GetList(Repo<User> repo, UserFilter filter)
     {
         var f = Builders<User>.Filter.Empty;
