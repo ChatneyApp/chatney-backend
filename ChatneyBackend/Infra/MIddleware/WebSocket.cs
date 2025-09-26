@@ -67,7 +67,7 @@ public class WebSocketConfigurator
                         throw new Exception("Message data is corrupted");
                     }
 
-                    var messageModel = Message.FromDTO(receivedObject);
+                    var messageModel = Message.FromDTO(receivedObject, "sdfsdfsd");
 
                     var responseObject = await messagesService.AddMessage(messageModel);
 
