@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
@@ -7,24 +8,35 @@ namespace ChatneyBackend.Infra.Middleware;
 
 public class WebSocketConnector
 {
-    public Dictionary<string, WebSocket> websocketsMapping = new Dictionary<string, WebSocket>();
+    private readonly ConcurrentDictionary<string, WebSocket> websocketsMapping = new();
+
     public void Configure(IApplicationBuilder app)
     {
-        app.UseWebSockets();  // Enable WebSocket middleware
+        app.UseWebSockets();
 
         app.Use(async (context, next) =>
         {
             if (context.Request.Path == "/ws")
             {
-                if (context.WebSockets.IsWebSocketRequest && context.Request.Query.TryGetValue("userId", out var userId))
+                if (context.WebSockets.IsWebSocketRequest)
                 {
-                    WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
-                    await HandleWebSocketAsync(webSocket);
-                    websocketsMapping.Add(userId.ToString(), webSocket);
+                    var userId = context.Request.Query["userId"].ToString();
+                    if (string.IsNullOrWhiteSpace(userId))
+                    {
+                        context.Response.StatusCode = 400;
+                        await context.Response.WriteAsync("userId is required");
+                        return;
+                    }
+
+                    var webSocket = await context.WebSockets.AcceptWebSocketAsync();
+                    websocketsMapping[userId] = webSocket;
+
+                    Console.WriteLine($"User {userId} connected.");
+                    await HandleWebSocketAsync(userId, webSocket);
                 }
                 else
                 {
-                    context.Response.StatusCode = 400; // Bad Request
+                    context.Response.StatusCode = 400;
                 }
             }
             else
@@ -34,86 +46,97 @@ public class WebSocketConnector
         });
     }
 
-    /**
-     * Receiving messages from ws  
-     */
-    private async Task HandleWebSocketAsync(WebSocket webSocket)
+    private async Task HandleWebSocketAsync(string userId, WebSocket webSocket)
     {
-        byte[] buffer = new byte[1024 * 4];  // Buffer for incoming messages
-        WebSocketReceiveResult result;
+        var buffer = new byte[1024 * 4];
 
         try
         {
             while (webSocket.State == WebSocketState.Open)
             {
-                // Receive message from the client
-                result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+                var result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
 
                 if (result.MessageType == WebSocketMessageType.Text)
                 {
-                    string jsonMessage = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                    Console.WriteLine($"Received JSON: {jsonMessage}");
+                    var jsonMessage = Encoding.UTF8.GetString(buffer, 0, result.Count);
+                    Console.WriteLine($"Received from {userId}: {jsonMessage}");
 
-                    // Deserialize the received message into an object
                     var receivedObject = JsonSerializer.Deserialize<MessageDTO>(jsonMessage);
 
                     if (receivedObject == null)
                     {
-                        throw new Exception("Message data is corrupted");
+                        throw new Exception("Invalid message");
                     }
 
-                    var messageModel = Message.FromDTO(receivedObject, "sdfsdfsd");
+                    var messageModel = Message.FromDTO(receivedObject, "ServerGeneratedId");
 
-
-                    // Serialize the response object into JSON
-                    string jsonResponse = JsonSerializer.Serialize(messageModel);
-
-                    // Send the response back to the client
+                    var jsonResponse = JsonSerializer.Serialize(messageModel);
                     await SendMessageAsync(webSocket, jsonResponse);
                 }
                 else if (result.MessageType == WebSocketMessageType.Close)
                 {
-                    await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Close", CancellationToken.None);
+                    Console.WriteLine($"WebSocket for {userId} closed.");
+                    websocketsMapping.TryRemove(userId, out _);
+                    await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closed", CancellationToken.None);
                 }
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Exception: {ex.Message}");
+            Console.WriteLine($"WebSocket error for {userId}: {ex.Message}");
+            websocketsMapping.TryRemove(userId, out _);
         }
     }
 
-    // Sending messages to ws
     private async Task SendMessageAsync(WebSocket webSocket, string message)
     {
-        byte[] buffer = Encoding.UTF8.GetBytes(message);
+        var buffer = Encoding.UTF8.GetBytes(message);
         await webSocket.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true, CancellationToken.None);
     }
 
-    public async Task sendMessage(Message message)
+    public async Task SendMessageToAllAsync(Message message)
     {
-        var serializedMessage = JsonSerializer.Serialize(message);
+        var options = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
+
+        var serializedMessage = JsonSerializer.Serialize(message, options);
         var buffer = Encoding.UTF8.GetBytes(serializedMessage);
         var segment = new ArraySegment<byte>(buffer);
-        var deadSocketsIds = new HashSet<string>();
+        var deadSockets = new List<string>();
+
+        Console.WriteLine($"Broadcasting: {serializedMessage}");
 
         foreach (var kvp in websocketsMapping)
         {
-            WebSocket socket = kvp.Value;
+            var socket = kvp.Value;
 
-            if (socket != null && socket.State == WebSocketState.Open)
+            if (socket?.State == WebSocketState.Open)
             {
-                await socket.SendAsync(segment, WebSocketMessageType.Text, true, CancellationToken.None);
+                try
+                {
+                    Console.WriteLine($"Sending to {kvp.Key}");
+                    await socket.SendAsync(segment, WebSocketMessageType.Text, true, CancellationToken.None);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex);
+                    deadSockets.Add(kvp.Key);
+                }
             }
             else
             {
-                deadSocketsIds.Add(kvp.Key);
+                Console.WriteLine($"Socket {kvp.Key} is closed.");
+                deadSockets.Add(kvp.Key);
             }
         }
 
-        foreach (var deadSocketId in deadSocketsIds)
+        Console.WriteLine("cleaning up");
+
+        foreach (var deadSocket in deadSockets)
         {
-            websocketsMapping.Remove(deadSocketId);
+            websocketsMapping.TryRemove(deadSocket, out _);
         }
     }
 }

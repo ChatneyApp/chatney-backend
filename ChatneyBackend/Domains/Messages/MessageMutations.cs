@@ -36,10 +36,11 @@ public class MessageMutations
             ChannelTypeId: channel.ChannelTypeId
         ));
 
+        Console.WriteLine(string.Join(" ", currentRole.Permissions));
         if (currentRole.Permissions.Contains(MessagePermissions.CreateMessage))
         {
             await messagesRepo.InsertOne(message);
-            await webSocketConnector.sendMessage(message);
+            await webSocketConnector.SendMessageToAllAsync(message);
             return message;
         }
 
