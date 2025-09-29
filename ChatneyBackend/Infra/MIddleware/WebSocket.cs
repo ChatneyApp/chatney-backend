@@ -16,13 +16,11 @@ public class WebSocketConnector
         {
             if (context.Request.Path == "/ws")
             {
-                if (context.WebSockets.IsWebSocketRequest)
+                if (context.WebSockets.IsWebSocketRequest && context.Request.Query.TryGetValue("userId", out var userId))
                 {
-                    var query = context.Request.QueryString;
-
                     WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
                     await HandleWebSocketAsync(webSocket);
-                    websocketsMapping.Add("userId", webSocket);
+                    websocketsMapping.Add(userId.ToString(), webSocket);
                 }
                 else
                 {
