@@ -2,19 +2,12 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
 using ChatneyBackend.Domains.Messages;
-using HotChocolate.Resolvers;
-using Microsoft.AspNetCore.WebSockets;
 
 namespace ChatneyBackend.Infra.Middleware;
 
-public class WebSocketConfigurator
+public class WebSocketConnector
 {
-    private readonly MessagesDomainService messagesService;
-    public WebSocketConfigurator(MessagesDomainService messagesService)
-    {
-        this.messagesService = messagesService;
-    }
-
+    public Dictionary<string, WebSocket> websocketsMapping = new Dictionary<string, WebSocket>();
     public void Configure(IApplicationBuilder app)
     {
         app.UseWebSockets();  // Enable WebSocket middleware
@@ -29,6 +22,7 @@ public class WebSocketConfigurator
 
                     WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
                     await HandleWebSocketAsync(webSocket);
+                    websocketsMapping.Add("userId", webSocket);
                 }
                 else
                 {
@@ -42,6 +36,9 @@ public class WebSocketConfigurator
         });
     }
 
+    /**
+     * Receiving messages from ws  
+     */
     private async Task HandleWebSocketAsync(WebSocket webSocket)
     {
         byte[] buffer = new byte[1024 * 4];  // Buffer for incoming messages
@@ -69,10 +66,9 @@ public class WebSocketConfigurator
 
                     var messageModel = Message.FromDTO(receivedObject, "sdfsdfsd");
 
-                    var responseObject = await messagesService.AddMessage(messageModel);
 
                     // Serialize the response object into JSON
-                    string jsonResponse = JsonSerializer.Serialize(responseObject);
+                    string jsonResponse = JsonSerializer.Serialize(messageModel);
 
                     // Send the response back to the client
                     await SendMessageAsync(webSocket, jsonResponse);
@@ -89,10 +85,37 @@ public class WebSocketConfigurator
         }
     }
 
-    // Method to send a JSON message to the client
+    // Sending messages to ws
     private async Task SendMessageAsync(WebSocket webSocket, string message)
     {
         byte[] buffer = Encoding.UTF8.GetBytes(message);
         await webSocket.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true, CancellationToken.None);
+    }
+
+    public async Task sendMessage(Message message)
+    {
+        var serializedMessage = JsonSerializer.Serialize(message);
+        var buffer = Encoding.UTF8.GetBytes(serializedMessage);
+        var segment = new ArraySegment<byte>(buffer);
+        var deadSocketsIds = new HashSet<string>();
+
+        foreach (var kvp in websocketsMapping)
+        {
+            WebSocket socket = kvp.Value;
+
+            if (socket != null && socket.State == WebSocketState.Open)
+            {
+                await socket.SendAsync(segment, WebSocketMessageType.Text, true, CancellationToken.None);
+            }
+            else
+            {
+                deadSocketsIds.Add(kvp.Key);
+            }
+        }
+
+        foreach (var deadSocketId in deadSocketsIds)
+        {
+            websocketsMapping.Remove(deadSocketId);
+        }
     }
 }

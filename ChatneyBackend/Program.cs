@@ -37,8 +37,7 @@ var db = mongoClient.GetDatabase(dbName);
 var messagesRepo = new Repo<Message>(db, MessagesDomainSettings.MessageCollectionName);
 var usersRepo = new Repo<User>(db, UserDomainSettings.UserCollectionName);
 var channelsRepo = new Repo<Channel>(db, ChannelDomainSettings.ChannelCollectionName);
-var messagesService = new MessagesDomainService(new RoleManager(db), messagesRepo, channelsRepo, usersRepo);
-
+var wsConfig = new WebSocketConnector();
 
 DbInit.Init(mongoClient, dbName);
 builder.Services.AddSingleton((sp) => db);
@@ -52,7 +51,8 @@ builder.Services.AddSingleton((sp) => new Repo<Config>(db, ConfigsDomainSettings
 builder.Services.AddSingleton((sp) => new Repo<Message>(db, MessagesDomainSettings.MessageCollectionName));
 builder.Services.AddSingleton((sp) => new Repo<Role>(db, RolesDomainSettings.RoleCollectionName));
 builder.Services.AddSingleton((sp) => new Repo<Workspace>(db, WorkspacesDomainSettings.WorkspaceCollectionName));
-builder.Services.AddSingleton((sp) => messagesService);
+builder.Services.AddSingleton(sp => wsConfig);
+
 
 // ---- CORS policies ----
 // Dev: open for local tooling; Prod: strict allow-list with credentials.
@@ -99,8 +99,6 @@ builder.Services.AddWebSockets(options =>
 });
 
 var app = builder.Build();
-
-var wsConfig = new WebSocketConfigurator(messagesService);
 wsConfig.Configure(app);
 
 app.UseMiddleware<AuthMiddleware>();
