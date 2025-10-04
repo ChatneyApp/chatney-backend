@@ -1,6 +1,27 @@
 using MongoDB.Driver;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace ChatneyBackend.Domains.Messages;
+
+public class AssignedUser
+{
+    [BsonElement("Id")]
+    public string Id { get; set; }
+
+    [BsonElement("Username")]
+    public string Username { get; set; }
+
+    [BsonElement("Avatar")]
+    public string Avatar { get; set; }
+}
+
+public class MessageWithAssignedUser : Message
+{
+    [BsonElement("assignedUser")]
+    public AssignedUser AssignedUser { get; set; }
+}
+
 
 public class MessageQueries
 {
@@ -13,11 +34,55 @@ public class MessageQueries
             : null;
     }
 
-    public async Task<List<Message>> GetListChannelMessages(IMongoDatabase mongoDatabase, string channelId)
+    public async Task<List<MessageWithAssignedUser>> GetListChannelMessages(IMongoDatabase mongoDatabase, string channelId)
     {
         var collection = mongoDatabase.GetCollection<Message>(DomainSettings.MessageCollectionName);
-        var records = await collection.FindAsync(r => r.ChannelId == channelId);
-        return records.ToList();
 
+        var pipeline = new[]
+            {
+            new BsonDocument("$match", new BsonDocument("channelId", channelId)),
+
+            new BsonDocument("$lookup", new BsonDocument
+            {
+                { "from", "users" },
+                { "localField", "userId" },
+                { "foreignField", "_id" },
+                { "as", "user" }
+            }),
+
+            new BsonDocument("$unwind", new BsonDocument
+            {
+                { "path", "$user" },
+                { "preserveNullAndEmptyArrays", true } // Optional: allows messages with missing users
+            }),
+
+            new BsonDocument("$addFields", new BsonDocument
+            {
+                {
+                    "assignedUser", new BsonDocument
+                    {
+                        { "Id", "$user._id" },
+                        { "Username", "$user.username" },
+                        { "Avatar", "$user.avatar" }
+                    }
+                }
+            }),
+
+            new BsonDocument("$project", new BsonDocument
+            {
+                { "user", 0 } // remove temporary 'user' field used for lookup
+            })
+        };
+
+        try
+        {
+            var result = await collection.AggregateAsync<MessageWithAssignedUser>(pipeline);
+            return await result.ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.ToString());
+            return new List<MessageWithAssignedUser>();
+        }
     }
 }
