@@ -97,13 +97,16 @@ public class User : IModel<UserResponse>, DatabaseItem
     [BsonElement("banned")]
     [BsonRepresentation(BsonType.Boolean)]
     public bool Banned { get; set; }
-    
+
     [BsonElement("muted")]
     [BsonRepresentation(BsonType.Boolean)]
     public bool Muted { get; set; }
 
     [BsonElement("email")]
     public string Email { get; set; }
+
+    [BsonElement("avatarUrl")]
+    public string AvatarUrl { get; set; }
 
     [BsonElement("roles")]
     public UserRole Roles { get; set; }
@@ -179,7 +182,7 @@ public class UserRegisterDTO : IDTO<User>
 /// <summary>
 /// Admin creates a user
 /// </summary>
-public class CreateUserDTO: IDTO<User>
+public class CreateUserDTO : IDTO<User>
 {
     [BsonElement("name")]
     public string Name { get; set; }
@@ -195,7 +198,7 @@ public class CreateUserDTO: IDTO<User>
     [BsonElement("banned")]
     [BsonRepresentation(BsonType.Boolean)]
     public bool Banned { get; set; }
-    
+
     [BsonElement("muted")]
     [BsonRepresentation(BsonType.Boolean)]
     public bool Muted { get; set; }

@@ -40,7 +40,7 @@ public class MessageMutations
         if (currentRole.Permissions.Contains(MessagePermissions.CreateMessage))
         {
             await messagesRepo.InsertOne(message);
-            await webSocketConnector.SendMessageToAllAsync(message);
+            await webSocketConnector.SendMessageAsync(MessageWithUser.Create(message, user));
             return message;
         }
 

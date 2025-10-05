@@ -6,6 +6,33 @@ using ChatneyBackend.Domains.Messages;
 
 namespace ChatneyBackend.Infra.Middleware;
 
+public readonly struct WebocketPayloadType
+{
+    public string Value { get; }
+
+    private WebocketPayloadType(string value)
+    {
+        Value = value;
+    }
+
+    public static readonly WebocketPayloadType NewMessage = new("newMessage");
+    public static readonly WebocketPayloadType Inactive = new("inactive");
+    public static readonly WebocketPayloadType Deleted = new("deleted");
+
+    public override string ToString() => Value;
+
+    // public static implicit operator string(WebocketPayloadType s) => s.Value;
+    // public static explicit operator WebocketPayloadType(string str) =>
+    //     str switch
+    //     {
+    //         "message" => Message,
+    //         "inactive" => Inactive,
+    //         "deleted" => Deleted,
+    //         _ => throw new ArgumentException($"Unknown status: {str}")
+    //     };
+}
+
+
 public class WebSocketConnector
 {
     private readonly ConcurrentDictionary<string, WebSocket> websocketsMapping = new();
@@ -94,14 +121,25 @@ public class WebSocketConnector
         await webSocket.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true, CancellationToken.None);
     }
 
-    public async Task SendMessageToAllAsync(Message message)
+    public async Task SendMessageAsync(MessageWithUser message)
+    {
+        await SendToAllAsync(WebocketPayloadType.NewMessage, message);
+    }
+
+    private async Task SendToAllAsync(WebocketPayloadType type, Object payload)
     {
         var options = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         };
 
-        var serializedMessage = JsonSerializer.Serialize(message, options);
+        var websocketPayload = new
+        {
+            Type = type,
+            Payload = payload,
+        };
+
+        var serializedMessage = JsonSerializer.Serialize(websocketPayload, options);
         var buffer = Encoding.UTF8.GetBytes(serializedMessage);
         var segment = new ArraySegment<byte>(buffer);
         var deadSockets = new List<string>();

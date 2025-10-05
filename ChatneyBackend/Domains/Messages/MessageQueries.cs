@@ -5,25 +5,6 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace ChatneyBackend.Domains.Messages;
 
-public class AssignedUser
-{
-    [BsonElement("_id")]
-    public string Id { get; set; }
-
-    [BsonElement("name")]
-    public string Name { get; set; }
-
-    [BsonElement("avatarUrl")]
-    public string? AvatarUrl { get; set; }
-}
-
-public class MessageWithUser : Message
-{
-    [BsonElement("user")]
-    public AssignedUser User { get; set; }
-}
-
-
 public class MessageQueries
 {
     public async Task<Message?> GetMessageById(IMongoDatabase mongoDatabase, string id)
