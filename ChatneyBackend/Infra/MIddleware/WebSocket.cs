@@ -2,22 +2,23 @@ using System.Collections.Concurrent;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using ChatneyBackend.Domains.Messages;
 
 namespace ChatneyBackend.Infra.Middleware;
 
-public readonly struct WebocketPayloadType
+public readonly struct WebSocketPayloadType
 {
     public string Value { get; }
 
-    private WebocketPayloadType(string value)
+    private WebSocketPayloadType(string value)
     {
         Value = value;
     }
 
-    public static readonly WebocketPayloadType NewMessage = new("newMessage");
-    public static readonly WebocketPayloadType Inactive = new("inactive");
-    public static readonly WebocketPayloadType Deleted = new("deleted");
+    public static readonly WebSocketPayloadType NewMessage = new("newMessage");
+    public static readonly WebSocketPayloadType Inactive = new("inactive");
+    public static readonly WebSocketPayloadType Deleted = new("deleted");
 
     public override string ToString() => Value;
 
@@ -32,6 +33,18 @@ public readonly struct WebocketPayloadType
     //     };
 }
 
+public class WebSocketPayloadTypeConverter : JsonConverter<WebSocketPayloadType>
+{
+    public override WebSocketPayloadType Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        throw new NotImplementedException(); // implement if deserialization is needed
+    }
+
+    public override void Write(Utf8JsonWriter writer, WebSocketPayloadType value, JsonSerializerOptions options)
+    {
+        writer.WriteStringValue(value.Value);
+    }
+}
 
 public class WebSocketConnector
 {
@@ -123,14 +136,15 @@ public class WebSocketConnector
 
     public async Task SendMessageAsync(MessageWithUser message)
     {
-        await SendToAllAsync(WebocketPayloadType.NewMessage, message);
+        await SendToAllAsync(WebSocketPayloadType.NewMessage, message);
     }
 
-    private async Task SendToAllAsync(WebocketPayloadType type, Object payload)
+    private async Task SendToAllAsync(WebSocketPayloadType type, Object payload)
     {
         var options = new JsonSerializerOptions
         {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            Converters = { new WebSocketPayloadTypeConverter() }
         };
 
         var websocketPayload = new

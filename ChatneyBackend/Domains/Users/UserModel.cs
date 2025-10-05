@@ -106,7 +106,7 @@ public class User : IModel<UserResponse>, DatabaseItem
     public string Email { get; set; }
 
     [BsonElement("avatarUrl")]
-    public string AvatarUrl { get; set; }
+    public string? AvatarUrl { get; set; }
 
     [BsonElement("roles")]
     public UserRole Roles { get; set; }

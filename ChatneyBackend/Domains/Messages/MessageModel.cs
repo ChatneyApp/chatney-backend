@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using ChatneyBackend.Domains.Users;
-using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace ChatneyBackend.Domains.Messages;
@@ -127,10 +126,9 @@ public class MessageWithUser : Message
             {
                 Id = user.Id,
                 Name = user.Name,
-                AvatarUrl = user.AvatarUrl ?? string.Empty,
+                AvatarUrl = user.AvatarUrl,
             }
         };
 
     }
 }
-
