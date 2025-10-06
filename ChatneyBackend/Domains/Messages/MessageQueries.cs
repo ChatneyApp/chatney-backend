@@ -16,6 +16,7 @@ public class MessageQueries
             : null;
     }
 
+    // TODO: implement side query to get all the users & attachments involved
     public async Task<List<MessageWithUser>> GetListChannelMessages(IMongoDatabase mongoDatabase, string channelId)
     {
         var collection = mongoDatabase.GetCollection<Message>(DomainSettings.MessageCollectionName);

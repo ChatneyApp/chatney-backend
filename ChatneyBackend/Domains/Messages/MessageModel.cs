@@ -132,3 +132,33 @@ public class MessageWithUser : Message
 
     }
 }
+
+public class MessageAttachment : DatabaseItem
+{
+    [BsonElement("_id")]
+    [BsonId]
+    [MaxLength(36)]
+    public string Id { get; set; }
+
+    [BsonElement("path")]
+    [MaxLength(36)]
+    public string Path { get; set; }
+
+    [BsonElement("fileName")]
+    [MaxLength(36)]
+    public string FileName { get; set; }
+
+    [BsonElement("mimeType")]
+    [MaxLength(36)]
+    public string MimeType { get; set; }
+
+    [BsonElement("createdBy")]
+    [MaxLength(36)]
+    public string CreatedBy { get; set; }
+
+    [BsonElement("createdAt")]
+    public DateTime CreatedAt { get; set; }
+
+    [BsonElement("updatedAt")]
+    public DateTime UpdatedAt { get; set; }
+}
