@@ -1,5 +1,6 @@
 using System.Security.Claims;
-using ChannelsNamespaces = ChatneyBackend.Domains.Channels;
+using ChatneyBackend.Domains.Channels;
+using ChatneyBackend.Domains.Users;
 using ChatneyBackend.Infra.Middleware;
 using HotChocolate.Authorization;
 using MongoDB.Driver;
@@ -9,25 +10,37 @@ namespace ChatneyBackend.Domains.Messages;
 public class MessageMutations
 {
     [Authorize]
-    public async Task<Message> AddMessage(HttpContext ctx, RoleManager roleManager, ClaimsPrincipal user,
-        IMongoDatabase mongoDatabase, MessageDTO messageDto)
+    public async Task<Message?> AddMessage(
+        RoleManager roleManager,
+        Repo<Channel> channelsRepo,
+        Repo<Message> messagesRepo,
+        Repo<User> usersRepo,
+        ClaimsPrincipal principal,
+        MessageDTO messageDto,
+        WebSocketConnector webSocketConnector
+    )
     {
-        Message message = Message.FromDTO(messageDto, user.GetUserId());
+        Message message = Message.FromDTO(messageDto, principal.GetUserId());
+        var user = await usersRepo.GetById(principal.GetUserId());
 
-        var channel = mongoDatabase
-            .GetCollection<ChannelsNamespaces.Channel>(ChannelsNamespaces.DomainSettings.ChannelCollectionName)
-            .Find(c => c.Id == message.ChannelId).FirstOrDefault();
+        var channel = await channelsRepo.GetById(message.ChannelId);
 
-        var currentRole = roleManager.GetRelevantRole(ctx.GetCurrentUser(), new RoleScope(
+        if (channel == null || user == null)
+        {
+            throw new InvalidOperationException("Channel or user is invalid");
+        }
+
+        var currentRole = roleManager.GetRelevantRole(user, new RoleScope(
             WorkspaceId: channel.WorkspaceId,
             ChannelId: channel.Id,
             ChannelTypeId: channel.ChannelTypeId
         ));
 
+        Console.WriteLine(string.Join(" ", currentRole.Permissions));
         if (currentRole.Permissions.Contains(MessagePermissions.CreateMessage))
         {
-            var collection = mongoDatabase.GetCollection<Message>(DomainSettings.MessageCollectionName);
-            await collection.InsertOneAsync(message);
+            await messagesRepo.InsertOne(message);
+            await webSocketConnector.SendMessageAsync(MessageWithUser.Create(message, user));
             return message;
         }
 

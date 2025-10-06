@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using MongoDB.Bson;
+using ChatneyBackend.Domains.Users;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace ChatneyBackend.Domains.Messages;
@@ -88,4 +88,77 @@ public class MessageDTO
     [BsonElement("parentId")]
     [MaxLength(36)]
     public string? ParentId { get; set; }
+}
+
+
+public class MessageUser
+{
+    [BsonElement("_id")]
+    public string Id { get; set; }
+
+    [BsonElement("name")]
+    public string Name { get; set; }
+
+    [BsonElement("avatarUrl")]
+    public string? AvatarUrl { get; set; }
+}
+
+public class MessageWithUser : Message
+{
+    [BsonElement("user")]
+    public MessageUser User { get; set; }
+
+    public static MessageWithUser Create(Message message, User user)
+    {
+        return new MessageWithUser()
+        {
+            Id = message.Id,
+            ChannelId = message.ChannelId,
+            UserId = user.Id,
+            Content = message.Content,
+            Attachments = message.Attachments,
+            Status = message.Status,
+            CreatedAt = message.CreatedAt,
+            UpdatedAt = message.UpdatedAt,
+            Reactions = message.Reactions,
+            ParentId = message.ParentId,
+            User = new MessageUser()
+            {
+                Id = user.Id,
+                Name = user.Name,
+                AvatarUrl = user.AvatarUrl,
+            }
+        };
+
+    }
+}
+
+public class MessageAttachment : DatabaseItem
+{
+    [BsonElement("_id")]
+    [BsonId]
+    [MaxLength(36)]
+    public string Id { get; set; }
+
+    [BsonElement("path")]
+    [MaxLength(36)]
+    public string Path { get; set; }
+
+    [BsonElement("fileName")]
+    [MaxLength(36)]
+    public string FileName { get; set; }
+
+    [BsonElement("mimeType")]
+    [MaxLength(36)]
+    public string MimeType { get; set; }
+
+    [BsonElement("createdBy")]
+    [MaxLength(36)]
+    public string CreatedBy { get; set; }
+
+    [BsonElement("createdAt")]
+    public DateTime CreatedAt { get; set; }
+
+    [BsonElement("updatedAt")]
+    public DateTime UpdatedAt { get; set; }
 }

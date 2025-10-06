@@ -15,50 +15,56 @@ using MessagesDomainSettings = ChatneyBackend.Domains.Messages.DomainSettings;
 using RolesDomainSettings = ChatneyBackend.Domains.Roles.DomainSettings;
 using UserDomainSettings = ChatneyBackend.Domains.Users.DomainSettings;
 using WorkspacesDomainSettings = ChatneyBackend.Domains.Workspaces.DomainSettings;
+using Microsoft.AspNetCore.WebSockets;
 
 var builder = WebApplication.CreateBuilder(args);
 
 var connectionString = builder.Configuration.GetConnectionString("MongoDB");
 var dbName = builder.Configuration.GetConnectionString("dbName");
-var UserPasswordSalt = builder.Configuration.GetSection("UserPasswordSalt").Value;
-var JwtSecret = builder.Configuration.GetSection("JwtSecret").Value;
+var userPasswordSalt = builder.Configuration.GetSection("UserPasswordSalt").Value;
+var jwtSecret = builder.Configuration.GetSection("JwtSecret").Value;
 
-if (connectionString == null || dbName == null || UserPasswordSalt == null || JwtSecret == null)
+if (connectionString == null || dbName == null || userPasswordSalt == null || jwtSecret == null)
 {
-    throw new ArgumentException("appsettings are invalid");
+    throw new ArgumentException("App settings are invalid");
 }
 
 var url = new MongoUrl(connectionString);
 var settings = MongoClientSettings.FromUrl(url);
 var mongoClient = new MongoClient(settings);
 var db = mongoClient.GetDatabase(dbName);
+
+var wsConfig = new WebSocketConnector();
+
 DbInit.Init(mongoClient, dbName);
-builder.Services.AddSingleton((sp) => db);
-builder.Services.AddSingleton((sp) => new AppConfig { UserPasswordSalt = UserPasswordSalt, JwtSecret = JwtSecret });
-builder.Services.AddSingleton((sp) => new RoleManager(db));
-builder.Services.AddSingleton((sp) => new Repo<User>(db, UserDomainSettings.UserCollectionName));
-builder.Services.AddSingleton((sp) => new Repo<Channel>(db, ChannelDomainSettings.ChannelCollectionName));
-builder.Services.AddSingleton((sp) => new Repo<ChannelType>(db, ChannelDomainSettings.ChannelTypeCollectionName));
-builder.Services.AddSingleton((sp) => new Repo<ChannelGroup>(db, ChannelDomainSettings.ChannelGroupCollectionName));
-builder.Services.AddSingleton((sp) => new Repo<Config>(db, ConfigsDomainSettings.ConfigCollectionName));
-builder.Services.AddSingleton((sp) => new Repo<Message>(db, MessagesDomainSettings.MessageCollectionName));
-builder.Services.AddSingleton((sp) => new Repo<Role>(db, RolesDomainSettings.RoleCollectionName));
-builder.Services.AddSingleton((sp) => new Repo<Workspace>(db, WorkspacesDomainSettings.WorkspaceCollectionName));
+builder.Services.AddSingleton(_ => db);
+builder.Services.AddSingleton(_ => new AppConfig { UserPasswordSalt = userPasswordSalt, JwtSecret = jwtSecret });
+builder.Services.AddSingleton(_ => new RoleManager(db));
+builder.Services.AddSingleton(_ => new Repo<User>(db, UserDomainSettings.UserCollectionName));
+builder.Services.AddSingleton(_ => new Repo<Channel>(db, ChannelDomainSettings.ChannelCollectionName));
+builder.Services.AddSingleton(_ => new Repo<ChannelType>(db, ChannelDomainSettings.ChannelTypeCollectionName));
+builder.Services.AddSingleton(_ => new Repo<ChannelGroup>(db, ChannelDomainSettings.ChannelGroupCollectionName));
+builder.Services.AddSingleton(_ => new Repo<Config>(db, ConfigsDomainSettings.ConfigCollectionName));
+builder.Services.AddSingleton(_ => new Repo<Message>(db, MessagesDomainSettings.MessageCollectionName));
+builder.Services.AddSingleton(_ => new Repo<Role>(db, RolesDomainSettings.RoleCollectionName));
+builder.Services.AddSingleton(_ => new Repo<Workspace>(db, WorkspacesDomainSettings.WorkspaceCollectionName));
+builder.Services.AddSingleton(_ => wsConfig);
+
 
 // ---- CORS policies ----
 // Dev: open for local tooling; Prod: strict allow-list with credentials.
-const string DevOpenCors = "DevOpenCors";
-const string ProdCors = "ProdCors";
+const string devOpenCors = "DevOpenCors";
+const string prodCors = "ProdCors";
 
 string[] allowedProdOrigins =
-{
+[
     "http://localhost:3001",
     "https://chatney.com"
-};
+];
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy(DevOpenCors, policy =>
+    options.AddPolicy(devOpenCors, policy =>
     {
         // Do NOT call AllowCredentials with AllowAnyOrigin.
         policy
@@ -67,7 +73,7 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod();
     });
 
-    options.AddPolicy(ProdCors, policy =>
+    options.AddPolicy(prodCors, policy =>
     {
         policy
             .WithOrigins(allowedProdOrigins)
@@ -84,19 +90,17 @@ builder.Services
     .AddMutationType<Mutation>();
 
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddWebSockets(options =>
+{
+    options.KeepAliveInterval = TimeSpan.FromSeconds(120); // Optional
+});
 
 var app = builder.Build();
+wsConfig.Configure(app);
 
 app.UseMiddleware<AuthMiddleware>();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseCors(DevOpenCors);
-}
-else
-{
-    app.UseCors(ProdCors);
-}
+app.UseCors(app.Environment.IsDevelopment() ? devOpenCors : prodCors);
 app.MapGraphQL("/query").WithOptions(new GraphQLServerOptions
 {
     EnableMultipartRequests = true,
