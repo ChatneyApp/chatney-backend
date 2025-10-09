@@ -71,7 +71,7 @@ public class AuthMiddleware
         {
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             context.Response.ContentType = "application/json";
-            await context.Response.WriteAsync($@"{{""error"":401,""reason"":""Auth error""}}");
+            await context.Response.WriteAsync($@"{{""error"":500,""reason"":""{error.Message}""}}");
         }
     }
 }

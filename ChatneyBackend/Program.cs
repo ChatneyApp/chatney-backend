@@ -46,6 +46,7 @@ builder.Services.AddSingleton(_ => new Repo<ChannelType>(db, ChannelDomainSettin
 builder.Services.AddSingleton(_ => new Repo<ChannelGroup>(db, ChannelDomainSettings.ChannelGroupCollectionName));
 builder.Services.AddSingleton(_ => new Repo<Config>(db, ConfigsDomainSettings.ConfigCollectionName));
 builder.Services.AddSingleton(_ => new Repo<Message>(db, MessagesDomainSettings.MessageCollectionName));
+builder.Services.AddSingleton(_ => new Repo<MessageAttachment>(db, MessagesDomainSettings.MessageAttachmentCollectionName));
 builder.Services.AddSingleton(_ => new Repo<Role>(db, RolesDomainSettings.RoleCollectionName));
 builder.Services.AddSingleton(_ => new Repo<Workspace>(db, WorkspacesDomainSettings.WorkspaceCollectionName));
 builder.Services.AddSingleton(_ => wsConfig);
@@ -87,7 +88,9 @@ builder.Services
     .AddGraphQLServer()
     .AddAuthorization()
     .AddQueryType<Query>()
-    .AddMutationType<Mutation>();
+    .AddMutationType<Mutation>()
+    .AddTypeExtension<HasUserIdTypeExtension<Message>>()
+    .AddDataLoader<UserByIdDataLoader>();
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddWebSockets(options =>

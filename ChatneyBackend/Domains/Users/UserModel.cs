@@ -75,7 +75,7 @@ public class UserResponse
     public List<string> Workspaces { get; set; }
 }
 
-public class User : IModel<UserResponse>, DatabaseItem
+public class User : IModel<UserResponse>, DatabaseItem, IType
 {
     [BsonElement("_id")]
     [BsonId]
@@ -143,6 +143,8 @@ public class User : IModel<UserResponse>, DatabaseItem
             Id = Id
         };
     }
+
+    public TypeKind Kind { get; }
 }
 
 /// <summary>
@@ -245,4 +247,9 @@ public class UserLoginResponse
     public string Id { get; set; }
 
     public string Token { get; set; }
+}
+
+public interface IHasUserId
+{
+    string UserId { get; }
 }
