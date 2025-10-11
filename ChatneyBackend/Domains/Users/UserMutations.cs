@@ -9,22 +9,22 @@ namespace ChatneyBackend.Domains.Users;
 
 public class UserMutations
 {
-    public async Task<UserResponse> CreateUser(AppConfig appConfig, Repo<User> repo, CreateUserDTO userDTO)
+    public async Task<User> CreateUser(AppConfig appConfig, Repo<User> repo, CreateUserDTO userDTO)
     {
         var user = userDTO.ToModel();
         user.Password = Helpers.GetMd5Hash(user.Password + appConfig.UserPasswordSalt);
 
         await repo.InsertOne(user);
-        return user.ToResponse();
+        return user;
     }
 
-    public async Task<UserResponse> Register(AppConfig appConfig, Repo<User> repo, UserRegisterDTO userDTO)
+    public async Task<User> Register(AppConfig appConfig, Repo<User> repo, UserRegisterDTO userDTO)
     {
         var user = userDTO.ToModel();
         user.Password = Helpers.GetMd5Hash(user.Password + appConfig.UserPasswordSalt);
 
         await repo.InsertOne(user);
-        return user.ToResponse();
+        return user;
     }
 
     public Task<bool> DeleteUser(Repo<User> repo, string id) => repo.DeleteById(id);
