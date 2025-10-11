@@ -85,7 +85,6 @@ public class User : IModel<UserResponse>, DatabaseItem, IType
     [BsonElement("name")]
     public string Name { get; set; }
 
-
     [BsonElement("active")]
     [BsonRepresentation(BsonType.Boolean)]
     public bool Active { get; set; }

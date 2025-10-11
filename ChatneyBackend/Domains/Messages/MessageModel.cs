@@ -4,7 +4,7 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace ChatneyBackend.Domains.Messages;
 
-public class Reaction
+public class Reaction : IHasUserId
 {
     [BsonElement("userId")]
     [MaxLength(36)]
