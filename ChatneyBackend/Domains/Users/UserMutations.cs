@@ -1,27 +1,31 @@
-﻿using System.Text;
-using ChatneyBackend.Utils;
-using MongoDB.Driver;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using Microsoft.IdentityModel.Tokens;
+﻿using ChatneyBackend.Utils;
+using ChatneyBackend.Domains.Roles;
 
 namespace ChatneyBackend.Domains.Users;
 
 public class UserMutations
 {
-    public async Task<User> CreateUser(AppConfig appConfig, Repo<User> repo, CreateUserDTO userDTO)
+    public async Task<User> CreateUser(AppConfig appConfig, Repo<User> repo, CreateUserDTO userDto)
     {
-        var user = userDTO.ToModel();
+        var user = userDto.ToModel();
         user.Password = Helpers.GetMd5Hash(user.Password + appConfig.UserPasswordSalt);
 
         await repo.InsertOne(user);
         return user;
     }
 
-    public async Task<User> Register(AppConfig appConfig, Repo<User> repo, UserRegisterDTO userDTO)
+    public async Task<User> Register(AppConfig appConfig, Repo<User> repo, Repo<Role> rolesRepo, UserRegisterDTO userDto)
     {
-        var user = userDTO.ToModel();
+        var user = userDto.ToModel();
         user.Password = Helpers.GetMd5Hash(user.Password + appConfig.UserPasswordSalt);
+
+        // find a default role ("user")
+        var userRole = await rolesRepo.GetOne(r => r.Name == "user");
+        if (userRole == null)
+        {
+            throw new Exception("User role not found");
+        }
+        user.Roles.Global = userRole.Id;
 
         await repo.InsertOne(user);
         return user;
@@ -29,23 +33,19 @@ public class UserMutations
 
     public Task<bool> DeleteUser(Repo<User> repo, string id) => repo.DeleteById(id);
 
-    public async Task<UserLoginResponse?> Login(AppConfig appConfig, IMongoDatabase mongoDatabase, string login, string password)
+    public async Task<UserLoginResponse?> Login(AppConfig appConfig, Repo<User> repo, string login, string password)
     {
         var passwordHash = Helpers.GetMd5Hash(password + appConfig.UserPasswordSalt);
-        var userStask = mongoDatabase.GetCollection<User>(DomainSettings.UserCollectionName).FindAsync(u => (u.Email == login || u.Name == login) && u.Password == passwordHash);
-        var users = (await userStask).ToList();
+        var user = await repo.GetOne(u => (u.Email == login || u.Name == login) && u.Password == passwordHash);
 
-        if (users.Count == 0)
+        if (user == null)
         {
             return null;
         }
-        else
+        return new UserLoginResponse
         {
-            return new UserLoginResponse
-            {
-                Id = users[0].Id,
-                Token = JwtHelpers.GetJwtToken(users[0].Email, users[0].Id, appConfig.JwtSecret)
-            };
-        }
+            Id = user.Id,
+            Token = JwtHelpers.GetJwtToken(user.Email, user.Id, appConfig.JwtSecret)
+        };
     }
 }

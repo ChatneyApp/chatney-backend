@@ -162,6 +162,13 @@ public class UserRegisterDTO : IDTO<User>
             Workspaces = [],
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
+            Roles = new UserRole()
+            {
+                Channel = new Dictionary<string, RoleChannel>(),
+                ChannelTypes = new Dictionary<string, RoleChannelType>(),
+                Global = string.Empty,
+                Workspace = new  Dictionary<string, RoleWorkspace>(),
+            },
             ChannelsSettings = new Dictionary<string, ChannelSettings>()
         };
     }
