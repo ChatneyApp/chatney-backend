@@ -64,12 +64,23 @@ public class AuthMiddleware
                     }
                 }
             }
-
-            await _next(context);
         }
         catch (Exception error)
         {
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsync(@"{{""error"":401,""reason"":""Auth error""}}");
+            return;
+        }
+
+        try
+        {
+            await _next(context);
+        }
+        catch (Exception error)
+        {
+            // TODO: detail on error codes
+            context.Response.StatusCode = StatusCodes.Status500InternalServerError;
             context.Response.ContentType = "application/json";
             await context.Response.WriteAsync($@"{{""error"":500,""reason"":""{error.Message}""}}");
         }
