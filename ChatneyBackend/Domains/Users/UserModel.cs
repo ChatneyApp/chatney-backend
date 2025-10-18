@@ -75,7 +75,7 @@ public class UserResponse
     public List<string> Workspaces { get; set; }
 }
 
-public class User : IModel<UserResponse>, DatabaseItem
+public class User : DatabaseItem, IType
 {
     [BsonElement("_id")]
     [BsonId]
@@ -84,7 +84,6 @@ public class User : IModel<UserResponse>, DatabaseItem
 
     [BsonElement("name")]
     public string Name { get; set; }
-
 
     [BsonElement("active")]
     [BsonRepresentation(BsonType.Boolean)]
@@ -119,30 +118,19 @@ public class User : IModel<UserResponse>, DatabaseItem
     public List<string> Workspaces { get; set; }
 
     [BsonElement("password")]
+    [GraphQLIgnore]
     public string Password { get; set; }
 
     [BsonElement("createdAt")]
+    [GraphQLIgnore]
     public DateTime CreatedAt { get; set; }
 
     [BsonElement("updatedAt")]
+    [GraphQLIgnore]
     public DateTime UpdatedAt { get; set; }
 
-    public UserResponse ToResponse()
-    {
-        return new UserResponse
-        {
-            Active = Active,
-            Muted = Muted,
-            Banned = Banned,
-            Verified = Verified,
-            Email = Email,
-            Workspaces = Workspaces,
-            Roles = Roles,
-            ChannelsSettings = ChannelsSettings,
-            Name = Name,
-            Id = Id
-        };
-    }
+    [GraphQLIgnore]
+    public TypeKind Kind { get; }
 }
 
 /// <summary>
@@ -174,6 +162,13 @@ public class UserRegisterDTO : IDTO<User>
             Workspaces = [],
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
+            Roles = new UserRole()
+            {
+                Channel = new Dictionary<string, RoleChannel>(),
+                ChannelTypes = new Dictionary<string, RoleChannelType>(),
+                Global = string.Empty,
+                Workspace = new  Dictionary<string, RoleWorkspace>(),
+            },
             ChannelsSettings = new Dictionary<string, ChannelSettings>()
         };
     }
@@ -245,4 +240,9 @@ public class UserLoginResponse
     public string Id { get; set; }
 
     public string Token { get; set; }
+}
+
+public interface IHasUserId
+{
+    string UserId { get; }
 }
