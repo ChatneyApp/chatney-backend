@@ -14,13 +14,13 @@ public record UserFilter
 public class UserQueries
 {
     [Authorize]
-    public async Task<UserResponse?> GetUserById(Repo<User> repo, string id) => (await repo.GetById(id))?.ToResponse();
+    public async Task<User?> GetUserById(Repo<User> repo, string id) => await repo.GetById(id);
 
     [Authorize]
-    public async Task<UserResponse?> GetUserByName(Repo<User> repo, string name) => (await repo.GetOne(u => u.Name == name))?.ToResponse();
+    public async Task<User?> GetUserByName(Repo<User> repo, string name) => await repo.GetOne(u => u.Name == name);
 
     [Authorize]
-    public async Task<List<UserResponse>> GetList(Repo<User> repo, UserFilter filter)
+    public async Task<List<User>> GetList(Repo<User> repo, UserFilter filter)
     {
         var f = Builders<User>.Filter.Empty;
         if (filter.Active != null)
@@ -40,9 +40,6 @@ public class UserQueries
             f &= Builders<User>.Filter.Eq(u => u.Name, filter.Name);
         }
 
-        var preList = await repo.GetList(f);
-        return preList
-            .Select(u => u.ToResponse())
-            .ToList();
+        return await repo.GetList(f);
     }
 }
