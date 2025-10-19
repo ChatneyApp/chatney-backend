@@ -90,7 +90,6 @@ builder.Services
     .AddQueryType<Query>()
     .AddMutationType<Mutation>()
     .AddTypeExtension<HasUserIdTypeExtension<Message>>()
-    .AddTypeExtension<HasUserIdTypeExtension<Reaction>>()
     .AddDataLoader<UserByIdDataLoader>();
 
 builder.Services.AddHttpContextAccessor();
