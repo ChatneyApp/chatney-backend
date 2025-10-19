@@ -9,7 +9,7 @@ namespace ChatneyBackend.Domains.Configs;
 
 public class InstallSystemResult
 {
-    public string status { get; set; }
+    public required string status { get; set; }
     public string? message {get; set;}
 }
 

@@ -83,6 +83,7 @@ public class MessageMutations
         }
         catch (Exception exception)
         {
+            Console.WriteLine(exception.ToString());
             return false;
         }
     }
