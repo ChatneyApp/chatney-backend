@@ -8,7 +8,7 @@ using MongoDB.Driver;
 
 namespace ChatneyBackend.Domains.Messages;
 
-public class AddReactionOutput
+public class ReactionEndpointOutput
 {
     public required string status { get; set; }
     public string? message { get; set; }
@@ -87,7 +87,7 @@ public class MessageMutations
         }
     }
 
-    public async Task<AddReactionOutput> AddReaction(
+    public async Task<ReactionEndpointOutput> AddReaction(
         WebSocketConnector webSocketConnector,
         Repo<MessageReactionDbModel> reactionRepo,
         Repo<Message> messageRepo,
@@ -102,7 +102,7 @@ public class MessageMutations
 
             if (string.IsNullOrEmpty(userId))
             {
-                return new AddReactionOutput()
+                return new ReactionEndpointOutput()
                 {
                     message = "invalid user",
                     status = "error"
@@ -126,7 +126,7 @@ public class MessageMutations
             }
             catch (MongoWriteException ex) when (ex.WriteError.Category == ServerErrorCategory.DuplicateKey)
             {
-                return new AddReactionOutput()
+                return new ReactionEndpointOutput()
                 {
                     status = "error",
                     message = "duplicate reaction"
@@ -161,19 +161,93 @@ public class MessageMutations
                     pushUpdate
                 );
             }
-            return new AddReactionOutput()
+            return new ReactionEndpointOutput()
             {
                 status = "success"
             };
         }
         catch (Exception e)
         {
-            return new AddReactionOutput()
+            return new ReactionEndpointOutput()
             {
                 message = e.ToString(),
                 status = "error"
             };
-;
+            ;
         }
     }
+    
+    public async Task<ReactionEndpointOutput> DeleteReaction(
+    WebSocketConnector webSocketConnector,
+    Repo<MessageReactionDbModel> reactionRepo,
+    Repo<Message> messageRepo,
+    string code,
+    string messageId,
+    ClaimsPrincipal principal)
+{
+    try
+    {
+        // 1. Validate user
+        var userId = principal.GetUserId();
+
+        if (string.IsNullOrEmpty(userId))
+        {
+            return new ReactionEndpointOutput
+            {
+                message = "invalid user",
+                status = "error"
+            };
+        }
+
+        // 2. Try to delete the user's reaction
+        var deleteResult = await reactionRepo._collection.DeleteOneAsync(
+            Builders<MessageReactionDbModel>.Filter.And(
+                Builders<MessageReactionDbModel>.Filter.Eq(r => r.UserId, userId),
+                Builders<MessageReactionDbModel>.Filter.Eq(r => r.MessageId, messageId),
+                Builders<MessageReactionDbModel>.Filter.Eq(r => r.Code, code)
+            )
+        );
+
+        if (deleteResult.DeletedCount == 0)
+        {
+            return new ReactionEndpointOutput
+            {
+                status = "error",
+                message = "reaction not found"
+            };
+        }
+
+        // 3. Decrement the count of the reaction in the message
+        var msgFilter = Builders<Message>.Filter.And(
+            Builders<Message>.Filter.Eq(m => m.Id, messageId),
+            Builders<Message>.Filter.ElemMatch(m => m.Reactions, r => r.Code == code)
+        );
+
+        var decrementUpdate = Builders<Message>.Update
+            .Inc("reactions.$.count", -1)
+            .Set(m => m.UpdatedAt, DateTime.UtcNow);
+
+        var updateResult = await messageRepo._collection.UpdateOneAsync(msgFilter, decrementUpdate);
+
+        // 4. Remove the reaction entry if count is now <= 0
+        await messageRepo._collection.UpdateOneAsync(
+            Builders<Message>.Filter.Eq(m => m.Id, messageId),
+            Builders<Message>.Update.PullFilter(m => m.Reactions, r => r.Code == code && r.Count <= 0)
+        );
+
+        return new ReactionEndpointOutput
+        {
+            status = "success"
+        };
+    }
+    catch (Exception ex)
+    {
+        return new ReactionEndpointOutput
+        {
+            message = ex.ToString(),
+            status = "error"
+        };
+    }
+}
+
 }
