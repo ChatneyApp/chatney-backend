@@ -133,6 +133,12 @@ public class MessageWithUser : Message
     }
 }
 
+public class DeletedMessage
+{
+    public string MessageId { get; set; }
+    public string ChannelId { get; set; }
+}
+
 public class MessageAttachment : DatabaseItem
 {
     [BsonElement("_id")]
