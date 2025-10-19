@@ -4,11 +4,10 @@ namespace ChatneyBackend.Domains.Workspaces;
 
 public class WorkspaceMutations
 {
-    public async Task<Workspace> AddWorkspace(IMongoDatabase mongoDatabase, WorkspaceDTO workspaceDto)
+    public async Task<Workspace> AddWorkspace(Repo<Workspace> workspaceRepo, WorkspaceDTO workspaceDto)
     {
-        var collection = mongoDatabase.GetCollection<Workspace>(DomainSettings.WorkspaceCollectionName);
         Workspace workspace = Workspace.FromDTO(workspaceDto);
-        await collection.InsertOneAsync(workspace);
+        await workspaceRepo.InsertOne(workspace);
         return workspace;
     }
 

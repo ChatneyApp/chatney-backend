@@ -30,17 +30,17 @@ services:
       - '9092:9092'
 
   minio:
-    image: docker.io/bitnami/minio:2022
-    restart: unless-stopped
+    image: minio/minio
+    container_name: minio
     ports:
-      - '9000:9000'
-      - '9001:9001'
-    volumes:
-      - 'minio_data:/data'
+      - "9000:9000"   # MinIO API
+      - "9001:9001"   # MinIO Console
     environment:
       - MINIO_ROOT_USER=minioadmin
-      - MINIO_ROOT_PASSWORD=miniopass
-      - MINIO_DEFAULT_BUCKETS=chatney
+      - MINIO_ROOT_PASSWORD=minioadminpassword
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
 
 volumes:
   minio_data:
