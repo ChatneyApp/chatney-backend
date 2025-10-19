@@ -4,16 +4,6 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace ChatneyBackend.Domains.Messages;
 
-public class Reaction
-{
-    [BsonElement("code")]
-    [MaxLength(255)]
-    public string Code { get; set; }
-
-    [BsonElement("count")]
-    public int Count { get; set; }
-}
-
 public class Message : DatabaseItem, IHasUserId
 {
     [BsonElement("_id")]
@@ -47,7 +37,7 @@ public class Message : DatabaseItem, IHasUserId
     public DateTime UpdatedAt { get; set; }
 
     [BsonElement("reactions")]
-    public List<Reaction> Reactions { get; set; }
+    public List<ReactionInMessage> Reactions { get; set; }
 
     [BsonElement("parentId")]
     [MaxLength(36)]
@@ -65,7 +55,7 @@ public class Message : DatabaseItem, IHasUserId
             Status = "sent", // TODO: Define status constants
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
-            Reactions = new List<Reaction>(),
+            Reactions = new List<ReactionInMessage>(),
             ParentId = message.ParentId
         };
     }

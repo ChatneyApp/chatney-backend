@@ -41,6 +41,7 @@ builder.Services.AddSingleton(_ => db);
 builder.Services.AddSingleton(_ => new AppConfig { UserPasswordSalt = userPasswordSalt, JwtSecret = jwtSecret });
 builder.Services.AddSingleton(_ => new RoleManager(db));
 builder.Services.AddSingleton(_ => new Repo<User>(db, UserDomainSettings.UserCollectionName));
+builder.Services.AddSingleton(_ => new Repo<MessageReactionDbModel>(db, MessagesDomainSettings.ReactionCollectionName));
 builder.Services.AddSingleton(_ => new Repo<Channel>(db, ChannelDomainSettings.ChannelCollectionName));
 builder.Services.AddSingleton(_ => new Repo<ChannelType>(db, ChannelDomainSettings.ChannelTypeCollectionName));
 builder.Services.AddSingleton(_ => new Repo<ChannelGroup>(db, ChannelDomainSettings.ChannelGroupCollectionName));

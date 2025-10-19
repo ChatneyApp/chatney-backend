@@ -10,7 +10,7 @@ public interface DatabaseItem
 
 public class Repo<T> where T : DatabaseItem
 {
-    private readonly IMongoCollection<T> _collection;
+    public readonly IMongoCollection<T> _collection;
 
     public Repo(IMongoDatabase db, string collectionName)
     {
@@ -41,4 +41,4 @@ public class Repo<T> where T : DatabaseItem
         var r = await _collection.ReplaceOneAsync(u => u.Id == record.Id, record);
         return r.ModifiedCount > 0;
     }
-}
+    }

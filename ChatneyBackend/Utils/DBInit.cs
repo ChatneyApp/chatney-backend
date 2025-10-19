@@ -1,6 +1,7 @@
 ﻿using ChatneyBackend.Domains.Users;
 using MongoDB.Driver;
 using UsersDomainSettings = ChatneyBackend.Domains.Users.DomainSettings;
+using MessageDomainSettings = ChatneyBackend.Domains.Messages.DomainSettings;
 
 namespace ChatneyBackend.Utils;
 
@@ -20,5 +21,16 @@ public static class DbInit
         var nameIndexOptions = new CreateIndexOptions { Unique = true };
         var nameIndexModel = new CreateIndexModel<User>(nameIndex, nameIndexOptions);
         usersCollection.Indexes.CreateMany([nameIndexModel, emailIndexModel]);
+
+
+        var messageReactionsCollection = db.GetCollection<MessageReactionDbModel>(MessageDomainSettings.ReactionCollectionName);
+        var indexKeys = Builders<MessageReactionDbModel>.IndexKeys
+            .Ascending(r => r.MessageId)
+            .Ascending(r => r.Code)
+            .Ascending(r => r.UserId);
+
+        var indexModel = new CreateIndexModel<MessageReactionDbModel>(indexKeys, new CreateIndexOptions { Unique = true });
+        messageReactionsCollection.Indexes.CreateOne(indexModel);
+
     }
 }
