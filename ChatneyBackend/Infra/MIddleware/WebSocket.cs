@@ -17,8 +17,7 @@ public readonly struct WebSocketPayloadType
     }
 
     public static readonly WebSocketPayloadType NewMessage = new("newMessage");
-    public static readonly WebSocketPayloadType Inactive = new("inactive");
-    public static readonly WebSocketPayloadType Deleted = new("deleted");
+    public static readonly WebSocketPayloadType DeletedMessage = new("deletedMessage");
 
     public override string ToString() => Value;
 
@@ -137,6 +136,11 @@ public class WebSocketConnector
     public async Task SendMessageAsync(MessageWithUser message)
     {
         await SendToAllAsync(WebSocketPayloadType.NewMessage, message);
+    }
+
+    public async Task DeleteMessageAsync(DeletedMessage message)
+    {
+        await SendToAllAsync(WebSocketPayloadType.DeletedMessage, message);
     }
 
     private async Task SendToAllAsync(WebSocketPayloadType type, Object payload)

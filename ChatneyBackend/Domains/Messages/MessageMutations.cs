@@ -59,10 +59,24 @@ public class MessageMutations
         return result.ModifiedCount > 0 ? message : null;
     }
 
-    public async Task<bool> DeleteMessage(IMongoDatabase mongoDatabase, string id)
+    public async Task<bool> DeleteMessage(WebSocketConnector webSocketConnector, Repo<Message> repo, string id)
     {
-        var collection = mongoDatabase.GetCollection<Message>(DomainSettings.MessageCollectionName);
-        var result = await collection.DeleteOneAsync(c => c.Id == id);
-        return result.DeletedCount > 0;
+        var message = await repo.GetById(id);
+        if (message == null) return false;
+
+        try
+        {
+            var result = await repo.DeleteById(id);
+            await webSocketConnector.DeleteMessageAsync(new DeletedMessage
+            {
+                ChannelId = message.ChannelId,
+                MessageId = message.Id
+            });
+            return result;
+        }
+        catch (Exception exception)
+        {
+            return false;
+        }
     }
 }
