@@ -32,3 +32,10 @@ public class MessageReactionDbModel : DatabaseItem
     [BsonElement("updatedAt")]
     public DateTime UpdatedAt { get; set; }
 }
+
+public class WebsocketReactionPayload
+{
+    public required string code { get; set; }
+    public required string usedId { get; set; }
+    public required string messageId { get; set; }
+}

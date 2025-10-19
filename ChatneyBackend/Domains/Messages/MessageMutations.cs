@@ -161,6 +161,15 @@ public class MessageMutations
                     pushUpdate
                 );
             }
+
+            // 5. Send websocket update
+            await webSocketConnector.AddReactionAsync(new WebsocketReactionPayload()
+            {
+                code = code,
+                usedId = userId,
+                messageId = messageId
+            });
+
             return new ReactionEndpointOutput()
             {
                 status = "success"
@@ -176,7 +185,7 @@ public class MessageMutations
             ;
         }
     }
-    
+
     public async Task<ReactionEndpointOutput> DeleteReaction(
     WebSocketConnector webSocketConnector,
     Repo<MessageReactionDbModel> reactionRepo,
@@ -184,70 +193,78 @@ public class MessageMutations
     string code,
     string messageId,
     ClaimsPrincipal principal)
-{
-    try
     {
-        // 1. Validate user
-        var userId = principal.GetUserId();
+        try
+        {
+            // 1. Validate user
+            var userId = principal.GetUserId();
 
-        if (string.IsNullOrEmpty(userId))
+            if (string.IsNullOrEmpty(userId))
+            {
+                return new ReactionEndpointOutput
+                {
+                    message = "invalid user",
+                    status = "error"
+                };
+            }
+
+            // 2. Try to delete the user's reaction
+            var deleteResult = await reactionRepo._collection.DeleteOneAsync(
+                Builders<MessageReactionDbModel>.Filter.And(
+                    Builders<MessageReactionDbModel>.Filter.Eq(r => r.UserId, userId),
+                    Builders<MessageReactionDbModel>.Filter.Eq(r => r.MessageId, messageId),
+                    Builders<MessageReactionDbModel>.Filter.Eq(r => r.Code, code)
+                )
+            );
+
+            if (deleteResult.DeletedCount == 0)
+            {
+                return new ReactionEndpointOutput
+                {
+                    status = "error",
+                    message = "reaction not found"
+                };
+            }
+
+            // 3. Decrement the count of the reaction in the message
+            var msgFilter = Builders<Message>.Filter.And(
+                Builders<Message>.Filter.Eq(m => m.Id, messageId),
+                Builders<Message>.Filter.ElemMatch(m => m.Reactions, r => r.Code == code)
+            );
+
+            var decrementUpdate = Builders<Message>.Update
+                .Inc("reactions.$.count", -1)
+                .Set(m => m.UpdatedAt, DateTime.UtcNow);
+
+            var updateResult = await messageRepo._collection.UpdateOneAsync(msgFilter, decrementUpdate);
+
+            // 4. Remove the reaction entry if count is now <= 0
+            await messageRepo._collection.UpdateOneAsync(
+                Builders<Message>.Filter.Eq(m => m.Id, messageId),
+                Builders<Message>.Update.PullFilter(m => m.Reactions, r => r.Code == code && r.Count <= 0)
+            );
+
+            // 5. Notify websocket listeners
+            await webSocketConnector.DeleteReactionAsync(new WebsocketReactionPayload()
+            {
+                code = code,
+                usedId = userId,
+                messageId = messageId
+            });
+
+            return new ReactionEndpointOutput
+            {
+                status = "success"
+            };
+        }
+        catch (Exception ex)
         {
             return new ReactionEndpointOutput
             {
-                message = "invalid user",
+                message = ex.ToString(),
                 status = "error"
             };
         }
-
-        // 2. Try to delete the user's reaction
-        var deleteResult = await reactionRepo._collection.DeleteOneAsync(
-            Builders<MessageReactionDbModel>.Filter.And(
-                Builders<MessageReactionDbModel>.Filter.Eq(r => r.UserId, userId),
-                Builders<MessageReactionDbModel>.Filter.Eq(r => r.MessageId, messageId),
-                Builders<MessageReactionDbModel>.Filter.Eq(r => r.Code, code)
-            )
-        );
-
-        if (deleteResult.DeletedCount == 0)
-        {
-            return new ReactionEndpointOutput
-            {
-                status = "error",
-                message = "reaction not found"
-            };
-        }
-
-        // 3. Decrement the count of the reaction in the message
-        var msgFilter = Builders<Message>.Filter.And(
-            Builders<Message>.Filter.Eq(m => m.Id, messageId),
-            Builders<Message>.Filter.ElemMatch(m => m.Reactions, r => r.Code == code)
-        );
-
-        var decrementUpdate = Builders<Message>.Update
-            .Inc("reactions.$.count", -1)
-            .Set(m => m.UpdatedAt, DateTime.UtcNow);
-
-        var updateResult = await messageRepo._collection.UpdateOneAsync(msgFilter, decrementUpdate);
-
-        // 4. Remove the reaction entry if count is now <= 0
-        await messageRepo._collection.UpdateOneAsync(
-            Builders<Message>.Filter.Eq(m => m.Id, messageId),
-            Builders<Message>.Update.PullFilter(m => m.Reactions, r => r.Code == code && r.Count <= 0)
-        );
-
-        return new ReactionEndpointOutput
-        {
-            status = "success"
-        };
     }
-    catch (Exception ex)
-    {
-        return new ReactionEndpointOutput
-        {
-            message = ex.ToString(),
-            status = "error"
-        };
-    }
-}
 
 }
