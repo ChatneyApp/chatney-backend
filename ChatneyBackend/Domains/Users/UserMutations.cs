@@ -20,7 +20,7 @@ public class UserMutations
         user.Password = Helpers.GetMd5Hash(user.Password + appConfig.UserPasswordSalt);
 
         // find a base role
-        var userRole = await rolesRepo.GetOne(r => r.Name == Configs.DomainSettings.BaseRoleName);
+        var userRole = await rolesRepo.GetOne(r => r.Name == Roles.DomainSettings.BaseRoleName);
         if (userRole == null)
         {
             throw new Exception("User role not found");

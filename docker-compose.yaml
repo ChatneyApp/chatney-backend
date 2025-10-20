@@ -32,12 +32,14 @@ services:
   minio:
     image: minio/minio
     container_name: minio
+    restart: unless-stopped
     ports:
       - "9000:9000"   # MinIO API
       - "9001:9001"   # MinIO Console
     environment:
       - MINIO_ROOT_USER=minioadmin
-      - MINIO_ROOT_PASSWORD=minioadminpassword
+      - MINIO_ROOT_PASSWORD=minioadminpass
+      - MINIO_DEFAULT_BUCKET=chatney
     command: server /data --console-address ":9001"
     volumes:
       - minio_data:/data

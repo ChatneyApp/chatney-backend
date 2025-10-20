@@ -16,6 +16,8 @@ public readonly struct WebSocketPayloadType
         Value = value;
     }
 
+    public static readonly WebSocketPayloadType NewReaction = new("newReaction");
+    public static readonly WebSocketPayloadType DeletedReaction = new("deletedReaction");
     public static readonly WebSocketPayloadType NewMessage = new("newMessage");
     public static readonly WebSocketPayloadType DeletedMessage = new("deletedMessage");
 
@@ -133,11 +135,22 @@ public class WebSocketConnector
         await webSocket.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true, CancellationToken.None);
     }
 
+    //#region Websocket Reaction Communication
+    public async Task AddReactionAsync(WebsocketReactionPayload reaction)
+    {
+        await SendToAllAsync(WebSocketPayloadType.NewReaction, reaction);
+    }
+    public async Task DeleteReactionAsync(WebsocketReactionPayload reaction)
+    {
+        await SendToAllAsync(WebSocketPayloadType.DeletedReaction, reaction);
+    }
+    //#endregion
+
+
     public async Task SendMessageAsync(MessageWithUser message)
     {
         await SendToAllAsync(WebSocketPayloadType.NewMessage, message);
     }
-
     public async Task DeleteMessageAsync(DeletedMessage message)
     {
         await SendToAllAsync(WebSocketPayloadType.DeletedMessage, message);

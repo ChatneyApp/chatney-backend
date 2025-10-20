@@ -3,12 +3,19 @@ using ChatneyBackend.Domains.Channels;
 using ChatneyBackend.Domains.Users;
 using ChatneyBackend.Infra.Middleware;
 using HotChocolate.Authorization;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace ChatneyBackend.Domains.Messages;
 
 public class MessageMutations
 {
+    public class ReactionEndpointOutput
+    {
+        public required string status { get; set; }
+        public string? message { get; set; }
+    }
+
     [Authorize]
     public async Task<Message?> AddMessage(
         RoleManager roleManager,
@@ -76,7 +83,172 @@ public class MessageMutations
         }
         catch (Exception exception)
         {
+            Console.WriteLine(exception.ToString());
             return false;
         }
     }
+
+    [Authorize]
+    public async Task<ReactionEndpointOutput> AddReaction(
+        WebSocketConnector webSocketConnector,
+        Repo<MessageReaction> reactionRepo,
+        Repo<Message> messageRepo,
+        string code,
+        string messageId,
+        ClaimsPrincipal principal)
+    {
+        try
+        {
+            // 1. Checking user is valid
+            var userId = principal.GetUserId();
+
+            // 2. Trying to insert new reaction into message, if it fails - means duplicate
+            var newReaction = new MessageReaction
+            {
+                Id = Guid.NewGuid().ToString(),
+                MessageId = messageId,
+                Code = code,
+                UserId = userId,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            try
+            {
+                await reactionRepo.Collection.InsertOneAsync(newReaction);
+            }
+            catch (MongoWriteException ex) when (ex.WriteError.Category == ServerErrorCategory.DuplicateKey)
+            {
+                return new ReactionEndpointOutput()
+                {
+                    status = "success",
+                    message = "duplicate reaction"
+                };
+            }
+
+            // 3. Incrementing reaction in message if exists
+            var msgFilter = Builders<Message>.Filter.And(
+                Builders<Message>.Filter.Eq(m => m.Id, messageId),
+                Builders<Message>.Filter.ElemMatch(m => m.Reactions, r => r.Code == code)
+            );
+
+            var msgUpdate = Builders<Message>.Update
+                .Inc("reactions.$.count", 1)
+                .Set(m => m.UpdatedAt, DateTime.UtcNow);
+
+            var updateResult = await messageRepo.Collection.UpdateOneAsync(msgFilter, msgUpdate);
+
+            // 4. If increment did not work - means there is no element and we need to insert it
+            if (updateResult.MatchedCount == 0)
+            {
+                var pushUpdate = Builders<Message>.Update
+                    .Push(m => m.Reactions, new ReactionInMessage
+                    {
+                        Code = code,
+                        Count = 1
+                    })
+                    .Set(m => m.UpdatedAt, DateTime.UtcNow);
+
+                await messageRepo.Collection.UpdateOneAsync(
+                    Builders<Message>.Filter.Eq(m => m.Id, messageId),
+                    pushUpdate
+                );
+            }
+
+            // 5. Send websocket update
+            await webSocketConnector.AddReactionAsync(new WebsocketReactionPayload()
+            {
+                code = code,
+                usedId = userId,
+                messageId = messageId
+            });
+
+            return new ReactionEndpointOutput()
+            {
+                status = "success"
+            };
+        }
+        catch (Exception e)
+        {
+            return new ReactionEndpointOutput()
+            {
+                message = e.ToString(),
+                status = "error"
+            };
+            ;
+        }
+    }
+
+    [Authorize]
+    public async Task<ReactionEndpointOutput> DeleteReaction(
+    WebSocketConnector webSocketConnector,
+    Repo<MessageReaction> reactionRepo,
+    Repo<Message> messageRepo,
+    string code,
+    string messageId,
+    ClaimsPrincipal principal)
+    {
+        try
+        {
+            var userId = principal.GetUserId();
+
+            // 2. Try to delete the user's reaction
+            var deleteResult = await reactionRepo.Collection.DeleteOneAsync(
+                Builders<MessageReaction>.Filter.And(
+                    Builders<MessageReaction>.Filter.Eq(r => r.UserId, userId),
+                    Builders<MessageReaction>.Filter.Eq(r => r.MessageId, messageId),
+                    Builders<MessageReaction>.Filter.Eq(r => r.Code, code)
+                )
+            );
+
+            if (deleteResult.DeletedCount == 0)
+            {
+                return new ReactionEndpointOutput
+                {
+                    status = "error",
+                    message = "reaction not found"
+                };
+            }
+
+            // 3. Decrement the count of the reaction in the message
+            var msgFilter = Builders<Message>.Filter.And(
+                Builders<Message>.Filter.Eq(m => m.Id, messageId),
+                Builders<Message>.Filter.ElemMatch(m => m.Reactions, r => r.Code == code)
+            );
+
+            var decrementUpdate = Builders<Message>.Update
+                .Inc("reactions.$.count", -1)
+                .Set(m => m.UpdatedAt, DateTime.UtcNow);
+
+            var updateResult = await messageRepo.Collection.UpdateOneAsync(msgFilter, decrementUpdate);
+
+            // 4. Remove the reaction entry if count is now <= 0
+            await messageRepo.Collection.UpdateOneAsync(
+                Builders<Message>.Filter.Eq(m => m.Id, messageId),
+                Builders<Message>.Update.PullFilter(m => m.Reactions, r => r.Code == code && r.Count <= 0)
+            );
+
+            // 5. Notify websocket listeners
+            await webSocketConnector.DeleteReactionAsync(new WebsocketReactionPayload()
+            {
+                code = code,
+                usedId = userId,
+                messageId = messageId
+            });
+
+            return new ReactionEndpointOutput
+            {
+                status = "success"
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ReactionEndpointOutput
+            {
+                message = ex.ToString(),
+                status = "error"
+            };
+        }
+    }
+
 }
