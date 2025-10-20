@@ -19,8 +19,8 @@ public class UserMutations
         var user = userDto.ToModel();
         user.Password = Helpers.GetMd5Hash(user.Password + appConfig.UserPasswordSalt);
 
-        // find a default role ("user")
-        var userRole = await rolesRepo.GetOne(r => r.Name == "user");
+        // find a base role
+        var userRole = await rolesRepo.GetOne(r => r.Name == Roles.DomainSettings.BaseRoleName);
         if (userRole == null)
         {
             throw new Exception("User role not found");

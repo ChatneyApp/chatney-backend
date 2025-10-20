@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using System.Reflection.Metadata;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace ChatneyBackend.Domains.Configs;
@@ -9,15 +8,15 @@ public class Config : DatabaseItem
     [BsonElement("_id")]
     [BsonId]
     [MaxLength(36)]
-    public string Id { get; set; }
+    public required string Id { get; set; }
 
     [BsonElement("name")]
     [MaxLength(255)]
-    public string Name { get; set; }
+    public required string Name { get; set; }
 
     [BsonElement("value")]
     [MaxLength(2048)]
-    public string Value { get; set; }
+    public required string Value { get; set; }
 
     [BsonElement("type")]
     [MaxLength(255)]
@@ -47,11 +46,11 @@ public class ConfigDTO
 {
     [BsonElement("name")]
     [MaxLength(255)]
-    public string Name { get; set; }
+    public required string Name { get; set; }
 
     [BsonElement("value")]
     [MaxLength(2048)]
-    public string Value { get; set; }
+    public required string Value { get; set; }
 
     [BsonElement("type")]
     [MaxLength(255)]
