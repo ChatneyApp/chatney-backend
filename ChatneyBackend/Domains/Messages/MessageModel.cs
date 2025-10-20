@@ -4,7 +4,6 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace ChatneyBackend.Domains.Messages;
 
-
 public class ReactionInMessage
 {
     [BsonElement("code")]
