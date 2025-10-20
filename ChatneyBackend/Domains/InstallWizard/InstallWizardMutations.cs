@@ -32,8 +32,8 @@ public class InstallWizardMutations
             await roleRepo.InsertOne(new Role
             {
                 Id = Guid.NewGuid().ToString(),
-                UpdatedAt = new DateTime(),
-                CreatedAt = new DateTime(),
+                UpdatedAt = DateTime.UtcNow,
+                CreatedAt = DateTime.UtcNow,
                 Name = Roles.DomainSettings.BaseRoleName,
                 Permissions = [
                     MessagePermissions.CreateMessage,
