@@ -10,7 +10,9 @@ public interface DatabaseItem
 
 public class Repo<T> where T : DatabaseItem
 {
-    public readonly IMongoCollection<T> _collection;
+    private readonly IMongoCollection<T> _collection;
+
+    public IMongoCollection<T> Collection => _collection;
 
     public Repo(IMongoDatabase db, string collectionName)
     {

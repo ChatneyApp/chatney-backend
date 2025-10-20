@@ -8,14 +8,14 @@ using MongoDB.Driver;
 
 namespace ChatneyBackend.Domains.Messages;
 
-public class ReactionEndpointOutput
-{
-    public required string status { get; set; }
-    public string? message { get; set; }
-}
-
 public class MessageMutations
 {
+    public class ReactionEndpointOutput
+    {
+        public required string status { get; set; }
+        public string? message { get; set; }
+    }
+
     [Authorize]
     public async Task<Message?> AddMessage(
         RoleManager roleManager,
@@ -115,13 +115,13 @@ public class MessageMutations
 
             try
             {
-                await reactionRepo._collection.InsertOneAsync(newReaction);
+                await reactionRepo.Collection.InsertOneAsync(newReaction);
             }
             catch (MongoWriteException ex) when (ex.WriteError.Category == ServerErrorCategory.DuplicateKey)
             {
                 return new ReactionEndpointOutput()
                 {
-                    status = "error",
+                    status = "success",
                     message = "duplicate reaction"
                 };
             }
@@ -136,7 +136,7 @@ public class MessageMutations
                 .Inc("reactions.$.count", 1)
                 .Set(m => m.UpdatedAt, DateTime.UtcNow);
 
-            var updateResult = await messageRepo._collection.UpdateOneAsync(msgFilter, msgUpdate);
+            var updateResult = await messageRepo.Collection.UpdateOneAsync(msgFilter, msgUpdate);
 
             // 4. If increment did not work - means there is no element and we need to insert it
             if (updateResult.MatchedCount == 0)
@@ -149,7 +149,7 @@ public class MessageMutations
                     })
                     .Set(m => m.UpdatedAt, DateTime.UtcNow);
 
-                await messageRepo._collection.UpdateOneAsync(
+                await messageRepo.Collection.UpdateOneAsync(
                     Builders<Message>.Filter.Eq(m => m.Id, messageId),
                     pushUpdate
                 );
@@ -193,7 +193,7 @@ public class MessageMutations
             var userId = principal.GetUserId();
 
             // 2. Try to delete the user's reaction
-            var deleteResult = await reactionRepo._collection.DeleteOneAsync(
+            var deleteResult = await reactionRepo.Collection.DeleteOneAsync(
                 Builders<MessageReaction>.Filter.And(
                     Builders<MessageReaction>.Filter.Eq(r => r.UserId, userId),
                     Builders<MessageReaction>.Filter.Eq(r => r.MessageId, messageId),
@@ -220,10 +220,10 @@ public class MessageMutations
                 .Inc("reactions.$.count", -1)
                 .Set(m => m.UpdatedAt, DateTime.UtcNow);
 
-            var updateResult = await messageRepo._collection.UpdateOneAsync(msgFilter, decrementUpdate);
+            var updateResult = await messageRepo.Collection.UpdateOneAsync(msgFilter, decrementUpdate);
 
             // 4. Remove the reaction entry if count is now <= 0
-            await messageRepo._collection.UpdateOneAsync(
+            await messageRepo.Collection.UpdateOneAsync(
                 Builders<Message>.Filter.Eq(m => m.Id, messageId),
                 Builders<Message>.Update.PullFilter(m => m.Reactions, r => r.Code == code && r.Count <= 0)
             );
