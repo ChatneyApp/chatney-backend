@@ -4,6 +4,17 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace ChatneyBackend.Domains.Messages;
 
+
+public class ReactionInMessage
+{
+    [BsonElement("code")]
+    [MaxLength(255)]
+    public required string Code { get; set; }
+
+    [BsonElement("count")]
+    public required int Count { get; set; }
+}
+
 public class Message : DatabaseItem, IHasUserId
 {
     [BsonElement("_id")]

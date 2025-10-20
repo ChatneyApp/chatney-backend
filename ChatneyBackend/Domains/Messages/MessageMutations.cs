@@ -88,9 +88,10 @@ public class MessageMutations
         }
     }
 
+    [Authorize]
     public async Task<ReactionEndpointOutput> AddReaction(
         WebSocketConnector webSocketConnector,
-        Repo<MessageReactionDbModel> reactionRepo,
+        Repo<MessageReaction> reactionRepo,
         Repo<Message> messageRepo,
         string code,
         string messageId,
@@ -101,17 +102,8 @@ public class MessageMutations
             // 1. Checking user is valid
             var userId = principal.GetUserId();
 
-            if (string.IsNullOrEmpty(userId))
-            {
-                return new ReactionEndpointOutput()
-                {
-                    message = "invalid user",
-                    status = "error"
-                };
-            }
-
             // 2. Trying to insert new reaction into message, if it fails - means duplicate
-            var newReaction = new MessageReactionDbModel
+            var newReaction = new MessageReaction
             {
                 Id = Guid.NewGuid().ToString(),
                 MessageId = messageId,
@@ -187,9 +179,10 @@ public class MessageMutations
         }
     }
 
+    [Authorize]
     public async Task<ReactionEndpointOutput> DeleteReaction(
     WebSocketConnector webSocketConnector,
-    Repo<MessageReactionDbModel> reactionRepo,
+    Repo<MessageReaction> reactionRepo,
     Repo<Message> messageRepo,
     string code,
     string messageId,
@@ -197,24 +190,14 @@ public class MessageMutations
     {
         try
         {
-            // 1. Validate user
             var userId = principal.GetUserId();
-
-            if (string.IsNullOrEmpty(userId))
-            {
-                return new ReactionEndpointOutput
-                {
-                    message = "invalid user",
-                    status = "error"
-                };
-            }
 
             // 2. Try to delete the user's reaction
             var deleteResult = await reactionRepo._collection.DeleteOneAsync(
-                Builders<MessageReactionDbModel>.Filter.And(
-                    Builders<MessageReactionDbModel>.Filter.Eq(r => r.UserId, userId),
-                    Builders<MessageReactionDbModel>.Filter.Eq(r => r.MessageId, messageId),
-                    Builders<MessageReactionDbModel>.Filter.Eq(r => r.Code, code)
+                Builders<MessageReaction>.Filter.And(
+                    Builders<MessageReaction>.Filter.Eq(r => r.UserId, userId),
+                    Builders<MessageReaction>.Filter.Eq(r => r.MessageId, messageId),
+                    Builders<MessageReaction>.Filter.Eq(r => r.Code, code)
                 )
             );
 

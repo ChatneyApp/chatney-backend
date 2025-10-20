@@ -23,13 +23,13 @@ public static class DbInit
         usersCollection.Indexes.CreateMany([nameIndexModel, emailIndexModel]);
 
 
-        var messageReactionsCollection = db.GetCollection<MessageReactionDbModel>(MessageDomainSettings.ReactionCollectionName);
-        var indexKeys = Builders<MessageReactionDbModel>.IndexKeys
+        var messageReactionsCollection = db.GetCollection<MessageReaction>(MessageDomainSettings.ReactionCollectionName);
+        var indexKeys = Builders<MessageReaction>.IndexKeys
             .Ascending(r => r.MessageId)
             .Ascending(r => r.Code)
             .Ascending(r => r.UserId);
 
-        var indexModel = new CreateIndexModel<MessageReactionDbModel>(indexKeys, new CreateIndexOptions { Unique = true });
+        var indexModel = new CreateIndexModel<MessageReaction>(indexKeys, new CreateIndexOptions { Unique = true });
         messageReactionsCollection.Indexes.CreateOne(indexModel);
 
     }

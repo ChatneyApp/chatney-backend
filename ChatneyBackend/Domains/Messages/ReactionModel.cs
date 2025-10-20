@@ -1,17 +1,6 @@
-using System.ComponentModel.DataAnnotations;
 using MongoDB.Bson.Serialization.Attributes;
 
-public class ReactionInMessage
-{
-    [BsonElement("code")]
-    [MaxLength(255)]
-    public required string Code { get; set; }
-
-    [BsonElement("count")]
-    public required int Count { get; set; }
-}
-
-public class MessageReactionDbModel : DatabaseItem
+public class MessageReaction : DatabaseItem
 {
     [BsonElement("_id")]
     [BsonId]
