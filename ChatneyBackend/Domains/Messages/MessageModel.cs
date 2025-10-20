@@ -35,7 +35,7 @@ public class Message : DatabaseItem, IHasUserId
     public required string Content { get; set; }
 
     [BsonElement("attachments")]
-    public List<string>? Attachments { get; set; }
+    public List<string> Attachments { get; set; } = new List<string>();
 
     [BsonElement("status")]
     [MaxLength(50)]
@@ -48,7 +48,7 @@ public class Message : DatabaseItem, IHasUserId
     public DateTime UpdatedAt { get; set; }
 
     [BsonElement("reactions")]
-    public List<ReactionInMessage>? Reactions { get; set; }
+    public required List<ReactionInMessage> Reactions { get; set; } = new List<ReactionInMessage>();
 
     [BsonElement("parentId")]
     [MaxLength(36)]
