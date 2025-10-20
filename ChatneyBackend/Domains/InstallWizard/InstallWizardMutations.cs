@@ -37,17 +37,17 @@ public class InstallWizardMutations
                 Name = Roles.DomainSettings.BaseRoleName,
                 Permissions = [
                     MessagePermissions.CreateMessage,
-                MessagePermissions.DeleteMessage,
-                MessagePermissions.EditMessage,
-                MessagePermissions.ReadMessage,
-                UserPermissions.ReadUser,
-                UserPermissions.EditUser,
-                ChannelPermissions.CreateMessage,
-                ChannelPermissions.DeleteMessage,
-                ChannelPermissions.EditMessage,
-                ChannelPermissions.ReadChannel,
-                ChannelPermissions.ReadMessage,
-                WorkspacePermissions.ReadWorkspace
+                    MessagePermissions.DeleteMessage,
+                    MessagePermissions.EditMessage,
+                    MessagePermissions.ReadMessage,
+                    UserPermissions.ReadUser,
+                    UserPermissions.EditUser,
+                    ChannelPermissions.CreateMessage,
+                    ChannelPermissions.DeleteMessage,
+                    ChannelPermissions.EditMessage,
+                    ChannelPermissions.ReadChannel,
+                    ChannelPermissions.ReadMessage,
+                    WorkspacePermissions.ReadWorkspace
                 ],
                 Settings = new RoleSettings()
                 {
