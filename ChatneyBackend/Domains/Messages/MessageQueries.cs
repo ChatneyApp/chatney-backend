@@ -19,11 +19,4 @@ public class MessageQueries
         await repo.GetList(
             Builders<Message>.Filter.Eq(m => m.ChannelId, channelId)
         );
-
-    public async Task<List<MessageUser>> GetMessageUsers(Message message)
-    {
-        Debug.WriteLine(message.Id);
-
-        return new List<MessageUser>();
-    }
 }

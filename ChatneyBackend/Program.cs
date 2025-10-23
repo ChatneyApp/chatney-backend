@@ -91,7 +91,9 @@ builder.Services
     .AddQueryType<Query>()
     .AddMutationType<Mutation>()
     .AddTypeExtension<HasUserIdTypeExtension<Message>>()
-    .AddDataLoader<UserByIdDataLoader>();
+    .AddTypeExtension<MessageReactionsTypeExtension>()
+    .AddDataLoader<UserByIdDataLoader>()
+    .AddDataLoader<MyReactionsByMessageIdDataLoader>();
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddWebSockets(options =>
