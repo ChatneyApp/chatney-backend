@@ -1,9 +1,11 @@
+
+using System.Security.Claims;
 using ChatneyBackend.Infra.Middleware;
 using MongoDB.Driver;
 
 namespace ChatneyBackend.Domains.Messages;
 
-public class MyReactionsByMessageIdDataLoader : GroupedDataLoader<string, MessageReaction>
+public class MyReactionsByMessageIdDataLoader : GroupedDataLoader<string, string>
 {
     private readonly Repo<MessageReaction> _repo;
     private readonly IHttpContextAccessor _httpContextAccessor;
@@ -15,7 +17,7 @@ public class MyReactionsByMessageIdDataLoader : GroupedDataLoader<string, Messag
         _httpContextAccessor = httpContextAccessor;
     }
 
-    protected override async Task<ILookup<string, MessageReaction>> LoadGroupedBatchAsync(
+    protected override async Task<ILookup<string, string>> LoadGroupedBatchAsync(
         IReadOnlyList<string> keys,
         CancellationToken cancellationToken
     )
@@ -23,20 +25,20 @@ public class MyReactionsByMessageIdDataLoader : GroupedDataLoader<string, Messag
         var user = _httpContextAccessor.HttpContext?.User;
         if (user == null)
         {
-            return Enumerable.Empty<MessageReaction>().ToLookup(r => r.MessageId);
+            return Enumerable.Empty<MessageReaction>().ToLookup(r => r.MessageId, r => r.Code);
         }
 
         var userId = user.GetUserId();
         if (userId == null)
         {
-            return Enumerable.Empty<MessageReaction>().ToLookup(r => r.MessageId);
+            return Enumerable.Empty<MessageReaction>().ToLookup(r => r.MessageId, r => r.Code);
         }
 
         var filter = Builders<MessageReaction>.Filter.In(x => x.MessageId, keys) &
                      Builders<MessageReaction>.Filter.Eq(x => x.UserId, userId);
 
         var reactions = await _repo.GetList(filter);
-        return reactions.ToLookup(r => r.MessageId);
+        return reactions.ToLookup(r => r.MessageId, r => r.Code);
     }
 }
 
@@ -52,6 +54,6 @@ public class MessageReactionsTypeExtension : ObjectTypeExtension<Message>
                 var reactions = await dataLoader.LoadAsync(message.Id, ctx.RequestAborted);
                 return reactions;
             })
-            .Type<ListType<ObjectType<MessageReaction>>>();
+            .Type<ListType<StringType>>();
     }
 }
