@@ -113,6 +113,29 @@ public class MessageMutations
                 UpdatedAt = DateTime.UtcNow
             };
 
+            Message message;
+            try
+            {
+                message = await messageRepo.GetById(messageId);
+            }
+            catch (MongoWriteException ex) when (ex.WriteError.Category == ServerErrorCategory.DuplicateKey)
+            {
+                return new ReactionEndpointOutput()
+                {
+                    status = "error",
+                    message = "wrong message id"
+                };
+            }
+
+            if (message == null)
+            {
+                return new ReactionEndpointOutput()
+                {
+                    status = "error",
+                    message = "wrong message id"
+                };
+            }
+
             try
             {
                 await reactionRepo.Collection.InsertOneAsync(newReaction);
@@ -158,9 +181,10 @@ public class MessageMutations
             // 5. Send websocket update
             await webSocketConnector.AddReactionAsync(new WebsocketReactionPayload()
             {
-                code = code,
-                usedId = userId,
-                messageId = messageId
+                Code = code,
+                UserId = userId,
+                MessageId = messageId,
+                ChannelId = message.ChannelId
             });
 
             return new ReactionEndpointOutput()
@@ -191,6 +215,29 @@ public class MessageMutations
         try
         {
             var userId = principal.GetUserId();
+
+            Message message;
+            try
+            {
+                message = await messageRepo.GetById(messageId);
+            }
+            catch (MongoWriteException ex) when (ex.WriteError.Category == ServerErrorCategory.DuplicateKey)
+            {
+                return new ReactionEndpointOutput()
+                {
+                    status = "error",
+                    message = "wrong message id"
+                };
+            }
+
+            if (message == null)
+            {
+                return new ReactionEndpointOutput()
+                {
+                    status = "error",
+                    message = "wrong message id"
+                };
+            }
 
             // 2. Try to delete the user's reaction
             var deleteResult = await reactionRepo.Collection.DeleteOneAsync(
@@ -231,9 +278,10 @@ public class MessageMutations
             // 5. Notify websocket listeners
             await webSocketConnector.DeleteReactionAsync(new WebsocketReactionPayload()
             {
-                code = code,
-                usedId = userId,
-                messageId = messageId
+                Code = code,
+                UserId = userId,
+                MessageId = messageId,
+                ChannelId = message.ChannelId
             });
 
             return new ReactionEndpointOutput

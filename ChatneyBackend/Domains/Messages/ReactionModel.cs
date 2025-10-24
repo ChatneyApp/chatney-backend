@@ -24,7 +24,8 @@ public class MessageReaction : DatabaseItem
 
 public class WebsocketReactionPayload
 {
-    public required string code { get; set; }
-    public required string usedId { get; set; }
-    public required string messageId { get; set; }
+    public required string Code { get; set; }
+    public required string UserId { get; set; }
+    public required string MessageId { get; set; }
+    public required string ChannelId { get; set; }
 }

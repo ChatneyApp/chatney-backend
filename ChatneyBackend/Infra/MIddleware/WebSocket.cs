@@ -135,7 +135,7 @@ public class WebSocketConnector
         await webSocket.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true, CancellationToken.None);
     }
 
-    //#region Websocket Reaction Communication
+    #region Message Reactions
     public async Task AddReactionAsync(WebsocketReactionPayload reaction)
     {
         await SendToAllAsync(WebSocketPayloadType.NewReaction, reaction);
@@ -144,9 +144,9 @@ public class WebSocketConnector
     {
         await SendToAllAsync(WebSocketPayloadType.DeletedReaction, reaction);
     }
-    //#endregion
+    #endregion
 
-
+    #region Messages
     public async Task SendMessageAsync(MessageWithUser message)
     {
         await SendToAllAsync(WebSocketPayloadType.NewMessage, message);
@@ -155,6 +155,7 @@ public class WebSocketConnector
     {
         await SendToAllAsync(WebSocketPayloadType.DeletedMessage, message);
     }
+    #endregion
 
     private async Task SendToAllAsync(WebSocketPayloadType type, Object payload)
     {
