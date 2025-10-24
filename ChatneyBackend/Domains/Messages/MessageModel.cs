@@ -106,6 +106,8 @@ public class MessageWithUser : Message
 {
     [BsonElement("user")]
     public required MessageUser User { get; set; }
+    [BsonElement("myReactions")]
+    public required string[] MyReactions { get; set; }
 
     public static MessageWithUser Create(Message message, User user)
     {
@@ -121,6 +123,7 @@ public class MessageWithUser : Message
             UpdatedAt = message.UpdatedAt,
             Reactions = message.Reactions,
             ParentId = message.ParentId,
+            MyReactions = [],
             User = new MessageUser()
             {
                 Id = user.Id,
