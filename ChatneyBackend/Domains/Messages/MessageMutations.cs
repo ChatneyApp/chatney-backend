@@ -2,8 +2,8 @@ using System.Security.Claims;
 using ChatneyBackend.Domains.Channels;
 using ChatneyBackend.Domains.Users;
 using ChatneyBackend.Infra.Middleware;
+using ChatneyBackend.Utils;
 using HotChocolate.Authorization;
-using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace ChatneyBackend.Domains.Messages;
@@ -22,6 +22,7 @@ public class MessageMutations
         Repo<Channel> channelsRepo,
         Repo<Message> messagesRepo,
         Repo<User> usersRepo,
+        Repo<UrlPreview> urlPreviewRepo,
         ClaimsPrincipal principal,
         MessageDTO messageDto,
         WebSocketConnector webSocketConnector
@@ -46,6 +47,45 @@ public class MessageMutations
         Console.WriteLine(string.Join(" ", currentRole.Permissions));
         if (currentRole.Permissions.Contains(MessagePermissions.CreateMessage))
         {
+            var urls = UrlPreviewExtractor.ExtractUrls(message.Content);
+            List<UrlPreview> newUrlPreviews = new List<UrlPreview>();
+
+            List<string> urlPreviewIds = new List<string>();
+            var existingUrlPreviews = await urlPreviewRepo.GetList(
+                Builders<UrlPreview>.Filter.In(x => x.Url, urls)
+            );
+            foreach (var url in urls)
+            {
+                var urlPreview = existingUrlPreviews.FirstOrDefault(x => x.Url == url);
+                if (urlPreview != null)
+                {
+                    urlPreviewIds.Add(urlPreview.Id);
+                }
+                else
+                {
+                    try
+                    {
+                        urlPreview = await UrlPreviewExtractor.GetPreviewAsync(url);
+                        if (urlPreview != null)
+                        {
+                            urlPreviewIds.Add(urlPreview.Id);
+                            newUrlPreviews.Add(urlPreview);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+
+                    }
+                }
+            }
+
+            if (newUrlPreviews.Count > 0)
+            {
+                await urlPreviewRepo.InsertBulk(newUrlPreviews);
+            }
+
+            message.UrlPreviewIds = urlPreviewIds;
+
             await messagesRepo.InsertOne(message);
             await webSocketConnector.SendMessageAsync(MessageWithUser.Create(message, user));
             return message;
@@ -58,6 +98,7 @@ public class MessageMutations
                 .Build());
     }
 
+    [Authorize]
     public async Task<Message?> UpdateMessage(IMongoDatabase mongoDatabase, Message message)
     {
         var collection = mongoDatabase.GetCollection<Message>(DomainSettings.MessageCollectionName);
@@ -66,6 +107,7 @@ public class MessageMutations
         return result.ModifiedCount > 0 ? message : null;
     }
 
+    [Authorize]
     public async Task<bool> DeleteMessage(WebSocketConnector webSocketConnector, Repo<Message> repo, string id)
     {
         var message = await repo.GetById(id);
@@ -113,7 +155,7 @@ public class MessageMutations
                 UpdatedAt = DateTime.UtcNow
             };
 
-            Message message;
+            Message? message;
             try
             {
                 message = await messageRepo.GetById(messageId);
@@ -205,18 +247,18 @@ public class MessageMutations
 
     [Authorize]
     public async Task<ReactionEndpointOutput> DeleteReaction(
-    WebSocketConnector webSocketConnector,
-    Repo<MessageReaction> reactionRepo,
-    Repo<Message> messageRepo,
-    string code,
-    string messageId,
-    ClaimsPrincipal principal)
+        WebSocketConnector webSocketConnector,
+        Repo<MessageReaction> reactionRepo,
+        Repo<Message> messageRepo,
+        string code,
+        string messageId,
+        ClaimsPrincipal principal)
     {
         try
         {
             var userId = principal.GetUserId();
 
-            Message message;
+            Message? message;
             try
             {
                 message = await messageRepo.GetById(messageId);

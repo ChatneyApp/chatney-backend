@@ -48,6 +48,7 @@ builder.Services.AddSingleton(_ => new Repo<ChannelGroup>(db, ChannelDomainSetti
 builder.Services.AddSingleton(_ => new Repo<Config>(db, ConfigsDomainSettings.ConfigCollectionName));
 builder.Services.AddSingleton(_ => new Repo<Message>(db, MessagesDomainSettings.MessageCollectionName));
 builder.Services.AddSingleton(_ => new Repo<MessageAttachment>(db, MessagesDomainSettings.MessageAttachmentCollectionName));
+builder.Services.AddSingleton(_ => new Repo<UrlPreview>(db, MessagesDomainSettings.UrlPreviewsCollectionName));
 builder.Services.AddSingleton(_ => new Repo<Role>(db, RolesDomainSettings.RoleCollectionName));
 builder.Services.AddSingleton(_ => new Repo<Workspace>(db, WorkspacesDomainSettings.WorkspaceCollectionName));
 builder.Services.AddSingleton(_ => wsConfig);

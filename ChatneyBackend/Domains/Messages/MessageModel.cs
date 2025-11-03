@@ -36,6 +36,9 @@ public class Message : DatabaseItem, IHasUserId
     [BsonElement("attachments")]
     public List<string> Attachments { get; set; } = new List<string>();
 
+    [BsonElement("urlPreviews")]
+    public List<string> UrlPreviewIds { get; set; } = new();
+
     [BsonElement("status")]
     [MaxLength(50)]
     public required string Status { get; set; }
