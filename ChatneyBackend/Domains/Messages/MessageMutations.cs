@@ -49,6 +49,7 @@ public class MessageMutations
         {
             var urls = UrlPreviewExtractor.ExtractUrls(message.Content);
             List<UrlPreview> newUrlPreviews = new List<UrlPreview>();
+            List<UrlPreview> urlPreviews = new List<UrlPreview>();
 
             List<string> urlPreviewIds = new List<string>();
             var existingUrlPreviews = await urlPreviewRepo.GetList(
@@ -60,6 +61,7 @@ public class MessageMutations
                 if (urlPreview != null)
                 {
                     urlPreviewIds.Add(urlPreview.Id);
+                    urlPreviews.Add(urlPreview);
                 }
                 else
                 {
@@ -70,6 +72,7 @@ public class MessageMutations
                         {
                             urlPreviewIds.Add(urlPreview.Id);
                             newUrlPreviews.Add(urlPreview);
+                            urlPreviews.Add(urlPreview);
                         }
                     }
                     catch (Exception ex)
@@ -87,7 +90,7 @@ public class MessageMutations
             message.UrlPreviewIds = urlPreviewIds;
 
             await messagesRepo.InsertOne(message);
-            await webSocketConnector.SendMessageAsync(MessageWithUser.Create(message, user));
+            await webSocketConnector.SendMessageAsync(MessageWithUser.Create(message, user, urlPreviews));
             return message;
         }
 

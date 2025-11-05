@@ -93,8 +93,10 @@ builder.Services
     .AddMutationType<Mutation>()
     .AddTypeExtension<HasUserIdTypeExtension<Message>>()
     .AddTypeExtension<MessageReactionsTypeExtension>()
+    .AddTypeExtension<UrlPreviewTypeExtension>()
     .AddDataLoader<UserByIdDataLoader>()
-    .AddDataLoader<MyReactionsByMessageIdDataLoader>();
+    .AddDataLoader<MyReactionsByMessageIdDataLoader>()
+    .AddDataLoader<UrlPreviewsByUrlPreviewIdDataLoader>();
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddWebSockets(options =>
