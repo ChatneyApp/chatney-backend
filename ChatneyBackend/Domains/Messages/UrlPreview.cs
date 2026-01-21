@@ -51,8 +51,11 @@ public class UrlPreview : DatabaseItem
     [BsonElement("author")]
     public string? Author { get; set; }           // Автор контента
 
-    [BsonElement("mediaSize")]
-    public UrlPreviewMediaSize? MediaSize { get; set; }
+    [BsonElement("imageWidth")]
+    public int? ImageWidth { get; set; }
+
+    [BsonElement("imageHeight")]
+    public int? ImageHeight { get; set; }
 
     [BsonElement("domain")]
     public string? Domain { get; set; }           // Домен сайта

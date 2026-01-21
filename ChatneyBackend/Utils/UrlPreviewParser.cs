@@ -145,11 +145,8 @@ public static class UrlPreviewExtractor
 
         if (mediaWidth > 0 && mediaHeight > 0)
         {
-            preview.MediaSize = new UrlPreviewMediaSize()
-            {
-                Width = mediaWidth,
-                Height = mediaHeight
-            };
+            preview.ImageWidth = mediaWidth;
+            preview.ImageHeight = mediaHeight;
         }
 
         preview.ImageUrl = metaProperties.GetValueOrDefault("og:image")
