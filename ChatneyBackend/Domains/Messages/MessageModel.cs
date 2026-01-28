@@ -36,6 +36,10 @@ public class Message : DatabaseItem, IHasUserId
     [BsonElement("attachments")]
     public List<string> Attachments { get; set; } = new List<string>();
 
+    [BsonElement("urlPreviewIds")]
+    [GraphQLIgnore]
+    public List<string> UrlPreviewIds { get; set; } = new();
+
     [BsonElement("status")]
     [MaxLength(50)]
     public required string Status { get; set; }
@@ -63,6 +67,7 @@ public class Message : DatabaseItem, IHasUserId
             Content = message.Content,
             Attachments = message.Attachments,
             Status = "sent", // TODO: Define status constants
+            UrlPreviewIds = new List<string>(),
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
             Reactions = new List<ReactionInMessage>(),
@@ -108,8 +113,10 @@ public class MessageWithUser : Message
     public required MessageUser User { get; set; }
     [BsonElement("myReactions")]
     public required string[] MyReactions { get; set; }
+    [BsonElement("urlPreviews")]
+    public required List<UrlPreview> UrlPreviews { get; set; }
 
-    public static MessageWithUser Create(Message message, User user)
+    public static MessageWithUser Create(Message message, User user, List<UrlPreview> urlPreviews)
     {
         return new MessageWithUser()
         {
@@ -119,6 +126,7 @@ public class MessageWithUser : Message
             Content = message.Content,
             Attachments = message.Attachments,
             Status = message.Status,
+            UrlPreviews = urlPreviews,
             CreatedAt = message.CreatedAt,
             UpdatedAt = message.UpdatedAt,
             Reactions = message.Reactions,
