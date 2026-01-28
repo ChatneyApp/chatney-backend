@@ -52,13 +52,11 @@ public class UrlPreviewParserTest
                 _testOutputHelper.WriteLine($"  Title: {preview.Title}");
                 _testOutputHelper.WriteLine(
                     $"  Описание: {preview.Description.Substring(0, Math.Min(100, preview.Description.Length))}...");
-                _testOutputHelper.WriteLine($"  Image: {preview.ImageUrl}");
-                if (preview.ImageWidth != null && preview.ImageHeight != null)
+                _testOutputHelper.WriteLine($"  Image: {preview.ThumbnailUrl}");
+                if (preview.ThumbnailWidth != null && preview.ThumbnailHeight != null)
                 {
-                    _testOutputHelper.WriteLine($"  Media size: {preview.ImageWidth}x{preview.ImageHeight}");
+                    _testOutputHelper.WriteLine($"  Media size: {preview.ThumbnailWidth}x{preview.ThumbnailHeight}");
                 }
-
-                _testOutputHelper.WriteLine($"  Domain: {preview.Domain}");
             }
             catch (Exception ex)
             {

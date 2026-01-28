@@ -57,7 +57,6 @@ public static class UrlPreviewExtractor
             IDocument doc = await context.OpenAsync(url);
             var uri = new Uri(url);
             preview.Url = uri.AbsoluteUri;
-            preview.Domain = uri.Host;
 
             ParseDocument(doc, preview, uri);
             return preview;
@@ -145,20 +144,20 @@ public static class UrlPreviewExtractor
 
         if (mediaWidth > 0 && mediaHeight > 0)
         {
-            preview.ImageWidth = mediaWidth;
-            preview.ImageHeight = mediaHeight;
+            preview.ThumbnailWidth = mediaWidth;
+            preview.ThumbnailHeight = mediaHeight;
         }
 
-        preview.ImageUrl = metaProperties.GetValueOrDefault("og:image")
-                           ?? metaProperties.GetValueOrDefault("og:image:url")
-                           ?? metaNames.GetValueOrDefault("twitter:image");
+        preview.ThumbnailUrl = metaProperties.GetValueOrDefault("og:image")
+                               ?? metaProperties.GetValueOrDefault("og:image:url")
+                               ?? metaNames.GetValueOrDefault("twitter:image");
 
-        preview.VideoUrl = metaProperties.GetValueOrDefault("og:video")
+        preview.VideoThumbnailUrl = metaProperties.GetValueOrDefault("og:video")
                            ?? metaProperties.GetValueOrDefault("og:video:url");
 
-        if (!string.IsNullOrEmpty(preview.ImageUrl))
+        if (!string.IsNullOrEmpty(preview.ThumbnailUrl))
         {
-            preview.ImageUrl = MakeAbsoluteUrl(preview.ImageUrl, baseUri);
+            preview.ThumbnailUrl = MakeAbsoluteUrl(preview.ThumbnailUrl, baseUri);
         }
 
         preview.SiteName = metaProperties.GetValueOrDefault("og:site_name");

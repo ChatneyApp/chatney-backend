@@ -33,11 +33,11 @@ public class UrlPreview : DatabaseItem
     [BsonElement("description")]
     public string? Description { get; set; }      // Описание страницы
 
-    [BsonElement("imageUrl")]
-    public string? ImageUrl { get; set; }         // URL главного изображения
+    [BsonElement("thumbnailUrl")]
+    public string? ThumbnailUrl { get; set; }         // URL главного изображения
 
-    [BsonElement("videoUrl")]
-    public string? VideoUrl { get; set; }         // URL главного изображения
+    [BsonElement("videoThumbnailUrl")]
+    public string? VideoThumbnailUrl { get; set; }         // URL главного изображения
 
     [BsonElement("siteName")]
     public string? SiteName { get; set; }         // Название сайта
@@ -51,12 +51,9 @@ public class UrlPreview : DatabaseItem
     [BsonElement("author")]
     public string? Author { get; set; }           // Автор контента
 
-    [BsonElement("imageWidth")]
-    public int? ImageWidth { get; set; }
+    [BsonElement("thumbnailWidth")]
+    public int? ThumbnailWidth { get; set; }
 
-    [BsonElement("imageHeight")]
-    public int? ImageHeight { get; set; }
-
-    [BsonElement("domain")]
-    public string? Domain { get; set; }           // Домен сайта
+    [BsonElement("thumbnailHeight")]
+    public int? ThumbnailHeight { get; set; }
 }

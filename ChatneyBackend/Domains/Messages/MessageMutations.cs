@@ -77,7 +77,7 @@ public class MessageMutations
                     }
                     catch (Exception ex)
                     {
-
+                        Console.Error.WriteLine($"Failed to parse url {url} with the error: {ex.Message}");
                     }
                 }
             }
