@@ -15,10 +15,17 @@ public class MessageQueries
             : null;
     }
 
-    // TODO: implement side query to get all the users & attachments involved
     [Authorize]
     public async Task<List<Message>> GetListChannelMessages(Repo<Message> repo, string channelId) =>
         await repo.GetList(
-            Builders<Message>.Filter.Eq(m => m.ChannelId, channelId)
+            Builders<Message>.Filter.Eq(m => m.ChannelId, channelId) &
+            Builders<Message>.Filter.Eq(m => m.ParentId, null)
+        );
+
+    [Authorize]
+    public async Task<List<Message>> GetListThreadMessages(Repo<Message> repo, string channelId, string threadId) =>
+        await repo.GetList(
+            Builders<Message>.Filter.Eq(m => m.ChannelId, channelId) &
+            Builders<Message>.Filter.Eq(m => m.ParentId, threadId)
         );
 }

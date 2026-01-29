@@ -118,6 +118,8 @@ public class MessageMutations
 
         try
         {
+            await repo.Delete(Builders<Message>.Filter.Eq(r => r.ParentId, id));
+
             var result = await repo.DeleteById(id);
             await webSocketConnector.DeleteMessageAsync(new DeletedMessage
             {
