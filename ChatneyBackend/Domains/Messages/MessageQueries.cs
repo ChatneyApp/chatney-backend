@@ -23,9 +23,8 @@ public class MessageQueries
         );
 
     [Authorize]
-    public async Task<List<Message>> GetListThreadMessages(Repo<Message> repo, string channelId, string threadId) =>
+    public async Task<List<Message>> GetListThreadMessages(Repo<Message> repo, string threadId) =>
         await repo.GetList(
-            Builders<Message>.Filter.Eq(m => m.ChannelId, channelId) &
             Builders<Message>.Filter.Eq(m => m.ParentId, threadId)
         );
 }

@@ -57,6 +57,9 @@ public class Message : DatabaseItem, IHasUserId
     [MaxLength(36)]
     public string? ParentId { get; set; }
 
+    [BsonElement("childrenCount")]
+    public required int ChildrenCount { get; set; }
+
     public static Message FromDTO(MessageDTO message, string userId)
     {
         return new Message()
@@ -71,7 +74,8 @@ public class Message : DatabaseItem, IHasUserId
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
             Reactions = new List<ReactionInMessage>(),
-            ParentId = message.ParentId
+            ParentId = message.ParentId,
+            ChildrenCount = 0
         };
     }
 }
@@ -131,6 +135,7 @@ public class MessageWithUser : Message
             UpdatedAt = message.UpdatedAt,
             Reactions = message.Reactions,
             ParentId = message.ParentId,
+            ChildrenCount = message.ChildrenCount,
             MyReactions = [],
             User = new MessageUser()
             {
@@ -147,6 +152,12 @@ public class DeletedMessage
 {
     public required string MessageId { get; set; }
     public required string ChannelId { get; set; }
+}
+
+public class MessageChildrenCountUpdated
+{
+    public required string MessageId { get; set; }
+    public required int ChildrenCount { get; set; }
 }
 
 public class MessageAttachment : DatabaseItem
