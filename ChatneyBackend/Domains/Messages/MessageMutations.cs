@@ -146,6 +146,28 @@ public class MessageMutations
             await repo.Delete(Builders<Message>.Filter.Eq(r => r.ParentId, id));
             // TODO: do it in cascade way if we have nested threads
 
+            // decrease children count in parent message if applicable
+            var parentMessage = message.ParentId != null
+                ? await repo.GetById(message.ParentId)
+                : null;
+            if (parentMessage != null)
+            {
+                var msgFilter = Builders<Message>.Filter.And(
+                    Builders<Message>.Filter.Eq(m => m.Id, message.ParentId)
+                );
+
+                var msgUpdate = Builders<Message>.Update
+                    .Inc("childrenCount", -1)
+                    .Set(m => m.UpdatedAt, DateTime.UtcNow);
+
+                await repo.Collection.UpdateOneAsync(msgFilter, msgUpdate);
+                await webSocketConnector.UpdateMessageChildrenCountAsync(new MessageChildrenCountUpdated
+                {
+                    ChildrenCount = parentMessage.ChildrenCount - 1,
+                    MessageId = parentMessage.Id
+                });
+            }
+
             var result = await repo.DeleteById(id);
             await webSocketConnector.DeleteMessageAsync(new DeletedMessage
             {
