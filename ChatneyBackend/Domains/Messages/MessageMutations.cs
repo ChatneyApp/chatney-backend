@@ -47,9 +47,6 @@ public class MessageMutations
         Console.WriteLine(string.Join(" ", currentRole.Permissions));
         if (currentRole.Permissions.Contains(MessagePermissions.CreateMessage))
         {
-
-            // TODO: update children count in parent message if applicable
-            // TODO: if parent doesn't exist - return error
             var parentMessage = message.ParentId != null
                 ? await messagesRepo.GetById(message.ParentId)
                 : null;
@@ -143,29 +140,34 @@ public class MessageMutations
 
         try
         {
-            await repo.Delete(Builders<Message>.Filter.Eq(r => r.ParentId, id));
-            // TODO: do it in cascade way if we have nested threads
-
-            // decrease children count in parent message if applicable
-            var parentMessage = message.ParentId != null
-                ? await repo.GetById(message.ParentId)
-                : null;
-            if (parentMessage != null)
+            // remove all children messages under this thread
+            if (message.ParentId == null)
             {
-                var msgFilter = Builders<Message>.Filter.And(
-                    Builders<Message>.Filter.Eq(m => m.Id, message.ParentId)
-                );
-
-                var msgUpdate = Builders<Message>.Update
-                    .Inc("childrenCount", -1)
-                    .Set(m => m.UpdatedAt, DateTime.UtcNow);
-
-                await repo.Collection.UpdateOneAsync(msgFilter, msgUpdate);
-                await webSocketConnector.UpdateMessageChildrenCountAsync(new MessageChildrenCountUpdated
+                await repo.Delete(Builders<Message>.Filter.Eq(r => r.ParentId, id));
+            }
+            else
+            {
+                // decrease children count in parent message if applicable
+                var parentMessage = message.ParentId != null
+                    ? await repo.GetById(message.ParentId)
+                    : null;
+                if (parentMessage != null)
                 {
-                    ChildrenCount = parentMessage.ChildrenCount - 1,
-                    MessageId = parentMessage.Id
-                });
+                    var msgFilter = Builders<Message>.Filter.And(
+                        Builders<Message>.Filter.Eq(m => m.Id, message.ParentId)
+                    );
+
+                    var msgUpdate = Builders<Message>.Update
+                        .Inc("childrenCount", -1)
+                        .Set(m => m.UpdatedAt, DateTime.UtcNow);
+
+                    await repo.Collection.UpdateOneAsync(msgFilter, msgUpdate);
+                    await webSocketConnector.UpdateMessageChildrenCountAsync(new MessageChildrenCountUpdated
+                    {
+                        ChildrenCount = parentMessage.ChildrenCount - 1,
+                        MessageId = parentMessage.Id
+                    });
+                }
             }
 
             var result = await repo.DeleteById(id);
