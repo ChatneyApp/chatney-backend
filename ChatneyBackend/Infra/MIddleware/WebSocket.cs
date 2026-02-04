@@ -20,6 +20,7 @@ public readonly struct WebSocketPayloadType
     public static readonly WebSocketPayloadType DeletedReaction = new("deletedReaction");
     public static readonly WebSocketPayloadType NewMessage = new("newMessage");
     public static readonly WebSocketPayloadType DeletedMessage = new("deletedMessage");
+    public static readonly WebSocketPayloadType MessageChildrenCountUpdated = new("messageChildrenCountUpdated");
 
     public override string ToString() => Value;
 
@@ -154,6 +155,10 @@ public class WebSocketConnector
     public async Task DeleteMessageAsync(DeletedMessage message)
     {
         await SendToAllAsync(WebSocketPayloadType.DeletedMessage, message);
+    }
+    public async Task UpdateMessageChildrenCountAsync(MessageChildrenCountUpdated message)
+    {
+        await SendToAllAsync(WebSocketPayloadType.MessageChildrenCountUpdated, message);
     }
     #endregion
 
