@@ -29,7 +29,7 @@ public class AttachmentMutations
             BucketName = "chatney",
             Key = "/media/fil1.jpg",
             Verb = HttpVerb.PUT,
-            Expires = DateTime.UtcNow.Add(TimeSpan.FromMinutes(5)),
+            Expires = DateTime.UtcNow.Add(TimeSpan.FromHours(1)),
             ContentType = "image/jpeg",
         };
 
