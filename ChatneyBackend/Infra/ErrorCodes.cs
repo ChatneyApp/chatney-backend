@@ -1,4 +1,4 @@
-namespace ChatneyBackend.Domains.Messages;
+namespace ChatneyBackend.Infra;
 
 public class ErrorCodes
 {

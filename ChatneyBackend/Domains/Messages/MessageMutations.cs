@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using ChatneyBackend.Domains.Channels;
 using ChatneyBackend.Domains.Users;
+using ChatneyInfra = ChatneyBackend.Infra;
 using ChatneyBackend.Infra.Middleware;
 using ChatneyBackend.Utils;
 using HotChocolate.Authorization;
@@ -118,8 +119,8 @@ public class MessageMutations
 
         throw new GraphQLException(
             ErrorBuilder.New()
-                .SetMessage(ErrorCodes.ForbiddenAction)
-                .SetCode(ErrorCodes.ForbiddenAction)
+                .SetMessage(ChatneyInfra.ErrorCodes.ForbiddenAction)
+                .SetCode(ChatneyInfra.ErrorCodes.ForbiddenAction)
                 .Build());
     }
 
