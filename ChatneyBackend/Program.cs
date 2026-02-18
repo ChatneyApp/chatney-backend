@@ -18,6 +18,7 @@ using RolesDomainSettings = ChatneyBackend.Domains.Roles.DomainSettings;
 using UserDomainSettings = ChatneyBackend.Domains.Users.DomainSettings;
 using WorkspacesDomainSettings = ChatneyBackend.Domains.Workspaces.DomainSettings;
 using Microsoft.AspNetCore.WebSockets;
+using Amazon.Runtime;
 using Amazon.S3;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -63,7 +64,27 @@ builder.Services.AddSingleton(_ => wsConfig);
 // AWS S3 setup
 var awsOptions = builder.Configuration.GetAWSOptions();
 builder.Services.AddDefaultAWSOptions(awsOptions);
-builder.Services.AddAWSService<IAmazonS3>();
+builder.Services.AddSingleton<IAmazonS3>(sp =>
+{
+    var cfg = sp.GetRequiredService<IConfiguration>();
+
+    var serviceUrl = cfg["AWS:ServiceUrl"]!;
+    var forcePathStyle = bool.Parse(cfg["AWS:ForcePathStyle"] ?? "false");
+
+    var accessKey = cfg["AWS:AccessKey"] ?? "";
+    var secretKey = cfg["AWS:SecretKey"] ?? "";
+
+    if (string.IsNullOrWhiteSpace(accessKey) || string.IsNullOrWhiteSpace(secretKey))
+        throw new InvalidOperationException("S3 credentials are not configured.");
+
+    var s3Config = new AmazonS3Config
+    {
+        ServiceURL = serviceUrl,
+        ForcePathStyle = forcePathStyle
+    };
+
+    return new AmazonS3Client(new BasicAWSCredentials(accessKey, secretKey), s3Config);
+});
 builder.Services.AddControllers();
 
 // ---- CORS policies ----

@@ -27,10 +27,10 @@ public class AttachmentMutations
         var req = new GetPreSignedUrlRequest
         {
             BucketName = "chatney",
-            Key = "/media/fil1.jpg",
+            Key = "/media/mario-neutral.png",
             Verb = HttpVerb.PUT,
             Expires = DateTime.UtcNow.Add(TimeSpan.FromHours(1)),
-            ContentType = "image/jpeg",
+            ContentType = "image/png"
         };
 
         // Если хочешь “привязать” дополнительные заголовки — добавляй их и требуй на клиенте.
