@@ -21,4 +21,7 @@ $env:aws_access_key_id="minioadmin"
 $env:aws_secret_access_key="minioadminpass"
 $env:aws_endpoint_url="http://localhost:9000"
 aws s3 ls
+
+# test:
+curl -H "Content-Type: image/png" -sS --data-binary @mario.png -X PUT "${URL}"
 ```
