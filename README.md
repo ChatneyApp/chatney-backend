@@ -17,8 +17,8 @@ Open-source Chat Api
 ## Minio
 
 ```shell
-$env:aws_access_key_id="minioadmin"
-$env:aws_secret_access_key="minioadminpass"
+$env:aws_access_key_id="admin"
+$env:aws_secret_access_key="admin"
 $env:aws_endpoint_url="http://localhost:9000"
 aws s3 ls
 
