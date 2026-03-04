@@ -15,7 +15,7 @@ public class AttachmentMutations
     }
 
     [Authorize]
-    public AttachmentUploadResponse RequestUpload(
+    public AttachmentUploadResponse Upload(
         RoleManager roleManager,
         Repo<User> usersRepo,
         Repo<Attachment> attachmentsRepo,
@@ -33,13 +33,9 @@ public class AttachmentMutations
             ContentType = "image/png"
         };
 
-        // Если хочешь “привязать” дополнительные заголовки — добавляй их и требуй на клиенте.
-        // req.Headers["x-amz-meta-..."] = "...";
-
-        var url = s3Client.GetPreSignedURL(req);
         return new AttachmentUploadResponse()
         {
-            SecureUrl = url
+            SecureUrl = ""
         };
     }
 }

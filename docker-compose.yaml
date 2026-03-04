@@ -40,7 +40,6 @@ services:
       RUSTFS_ACCESS_KEY: admin
       RUSTFS_SECRET_KEY: admin
       RUSTFS_ADDRESS: http://localhost:9000
-      GLOBAL_REGION: us-east-1
     command: ["/data"]
     volumes:
       - rustfs_data:/data
