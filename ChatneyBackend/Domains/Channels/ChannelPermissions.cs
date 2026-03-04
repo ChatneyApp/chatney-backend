@@ -11,4 +11,8 @@ public class ChannelPermissions
     public const string EditChannel   = DomainSettings.PermissionsPrefix + ".editChannel";
     public const string CreateChannel = DomainSettings.PermissionsPrefix + ".createChannel";
     public const string ReadChannel   = DomainSettings.PermissionsPrefix + ".readChannel";
+
+    public const string DeleteOwnMessage = DomainSettings.PermissionsPrefix + ".deleteOwnMessage";
+    public const string EditOwnMessage = DomainSettings.PermissionsPrefix + ".editOwnMessage";
+
 }

@@ -40,6 +40,7 @@ public class Message : DatabaseItem, IHasUserId
     [GraphQLIgnore]
     public List<string> UrlPreviewIds { get; set; } = new();
 
+    // Used for soft delete, pending etc
     [BsonElement("status")]
     [MaxLength(50)]
     public required string Status { get; set; }
