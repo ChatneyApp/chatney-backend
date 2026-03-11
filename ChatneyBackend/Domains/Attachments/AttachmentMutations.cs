@@ -11,50 +11,35 @@ public class AttachmentMutations
 {
     public class AttachmentUploadResponse
     {
-        public string SecureUrl { get; set; }
+        public required string S3Url { get; set; }
+        public required string AttachmentId { get; set; }
     }
 
     [Authorize]
     public async Task<AttachmentUploadResponse> Upload(
-    RoleManager roleManager,
     Repo<User> usersRepo,
     Repo<Attachment> attachmentsRepo,
     ClaimsPrincipal principal,
-    WebSocketConnector webSocketConnector,
     IAmazonS3 s3Client,
-    IFormFile file
+    IFile file
     )
     {
         if (file == null || file.Length == 0)
             throw new Exception("File is empty.");
 
-        // 1️⃣ Validate user
-        var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId))
-            throw new Exception("Unauthorized.");
-
-        var user = await usersRepo.GetById(userId);
-        if (user == null)
-            throw new Exception("User not found.");
-
-        var attachment = new Attachment
-        {
-            Id = Guid.NewGuid().ToString(),
-            FileName = file.FileName,
-            S3Key = s3Key,
-            UploadedById = user.Id,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        await attachmentsRepo.AddAsync(attachment);
-
-        var bucketName = "your-bucket-name";
+        var userId = principal.GetUserId();
+        var id = Guid.NewGuid().ToString();
+        var bucketName = "chatney";
         var s3Folder = "attachments";
         var dateString = DateTime.UtcNow.ToString("yyyy-MM-dd");
+        string ext = "txt";
+        string fullExt = ext == "" ? "" : "." + ext;
+        string type = "image";
 
-        var s3Key = $"{s3Folder}/{userId}/{dateString}/{file.}";
+        var s3Key = $"{s3Folder}/{userId}/{dateString}/{id}{fullExt}";
 
-        using (var fileStream = new FileStream(tmpFilePath, FileMode.Open))
+        PutObjectResponse s3Response;
+        using (var fileStream = file.OpenReadStream())
         {
             var uploadRequest = new PutObjectRequest
             {
@@ -64,37 +49,27 @@ public class AttachmentMutations
                 ContentType = file.ContentType
             };
 
-            await s3Client.PutObjectAsync(uploadRequest);
+            s3Response = await s3Client.PutObjectAsync(uploadRequest);
         }
 
-        // 5️⃣ Save attachment record in DB
         var attachment = new Attachment
         {
-            Id = Guid.NewGuid().ToString(),
-            FileName = file.FileName,
-            S3Key = s3Key,
-            UploadedById = user.Id,
-            CreatedAt = DateTime.UtcNow
+            UserId = userId,
+            Extension = ext,
+            MimeType = file.ContentType,
+            Id = id,
+            OriginalFileName = file.Name,
+            CreatedAt = DateTime.UtcNow,
+            Type = type,
+            UrlPath = s3Key
         };
 
-        await attachmentsRepo.AddAsync(attachment);
-
-        // 6️⃣ Cleanup tmp file
-        if (File.Exists(tmpFilePath))
-            File.Delete(tmpFilePath);
-
-        // 7️⃣ Optional websocket notify
-        await webSocketConnector.NotifyAsync("file_uploaded", new
-        {
-            attachmentId = attachment.Id,
-            fileName = attachment.FileName
-        });
+        await attachmentsRepo.InsertOne(attachment);
 
         return new AttachmentUploadResponse
         {
-            Success = true,
             AttachmentId = attachment.Id,
-            Url = $"https://{bucketName}.s3.amazonaws.com/{s3Key}"
+            S3Url = $"{s3Client.Config.ServiceURL}/{s3Key}"
         };
     }
 }

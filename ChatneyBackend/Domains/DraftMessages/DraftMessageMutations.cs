@@ -17,7 +17,7 @@ public class DraftMessageMutations
     }
 
     [Authorize]
-    public async Task<DraftMessage?> AddMessage(
+    public async Task<DraftMessage?> AddDraftMessage(
         RoleManager roleManager,
         Repo<Channel> channelsRepo,
         Repo<DraftMessage> messagesRepo,
@@ -66,7 +66,7 @@ public class DraftMessageMutations
     }
 
     [Authorize]
-    public async Task<DraftMessage?> UpdateMessage(IMongoDatabase mongoDatabase, DraftMessage message)
+    public async Task<DraftMessage?> UpdateDraftMessage(IMongoDatabase mongoDatabase, DraftMessage message)
     {
         var collection = mongoDatabase.GetCollection<DraftMessage>(DomainSettings.MessageCollectionName);
         var filter = Builders<DraftMessage>.Filter.Eq("_id", message.Id);

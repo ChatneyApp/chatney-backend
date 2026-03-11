@@ -129,7 +129,9 @@ builder.Services
     .AddTypeExtension<UrlPreviewTypeExtension>()
     .AddDataLoader<UserByIdDataLoader>()
     .AddDataLoader<MyReactionsByMessageIdDataLoader>()
-    .AddDataLoader<UrlPreviewsByUrlPreviewIdDataLoader>();
+    .AddDataLoader<UrlPreviewsByUrlPreviewIdDataLoader>()
+    .AddType<UploadType>();
+
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddWebSockets(options =>
