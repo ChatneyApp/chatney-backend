@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using ChatneyBackend.Domains.Attachments;
 using ChatneyBackend.Domains.Channels;
 using ChatneyBackend.Domains.Users;
 using ChatneyInfra = ChatneyBackend.Infra;
@@ -24,6 +25,7 @@ public class MessageMutations
         Repo<Message> messagesRepo,
         Repo<User> usersRepo,
         Repo<UrlPreview> urlPreviewRepo,
+        Repo<Attachment> attachmentRepo,
         ClaimsPrincipal principal,
         MessageDTO messageDto,
         WebSocketConnector webSocketConnector
@@ -113,7 +115,10 @@ public class MessageMutations
             message.UrlPreviewIds = urlPreviewIds;
 
             await messagesRepo.InsertOne(message);
-            await webSocketConnector.SendMessageAsync(MessageWithUser.Create(message, user, urlPreviews));
+            var attachments = await attachmentRepo.GetList(
+                Builders<Attachment>.Filter.In(x => x.Id, message.AttachmentIds)
+            );
+            await webSocketConnector.SendMessageAsync(MessageWithUser.Create(message, user, urlPreviews, attachments));
             return message;
         }
 

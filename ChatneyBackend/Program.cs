@@ -127,9 +127,11 @@ builder.Services
     .AddTypeExtension<HasUserIdTypeExtension<Message>>()
     .AddTypeExtension<MessageReactionsTypeExtension>()
     .AddTypeExtension<UrlPreviewTypeExtension>()
+    .AddTypeExtension<AttachmentDataLoader>()
     .AddDataLoader<UserByIdDataLoader>()
     .AddDataLoader<MyReactionsByMessageIdDataLoader>()
     .AddDataLoader<UrlPreviewsByUrlPreviewIdDataLoader>()
+    .AddDataLoader<AttachmentsByAttachmentIdDataLoader>()
     .AddType<UploadType>();
 
 

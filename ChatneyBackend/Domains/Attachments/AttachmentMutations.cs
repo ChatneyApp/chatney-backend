@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text.RegularExpressions;
 using Amazon.S3;
 using Amazon.S3.Model;
 using ChatneyBackend.Domains.Users;
@@ -32,13 +33,13 @@ public class AttachmentMutations
         var bucketName = "chatney";
         var s3Folder = "attachments";
         var dateString = DateTime.UtcNow.ToString("yyyy-MM-dd");
-        string ext = "txt";
+        var extMatch = Regex.Match(file.Name, "\\.([^\\.]+$)");
+        var ext = extMatch.Success ? extMatch.Groups[1].Value : "";
         string fullExt = ext == "" ? "" : "." + ext;
         string type = "image";
 
         var s3Key = $"{s3Folder}/{userId}/{dateString}/{id}{fullExt}";
 
-        PutObjectResponse s3Response;
         using (var fileStream = file.OpenReadStream())
         {
             var uploadRequest = new PutObjectRequest
@@ -49,7 +50,7 @@ public class AttachmentMutations
                 ContentType = file.ContentType
             };
 
-            s3Response = await s3Client.PutObjectAsync(uploadRequest);
+            await s3Client.PutObjectAsync(uploadRequest);
         }
 
         var attachment = new Attachment
@@ -66,10 +67,12 @@ public class AttachmentMutations
 
         await attachmentsRepo.InsertOne(attachment);
 
+        var serviceUrl = s3Client.Config.ServiceURL.TrimEnd('/');
+
         return new AttachmentUploadResponse
         {
             AttachmentId = attachment.Id,
-            S3Url = $"{s3Client.Config.ServiceURL}/{s3Key}"
+            S3Url = $"{serviceUrl}/{bucketName}/{s3Key}"
         };
     }
 }

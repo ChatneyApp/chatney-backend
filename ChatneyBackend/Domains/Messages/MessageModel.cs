@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using ChatneyBackend.Domains.Attachments;
 using ChatneyBackend.Domains.Users;
 using MongoDB.Bson.Serialization.Attributes;
 
@@ -33,8 +34,9 @@ public class Message : DatabaseItem, IHasUserId
     [MaxLength(4096)]
     public required string Content { get; set; }
 
-    [BsonElement("attachments")]
-    public List<string> Attachments { get; set; } = new List<string>();
+    [BsonElement("attachmentIds")]
+    [GraphQLIgnore]
+    public List<string> AttachmentIds { get; set; } = new List<string>();
 
     [BsonElement("urlPreviewIds")]
     [GraphQLIgnore]
@@ -69,7 +71,7 @@ public class Message : DatabaseItem, IHasUserId
             ChannelId = message.ChannelId,
             UserId = userId,
             Content = message.Content,
-            Attachments = message.Attachments,
+            AttachmentIds = message.AttachmentIds,
             Status = "sent", // TODO: Define status constants
             UrlPreviewIds = new List<string>(),
             CreatedAt = DateTime.UtcNow,
@@ -91,8 +93,8 @@ public class MessageDTO
     [MaxLength(4096)]
     public required string Content { get; set; }
 
-    [BsonElement("attachments")]
-    public List<string>? Attachments { get; set; }
+    [BsonElement("attachmentIds")]
+    public List<string>? AttachmentIds { get; set; }
 
     [BsonElement("parentId")]
     [MaxLength(36)]
@@ -120,8 +122,10 @@ public class MessageWithUser : Message
     public required string[] MyReactions { get; set; }
     [BsonElement("urlPreviews")]
     public required List<UrlPreview> UrlPreviews { get; set; }
+    [BsonElement("attachments")]
+    public required List<Attachment> Attachments { get; set; }
 
-    public static MessageWithUser Create(Message message, User user, List<UrlPreview> urlPreviews)
+    public static MessageWithUser Create(Message message, User user, List<UrlPreview> urlPreviews, List<Attachment> attachments)
     {
         return new MessageWithUser()
         {
@@ -129,7 +133,8 @@ public class MessageWithUser : Message
             ChannelId = message.ChannelId,
             UserId = user.Id,
             Content = message.Content,
-            Attachments = message.Attachments,
+            AttachmentIds = message.AttachmentIds,
+            Attachments = attachments,
             Status = message.Status,
             UrlPreviews = urlPreviews,
             CreatedAt = message.CreatedAt,
@@ -145,7 +150,6 @@ public class MessageWithUser : Message
                 AvatarUrl = user.AvatarUrl,
             }
         };
-
     }
 }
 
