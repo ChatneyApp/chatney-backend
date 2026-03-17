@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using ChatneyBackend.Domains.Attachments;
 using ChatneyBackend.Domains.Users;
 using MongoDB.Bson.Serialization.Attributes;
@@ -36,10 +37,12 @@ public class Message : DatabaseItem, IHasUserId
 
     [BsonElement("attachmentIds")]
     [GraphQLIgnore]
+    [JsonIgnore]
     public List<string> AttachmentIds { get; set; } = new List<string>();
 
     [BsonElement("urlPreviewIds")]
     [GraphQLIgnore]
+    [JsonIgnore]
     public List<string> UrlPreviewIds { get; set; } = new();
 
     // Used for soft delete, pending etc
@@ -136,6 +139,7 @@ public class MessageWithUser : Message
             AttachmentIds = message.AttachmentIds,
             Attachments = attachments,
             Status = message.Status,
+            UrlPreviewIds = message.UrlPreviewIds,
             UrlPreviews = urlPreviews,
             CreatedAt = message.CreatedAt,
             UpdatedAt = message.UpdatedAt,
