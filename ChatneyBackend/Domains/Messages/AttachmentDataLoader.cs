@@ -17,8 +17,9 @@ public class AttachmentDataLoader : ObjectTypeExtension<Message>
                 }
 
                 var dataLoader = ctx.DataLoader<AttachmentsByAttachmentIdDataLoader>();
-                var previews = await dataLoader.LoadAsync(message.AttachmentIds, ctx.RequestAborted);
-                return previews;
+                // TODO: add fullUrl for the frontend based on domain, bucket, s3 key, etc
+                var attachments = await dataLoader.LoadAsync(message.AttachmentIds, ctx.RequestAborted);
+                return attachments;
             })
             .Type<ListType<ObjectType<Attachment>>>();
     }

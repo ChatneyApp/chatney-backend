@@ -115,6 +115,7 @@ public class MessageMutations
             message.UrlPreviewIds = urlPreviewIds;
 
             await messagesRepo.InsertOne(message);
+            // TODO: add fullUrl for the frontend based on domain, bucket, s3 key, etc
             var attachments = await attachmentRepo.GetList(
                 Builders<Attachment>.Filter.In(x => x.Id, message.AttachmentIds)
             );
