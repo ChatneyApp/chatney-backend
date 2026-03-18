@@ -1,4 +1,4 @@
-namespace ChatneyBackend.Domains.Messages;
+namespace ChatneyBackend.Domains.DraftMessages;
 
 public class DomainSettings
 {

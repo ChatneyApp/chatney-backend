@@ -14,9 +14,14 @@ Open-source Chat Api
 
 ## Development
 
-Generate endpoints from GraphQL
-```sh
-go run github.com/99designs/gqlgen generate
-```
+## Minio
 
-or just run `make gen`
+```shell
+$env:aws_access_key_id="admin"
+$env:aws_secret_access_key="admin"
+$env:aws_endpoint_url="http://localhost:9000"
+aws s3 ls
+
+# test:
+curl -H "Content-Type: image/png" -sS --data-binary @mario.png -X PUT "${URL}"
+```

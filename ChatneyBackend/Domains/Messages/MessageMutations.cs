@@ -1,6 +1,8 @@
 using System.Security.Claims;
+using ChatneyBackend.Domains.Attachments;
 using ChatneyBackend.Domains.Channels;
 using ChatneyBackend.Domains.Users;
+using ChatneyInfra = ChatneyBackend.Infra;
 using ChatneyBackend.Infra.Middleware;
 using ChatneyBackend.Utils;
 using HotChocolate.Authorization;
@@ -23,6 +25,7 @@ public class MessageMutations
         Repo<Message> messagesRepo,
         Repo<User> usersRepo,
         Repo<UrlPreview> urlPreviewRepo,
+        Repo<Attachment> attachmentRepo,
         ClaimsPrincipal principal,
         MessageDTO messageDto,
         WebSocketConnector webSocketConnector
@@ -112,14 +115,18 @@ public class MessageMutations
             message.UrlPreviewIds = urlPreviewIds;
 
             await messagesRepo.InsertOne(message);
-            await webSocketConnector.SendMessageAsync(MessageWithUser.Create(message, user, urlPreviews));
+            // TODO: add fullUrl for the frontend based on domain, bucket, s3 key, etc
+            var attachments = await attachmentRepo.GetList(
+                Builders<Attachment>.Filter.In(x => x.Id, message.AttachmentIds)
+            );
+            await webSocketConnector.SendMessageAsync(MessageWithUser.Create(message, user, urlPreviews, attachments));
             return message;
         }
 
         throw new GraphQLException(
             ErrorBuilder.New()
-                .SetMessage(ErrorCodes.ForbiddenAction)
-                .SetCode(ErrorCodes.ForbiddenAction)
+                .SetMessage(ChatneyInfra.ErrorCodes.ForbiddenAction)
+                .SetCode(ChatneyInfra.ErrorCodes.ForbiddenAction)
                 .Build());
     }
 

@@ -1,4 +1,6 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
+using ChatneyBackend.Domains.Attachments;
 using ChatneyBackend.Domains.Users;
 using MongoDB.Bson.Serialization.Attributes;
 
@@ -33,13 +35,17 @@ public class Message : DatabaseItem, IHasUserId
     [MaxLength(4096)]
     public required string Content { get; set; }
 
-    [BsonElement("attachments")]
-    public List<string> Attachments { get; set; } = new List<string>();
+    [BsonElement("attachmentIds")]
+    [GraphQLIgnore]
+    [JsonIgnore]
+    public List<string> AttachmentIds { get; set; } = new List<string>();
 
     [BsonElement("urlPreviewIds")]
     [GraphQLIgnore]
+    [JsonIgnore]
     public List<string> UrlPreviewIds { get; set; } = new();
 
+    // Used for soft delete, pending etc
     [BsonElement("status")]
     [MaxLength(50)]
     public required string Status { get; set; }
@@ -68,7 +74,7 @@ public class Message : DatabaseItem, IHasUserId
             ChannelId = message.ChannelId,
             UserId = userId,
             Content = message.Content,
-            Attachments = message.Attachments,
+            AttachmentIds = message.AttachmentIds,
             Status = "sent", // TODO: Define status constants
             UrlPreviewIds = new List<string>(),
             CreatedAt = DateTime.UtcNow,
@@ -90,8 +96,8 @@ public class MessageDTO
     [MaxLength(4096)]
     public required string Content { get; set; }
 
-    [BsonElement("attachments")]
-    public List<string>? Attachments { get; set; }
+    [BsonElement("attachmentIds")]
+    public List<string>? AttachmentIds { get; set; }
 
     [BsonElement("parentId")]
     [MaxLength(36)]
@@ -119,8 +125,10 @@ public class MessageWithUser : Message
     public required string[] MyReactions { get; set; }
     [BsonElement("urlPreviews")]
     public required List<UrlPreview> UrlPreviews { get; set; }
+    [BsonElement("attachments")]
+    public required List<Attachment> Attachments { get; set; }
 
-    public static MessageWithUser Create(Message message, User user, List<UrlPreview> urlPreviews)
+    public static MessageWithUser Create(Message message, User user, List<UrlPreview> urlPreviews, List<Attachment> attachments)
     {
         return new MessageWithUser()
         {
@@ -128,8 +136,10 @@ public class MessageWithUser : Message
             ChannelId = message.ChannelId,
             UserId = user.Id,
             Content = message.Content,
-            Attachments = message.Attachments,
+            AttachmentIds = message.AttachmentIds,
+            Attachments = attachments,
             Status = message.Status,
+            UrlPreviewIds = message.UrlPreviewIds,
             UrlPreviews = urlPreviews,
             CreatedAt = message.CreatedAt,
             UpdatedAt = message.UpdatedAt,
@@ -144,7 +154,6 @@ public class MessageWithUser : Message
                 AvatarUrl = user.AvatarUrl,
             }
         };
-
     }
 }
 
@@ -158,34 +167,4 @@ public class MessageChildrenCountUpdated
 {
     public required string MessageId { get; set; }
     public required int ChildrenCount { get; set; }
-}
-
-public class MessageAttachment : DatabaseItem
-{
-    [BsonElement("_id")]
-    [BsonId]
-    [MaxLength(36)]
-    public required string Id { get; set; }
-
-    [BsonElement("path")]
-    [MaxLength(36)]
-    public required string Path { get; set; }
-
-    [BsonElement("fileName")]
-    [MaxLength(36)]
-    public required string FileName { get; set; }
-
-    [BsonElement("mimeType")]
-    [MaxLength(36)]
-    public required string MimeType { get; set; }
-
-    [BsonElement("createdBy")]
-    [MaxLength(36)]
-    public required string CreatedBy { get; set; }
-
-    [BsonElement("createdAt")]
-    public DateTime CreatedAt { get; set; }
-
-    [BsonElement("updatedAt")]
-    public DateTime UpdatedAt { get; set; }
 }

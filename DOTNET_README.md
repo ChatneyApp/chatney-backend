@@ -20,3 +20,21 @@ dotnet run
 ```shell
 dotnet watch
 ```
+
+# Ubuntu:
+
+```shell
+sudo snap install dotnet-sdk-90 --classic
+```
+
+add this to your `.bashrc`:
+
+```
+export DOTNET_ROOT=/snap/dotnet-sdk-90/current
+```
+
+add the symlink in case you can't execute `dotnet` command:
+
+```shell
+sudo ln -sf $DOTNET_ROOT/dotnet /usr/local/bin/dotnet
+```

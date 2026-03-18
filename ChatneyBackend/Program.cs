@@ -1,6 +1,7 @@
 using ChatneyBackend.Domains.Channels;
 using ChatneyBackend.Domains.Configs;
 using ChatneyBackend.Domains.Messages;
+using ChatneyBackend.Domains.Attachments;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Domains.Users;
 using ChatneyBackend.Domains.Workspaces;
@@ -12,10 +13,13 @@ using ChatneyBackend.Infra.Middleware;
 using ChannelDomainSettings = ChatneyBackend.Domains.Channels.DomainSettings;
 using ConfigsDomainSettings = ChatneyBackend.Domains.Configs.DomainSettings;
 using MessagesDomainSettings = ChatneyBackend.Domains.Messages.DomainSettings;
+using AttachmentsDomainSettings = ChatneyBackend.Domains.Attachments.DomainSettings;
 using RolesDomainSettings = ChatneyBackend.Domains.Roles.DomainSettings;
 using UserDomainSettings = ChatneyBackend.Domains.Users.DomainSettings;
 using WorkspacesDomainSettings = ChatneyBackend.Domains.Workspaces.DomainSettings;
 using Microsoft.AspNetCore.WebSockets;
+using Amazon.Runtime;
+using Amazon.S3;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,6 +40,10 @@ var db = mongoClient.GetDatabase(dbName);
 
 var wsConfig = new WebSocketConnector();
 
+// var bucket = builder.Configuration.GetSection("AWS").GetValue<string>("Bucket");
+// Console.WriteLine(bucket);
+
+// Database
 DbInit.Init(mongoClient, dbName);
 builder.Services.AddSingleton(_ => db);
 builder.Services.AddSingleton(_ => new AppConfig { UserPasswordSalt = userPasswordSalt, JwtSecret = jwtSecret });
@@ -47,12 +55,37 @@ builder.Services.AddSingleton(_ => new Repo<ChannelType>(db, ChannelDomainSettin
 builder.Services.AddSingleton(_ => new Repo<ChannelGroup>(db, ChannelDomainSettings.ChannelGroupCollectionName));
 builder.Services.AddSingleton(_ => new Repo<Config>(db, ConfigsDomainSettings.ConfigCollectionName));
 builder.Services.AddSingleton(_ => new Repo<Message>(db, MessagesDomainSettings.MessageCollectionName));
-builder.Services.AddSingleton(_ => new Repo<MessageAttachment>(db, MessagesDomainSettings.MessageAttachmentCollectionName));
+builder.Services.AddSingleton(_ => new Repo<Attachment>(db, AttachmentsDomainSettings.AttachmentCollectionName));
 builder.Services.AddSingleton(_ => new Repo<UrlPreview>(db, MessagesDomainSettings.UrlPreviewsCollectionName));
 builder.Services.AddSingleton(_ => new Repo<Role>(db, RolesDomainSettings.RoleCollectionName));
 builder.Services.AddSingleton(_ => new Repo<Workspace>(db, WorkspacesDomainSettings.WorkspaceCollectionName));
+// WebSocket
 builder.Services.AddSingleton(_ => wsConfig);
+// AWS S3 setup
+var awsOptions = builder.Configuration.GetAWSOptions();
+builder.Services.AddDefaultAWSOptions(awsOptions);
+builder.Services.AddSingleton<IAmazonS3>(sp =>
+{
+    var cfg = sp.GetRequiredService<IConfiguration>();
 
+    var serviceUrl = cfg["AWS:ServiceUrl"]!;
+    var forcePathStyle = bool.Parse(cfg["AWS:ForcePathStyle"] ?? "false");
+
+    var accessKey = cfg["AWS:AccessKey"] ?? "";
+    var secretKey = cfg["AWS:SecretKey"] ?? "";
+
+    if (string.IsNullOrWhiteSpace(accessKey) || string.IsNullOrWhiteSpace(secretKey))
+        throw new InvalidOperationException("S3 credentials are not configured.");
+
+    var s3Config = new AmazonS3Config
+    {
+        ServiceURL = serviceUrl,
+        ForcePathStyle = forcePathStyle
+    };
+
+    return new AmazonS3Client(new BasicAWSCredentials(accessKey, secretKey), s3Config);
+});
+builder.Services.AddControllers();
 
 // ---- CORS policies ----
 // Dev: open for local tooling; Prod: strict allow-list with credentials.
@@ -94,9 +127,13 @@ builder.Services
     .AddTypeExtension<HasUserIdTypeExtension<Message>>()
     .AddTypeExtension<MessageReactionsTypeExtension>()
     .AddTypeExtension<UrlPreviewTypeExtension>()
+    .AddTypeExtension<AttachmentDataLoader>()
     .AddDataLoader<UserByIdDataLoader>()
     .AddDataLoader<MyReactionsByMessageIdDataLoader>()
-    .AddDataLoader<UrlPreviewsByUrlPreviewIdDataLoader>();
+    .AddDataLoader<UrlPreviewsByUrlPreviewIdDataLoader>()
+    .AddDataLoader<AttachmentsByAttachmentIdDataLoader>()
+    .AddType<UploadType>();
+
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddWebSockets(options =>
