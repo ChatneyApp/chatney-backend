@@ -10,6 +10,19 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: pass
     volumes:
       - mongo_data:/data/db
+
+  postgres:
+    image: postgres:18-alpine
+    container_name: postgres-chatney
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: chatney
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
   
   mongo_express:
     image: mongo-express
@@ -46,4 +59,6 @@ volumes:
   rustfs_data:
     driver: local
   mongo_data:
+    driver: local
+  postgres_data:
     driver: local

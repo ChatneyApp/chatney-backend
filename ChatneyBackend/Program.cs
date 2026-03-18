@@ -20,15 +20,18 @@ using WorkspacesDomainSettings = ChatneyBackend.Domains.Workspaces.DomainSetting
 using Microsoft.AspNetCore.WebSockets;
 using Amazon.Runtime;
 using Amazon.S3;
+using Dapper;
+using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
 
 var connectionString = builder.Configuration.GetConnectionString("MongoDB");
+var postgresConnectionString = builder.Configuration.GetConnectionString("Postgres");
 var dbName = builder.Configuration.GetConnectionString("dbName");
 var userPasswordSalt = builder.Configuration.GetSection("UserPasswordSalt").Value;
 var jwtSecret = builder.Configuration.GetSection("JwtSecret").Value;
 
-if (connectionString == null || dbName == null || userPasswordSalt == null || jwtSecret == null)
+if (connectionString == null || postgresConnectionString == null || dbName == null || userPasswordSalt == null || jwtSecret == null)
 {
     throw new ArgumentException("App settings are invalid");
 }
@@ -37,6 +40,16 @@ var url = new MongoUrl(connectionString);
 var settings = MongoClientSettings.FromUrl(url);
 var mongoClient = new MongoClient(settings);
 var db = mongoClient.GetDatabase(dbName);
+var pgDataSource = NpgsqlDataSource.Create(postgresConnectionString);
+
+await using (var pgConnection = await pgDataSource.OpenConnectionAsync())
+{
+    var ping = await pgConnection.ExecuteScalarAsync<int>("SELECT 1");
+    if (ping == 1)
+    {
+        Console.WriteLine("pg connection is OK");
+    }
+}
 
 var wsConfig = new WebSocketConnector();
 
@@ -46,6 +59,7 @@ var wsConfig = new WebSocketConnector();
 // Database
 DbInit.Init(mongoClient, dbName);
 builder.Services.AddSingleton(_ => db);
+builder.Services.AddSingleton(pgDataSource);
 builder.Services.AddSingleton(_ => new AppConfig { UserPasswordSalt = userPasswordSalt, JwtSecret = jwtSecret });
 builder.Services.AddSingleton(_ => new RoleManager(db));
 builder.Services.AddSingleton(_ => new Repo<User>(db, UserDomainSettings.UserCollectionName));
