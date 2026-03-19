@@ -3,8 +3,7 @@ using ChatneyBackend.Domains.Messages;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Domains.Users;
 using ChatneyBackend.Domains.Workspaces;
-using Dapper;
-using Npgsql;
+using FluentMigrator.Runner;
 
 namespace ChatneyBackend.Domains.InstallWizard;
 
@@ -16,36 +15,21 @@ public class InstallWizardMutations
         public string? message { get; set; }
     }
 
-    public async Task<InstallSystemResult> InstallSystem(Repo<Role> roleRepo, NpgsqlDataSource pgDataSource)
+    public async Task<InstallSystemResult> InstallSystem(Repo<Role> roleRepo, IMigrationRunner migrationRunner)
     {
-        // PG
-        var pgConnection = await pgDataSource.OpenConnectionAsync();
-        var sql = """
-            CREATE TABLE IF NOT EXISTS roles (
-                id int GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-                name varchar(255) NOT NULL,
-                is_base bool NOT NULL DEFAULT false,
-                permissions text[] NOT NULL DEFAULT '{}',
-                created_at timestamptz NOT NULL DEFAULT NOW(),
-                updated_at timestamptz NOT NULL DEFAULT NOW()
-            );
-        """;
-        await pgConnection.ExecuteAsync(sql);
-        await pgConnection.CloseAsync();
-
-        // Mongo
-        Role? baseRole = await roleRepo.GetOne((r) => r.Name == Roles.DomainSettings.BaseRoleName);
-
-        if (baseRole != null)
-        {
-            return new InstallSystemResult()
-            {
-                status = "installed"
-            };
-        }
-
         try
         {
+            migrationRunner.MigrateUp();
+
+            Role? baseRole = await roleRepo.GetOne((r) => r.Name == Roles.DomainSettings.BaseRoleName);
+
+            if (baseRole != null)
+            {
+                return new InstallSystemResult()
+                {
+                    status = "installed"
+                };
+            }
 
             await roleRepo.InsertOne(new Role
             {

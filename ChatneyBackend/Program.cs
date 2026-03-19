@@ -20,7 +20,10 @@ using WorkspacesDomainSettings = ChatneyBackend.Domains.Workspaces.DomainSetting
 using Microsoft.AspNetCore.WebSockets;
 using Amazon.Runtime;
 using Amazon.S3;
+using ChatneyBackend.Infra.Migrations;
 using Dapper;
+using FluentMigrator.Runner;
+using FluentMigrator.Runner.VersionTableInfo;
 using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -73,6 +76,13 @@ builder.Services.AddSingleton(_ => new Repo<Attachment>(db, AttachmentsDomainSet
 builder.Services.AddSingleton(_ => new Repo<UrlPreview>(db, MessagesDomainSettings.UrlPreviewsCollectionName));
 builder.Services.AddSingleton(_ => new Repo<Role>(db, RolesDomainSettings.RoleCollectionName));
 builder.Services.AddSingleton(_ => new Repo<Workspace>(db, WorkspacesDomainSettings.WorkspaceCollectionName));
+builder.Services
+    .AddFluentMigratorCore()
+    .ConfigureRunner(runner => runner
+        .AddPostgres()
+        .WithGlobalConnectionString(postgresConnectionString)
+        .ScanIn(typeof(Program).Assembly).For.Migrations())
+        .ConfigureRunner(rb => rb.WithVersionTable(new CustomVersionTable()));
 // WebSocket
 builder.Services.AddSingleton(_ => wsConfig);
 // AWS S3 setup

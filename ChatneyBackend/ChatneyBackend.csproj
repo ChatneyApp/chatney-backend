@@ -13,6 +13,9 @@
         <PackageReference Include="AWSSDK.Extensions.NETCore.Setup" Version="4.0.3.23" />
         <PackageReference Include="AWSSDK.S3" Version="4.0.18.7" />
         <PackageReference Include="Dapper" Version="2.1.66" />
+        <PackageReference Include="FluentMigrator" Version="7.1.0" />
+        <PackageReference Include="FluentMigrator.Runner" Version="7.1.0" />
+        <PackageReference Include="FluentMigrator.Runner.Postgres" Version="7.1.0" />
         <PackageReference Include="Microsoft.AspNetCore.WebSockets" Version="2.3.0" />
         <PackageReference Include="HotChocolate" Version="15.1.8" />
         <PackageReference Include="HotChocolate.AspNetCore" Version="15.1.8" />
