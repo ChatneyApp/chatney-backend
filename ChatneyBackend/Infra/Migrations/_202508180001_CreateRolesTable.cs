@@ -29,6 +29,21 @@ public class _202508180001_CreateRolesTable : Migration
                     updated_at timestamptz NOT NULL DEFAULT NOW()
                 );
 
+                CREATE OR REPLACE FUNCTION set_updated_at()
+                RETURNS trigger AS $$
+                BEGIN
+                    NEW.updated_at = NOW();
+                    RETURN NEW;
+                END;
+                $$ LANGUAGE plpgsql;
+                   
+                DROP TRIGGER IF EXISTS trg_roles_set_updated_at ON roles;
+            
+                CREATE TRIGGER trg_roles_set_updated_at
+                BEFORE UPDATE ON roles
+                FOR EACH ROW
+                EXECUTE FUNCTION set_updated_at();
+
                 INSERT INTO roles (name, is_base, permissions)
                 SELECT @name, TRUE, @permissions
                 WHERE NOT EXISTS (
@@ -66,6 +81,12 @@ public class _202508180001_CreateRolesTable : Migration
 
     public override void Down()
     {
-        Delete.Table("roles");
+        var sql = """
+            DROP TRIGGER IF EXISTS trg_roles_set_updated_at ON roles;
+            DROP TABLE IF EXISTS roles;
+            DROP FUNCTION IF EXISTS set_updated_at();
+        """;
+
+        Execute.Sql(sql);
     }
 }
