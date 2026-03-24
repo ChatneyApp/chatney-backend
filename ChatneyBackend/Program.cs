@@ -14,16 +14,15 @@ using ChannelDomainSettings = ChatneyBackend.Domains.Channels.DomainSettings;
 using ConfigsDomainSettings = ChatneyBackend.Domains.Configs.DomainSettings;
 using MessagesDomainSettings = ChatneyBackend.Domains.Messages.DomainSettings;
 using AttachmentsDomainSettings = ChatneyBackend.Domains.Attachments.DomainSettings;
-using RolesDomainSettings = ChatneyBackend.Domains.Roles.DomainSettings;
 using UserDomainSettings = ChatneyBackend.Domains.Users.DomainSettings;
 using WorkspacesDomainSettings = ChatneyBackend.Domains.Workspaces.DomainSettings;
 using Microsoft.AspNetCore.WebSockets;
 using Amazon.Runtime;
 using Amazon.S3;
 using ChatneyBackend.Infra.Migrations;
+using ChatneyBackend.Infra;
 using Dapper;
 using FluentMigrator.Runner;
-using FluentMigrator.Runner.VersionTableInfo;
 using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -42,6 +41,8 @@ if (connectionString == null || postgresConnectionString == null || dbName == nu
 var url = new MongoUrl(connectionString);
 var settings = MongoClientSettings.FromUrl(url);
 var mongoClient = new MongoClient(settings);
+// snake_case to PascalCase automatic conversion
+DefaultTypeMap.MatchNamesWithUnderscores = true;
 var db = mongoClient.GetDatabase(dbName);
 var pgDataSource = NpgsqlDataSource.Create(postgresConnectionString);
 
@@ -59,12 +60,14 @@ var wsConfig = new WebSocketConnector();
 // var bucket = builder.Configuration.GetSection("AWS").GetValue<string>("Bucket");
 // Console.WriteLine(bucket);
 
+var rolesRepo = new PgRepo<Role, int>(pgDataSource, "roles");
+
 // Database
 DbInit.Init(mongoClient, dbName);
 builder.Services.AddSingleton(_ => db);
 builder.Services.AddSingleton(pgDataSource);
 builder.Services.AddSingleton(_ => new AppConfig { UserPasswordSalt = userPasswordSalt, JwtSecret = jwtSecret });
-builder.Services.AddSingleton(_ => new RoleManager(db));
+builder.Services.AddSingleton(_ => new RoleManager(rolesRepo));
 builder.Services.AddSingleton(_ => new Repo<User>(db, UserDomainSettings.UserCollectionName));
 builder.Services.AddSingleton(_ => new Repo<MessageReaction>(db, MessagesDomainSettings.ReactionCollectionName));
 builder.Services.AddSingleton(_ => new Repo<Channel>(db, ChannelDomainSettings.ChannelCollectionName));
@@ -74,7 +77,7 @@ builder.Services.AddSingleton(_ => new Repo<Config>(db, ConfigsDomainSettings.Co
 builder.Services.AddSingleton(_ => new Repo<Message>(db, MessagesDomainSettings.MessageCollectionName));
 builder.Services.AddSingleton(_ => new Repo<Attachment>(db, AttachmentsDomainSettings.AttachmentCollectionName));
 builder.Services.AddSingleton(_ => new Repo<UrlPreview>(db, MessagesDomainSettings.UrlPreviewsCollectionName));
-builder.Services.AddSingleton(_ => new Repo<Role>(db, RolesDomainSettings.RoleCollectionName));
+builder.Services.AddSingleton(_ => rolesRepo);
 builder.Services.AddSingleton(_ => new Repo<Workspace>(db, WorkspacesDomainSettings.WorkspaceCollectionName));
 builder.Services
     .AddFluentMigratorCore()

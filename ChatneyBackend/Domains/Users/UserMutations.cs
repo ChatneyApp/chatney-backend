@@ -1,5 +1,6 @@
 ﻿using ChatneyBackend.Utils;
 using ChatneyBackend.Domains.Roles;
+using ChatneyBackend.Infra;
 
 namespace ChatneyBackend.Domains.Users;
 
@@ -14,13 +15,13 @@ public class UserMutations
         return user;
     }
 
-    public async Task<User> Register(AppConfig appConfig, Repo<User> repo, Repo<Role> rolesRepo, UserRegisterDTO userDto)
+    public async Task<User> Register(AppConfig appConfig, Repo<User> repo, PgRepo<Role, int> rolesRepo, UserRegisterDTO userDto)
     {
         var user = userDto.ToModel();
         user.Password = Helpers.GetMd5Hash(user.Password + appConfig.UserPasswordSalt);
 
         // find a base role
-        var userRole = await rolesRepo.GetOne(r => r.Name == Roles.DomainSettings.BaseRoleName);
+        var userRole = await rolesRepo.GetOne("name = @name", new {name = Roles.DomainSettings.BaseRoleName});
         if (userRole == null)
         {
             throw new Exception("User role not found");

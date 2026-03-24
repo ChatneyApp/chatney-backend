@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using ChatneyBackend.Domains.Channels;
+using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Domains.Users;
 using ChatneyInfra = ChatneyBackend.Infra;
 using ChatneyBackend.Infra.Middleware;
@@ -36,14 +37,14 @@ public class DraftMessageMutations
             throw new InvalidOperationException("Channel or user is invalid");
         }
 
-        var currentRole = roleManager.GetRelevantRole(user, new RoleScope(
+        var currentRole = await roleManager.GetRelevantRole(user, new RoleScope(
             WorkspaceId: channel.WorkspaceId,
             ChannelId: channel.Id,
             ChannelTypeId: channel.ChannelTypeId
         ));
 
-        Console.WriteLine(string.Join(" ", currentRole.Permissions));
-        if (currentRole.Permissions.Contains(ChannelPermissions.CreateMessage))
+        Console.WriteLine(string.Join(" ", currentRole?.Permissions ?? []));
+        if ((currentRole?.Permissions ?? []).Contains(ChannelPermissions.CreateMessage))
         {
             var parentMessage = message.ParentId != null
                 ? await messagesRepo.GetById(message.ParentId)

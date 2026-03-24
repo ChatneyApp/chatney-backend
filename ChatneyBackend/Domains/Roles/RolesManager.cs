@@ -1,42 +1,42 @@
-
-using ChatneyBackend.Domains.Roles;
+using ChatneyBackend.Infra;
 using ChatneyBackend.Domains.Users;
-using MongoDB.Driver;
+
+namespace ChatneyBackend.Domains.Roles;
 
 public sealed record RoleScope(string? WorkspaceId, string? ChannelId, string? ChannelTypeId);
 
 public class RoleManager
 {
-    private readonly IMongoCollection<Role> _roles;
+    private readonly PgRepo<Role, int> _roles;
 
-    public RoleManager(IMongoDatabase db)
+    public RoleManager(PgRepo<Role, int> roles)
     {
-        _roles = db.GetCollection<Role>("roles");
+        _roles = roles;
     }
 
-    public Role GetRelevantRole(
+    public async Task<Role?> GetRelevantRole(
         User user,
-        RoleScope roleScope)
+        RoleScope roleScope
+    )
     {
         if (roleScope.ChannelId != null && user.Roles.Channel.ContainsKey(roleScope.ChannelId))
         {
             var channelRole = user.Roles.Channel[roleScope.ChannelId];
-            return _roles.Find(r => r.Id == channelRole.RoleId).FirstOrDefault();
+            return await _roles.GetById(channelRole.RoleId);
         }
 
         if (roleScope.ChannelTypeId != null && user.Roles.ChannelTypes.ContainsKey(roleScope.ChannelTypeId))
         {
             var channelTypeRole = user.Roles.ChannelTypes[roleScope.ChannelTypeId];
-            return _roles.Find(r => r.Id == channelTypeRole.RoleId).FirstOrDefault();
+            return await _roles.GetById(channelTypeRole.RoleId);
         }
 
         if (roleScope.WorkspaceId != null && user.Roles.Workspace.ContainsKey(roleScope.WorkspaceId))
         {
             var workspaceRole = user.Roles.Workspace[roleScope.WorkspaceId];
-            return _roles.Find(r => r.Id == workspaceRole.RoleId).FirstOrDefault();
+            return await _roles.GetById(workspaceRole.RoleId);
         }
 
-        return _roles.Find(r => r.Id == user.Roles.Global).FirstOrDefault();
+        return await _roles.GetById(user.Roles.Global);
     }
 }
-

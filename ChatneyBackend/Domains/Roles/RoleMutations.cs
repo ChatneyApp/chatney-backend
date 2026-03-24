@@ -1,29 +1,24 @@
-using MongoDB.Driver;
+using ChatneyBackend.Infra;
 
 namespace ChatneyBackend.Domains.Roles;
 
 public class RoleMutations
 {
-    public async Task<Role> AddRole(IMongoDatabase mongoDatabase, RoleDTO roleDto)
+    public async Task<Role> AddRole(PgRepo<Role, int> rolesRepo, RoleDto roleDto)
     {
-        var collection = mongoDatabase.GetCollection<Role>(DomainSettings.RoleCollectionName);
-        Role role = Role.FromDTO(roleDto);
-        await collection.InsertOneAsync(role);
+        var role = Role.FromDTO(roleDto);
+        await rolesRepo.InsertOne(role);
         return role;
     }
 
-    public async Task<Role?> UpdateRole(IMongoDatabase mongoDatabase, Role role)
+    public async Task<Role> UpdateRole(PgRepo<Role, int> rolesRepo, Role role)
     {
-        var collection = mongoDatabase.GetCollection<Role>(DomainSettings.RoleCollectionName);
-        var filter = Builders<Role>.Filter.Eq("_id", role.Id);
-        var result = await collection.ReplaceOneAsync(filter, role);
-        return result.ModifiedCount > 0 ? role : null;
+        await rolesRepo.UpdateOne(role);
+        return role;
     }
 
-    public async Task<bool> DeleteRole(IMongoDatabase mongoDatabase, string id)
+    public async Task<bool> DeleteRole(PgRepo<Role, int> rolesRepo, int id)
     {
-        var collection = mongoDatabase.GetCollection<Role>(DomainSettings.RoleCollectionName);
-        var result = await collection.DeleteOneAsync(c => c.Id == id);
-        return result.DeletedCount > 0;
+        return await rolesRepo.DeleteById(id);
     }
 }

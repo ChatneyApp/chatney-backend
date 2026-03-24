@@ -3,6 +3,7 @@ using ChatneyBackend.Domains.Messages;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Domains.Users;
 using ChatneyBackend.Domains.Workspaces;
+using ChatneyBackend.Infra;
 using FluentMigrator.Runner;
 
 namespace ChatneyBackend.Domains.InstallWizard;
@@ -15,13 +16,13 @@ public class InstallWizardMutations
         public string? message { get; set; }
     }
 
-    public async Task<InstallSystemResult> InstallSystem(Repo<Role> roleRepo, IMigrationRunner migrationRunner)
+    public async Task<InstallSystemResult> InstallSystem(PgRepo<Role, int> roleRepo, IMigrationRunner migrationRunner)
     {
         try
         {
             migrationRunner.MigrateUp();
 
-            Role? baseRole = await roleRepo.GetOne((r) => r.Name == Roles.DomainSettings.BaseRoleName);
+            Role? baseRole = await roleRepo.GetOne("name = @name", new {name = Roles.DomainSettings.BaseRoleName});
 
             if (baseRole != null)
             {
@@ -33,7 +34,6 @@ public class InstallWizardMutations
 
             await roleRepo.InsertOne(new Role
             {
-                Id = Guid.NewGuid().ToString(),
                 UpdatedAt = DateTime.UtcNow,
                 CreatedAt = DateTime.UtcNow,
                 Name = Roles.DomainSettings.BaseRoleName,
@@ -51,10 +51,7 @@ public class InstallWizardMutations
                     ChannelPermissions.ReadMessage,
                     WorkspacePermissions.ReadWorkspace
                 ],
-                Settings = new RoleSettings()
-                {
-                    Base = true
-                }
+                IsBase = true
             });
         }
         catch (Exception e)

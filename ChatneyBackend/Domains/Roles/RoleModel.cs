@@ -1,64 +1,49 @@
 using System.ComponentModel.DataAnnotations;
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
+using ChatneyBackend.Infra;
 
 namespace ChatneyBackend.Domains.Roles;
 
-public class RoleSettings
+public class Role : IPgDatabaseItem<int>
 {
-    [BsonElement("base")]
-    public bool Base { get; set; }
-}
-
-public class Role : DatabaseItem
-{
-    [BsonElement("_id")]
-    [BsonId]
+    [Column("id")]
     [MaxLength(36)]
-    public string Id { get; set; }
+    public int Id { get; set; }
 
-    [BsonElement("name")]
+    [Column("name")]
     [MaxLength(255)]
     public string Name { get; set; }
 
-    [BsonElement("settings")]
-    public RoleSettings Settings { get; set; }
+    [Column("is_base")]
+    public bool IsBase { get; set; }
 
-    [BsonElement("permissions")]
-    public HashSet<string> Permissions { get; set; }
+    [Column("permissions")]
+    public string[] Permissions { get; set; } = [];
 
-    [BsonElement("createdAt")]
+    [Column("created_at")]
     public DateTime CreatedAt { get; set; }
 
-    [BsonElement("updatedAt")]
+    [Column("updated_at")]
     public DateTime UpdatedAt { get; set; }
 
-    public static Role FromDTO(RoleDTO role)
+    public static Role FromDTO(RoleDto role)
     {
         return new Role()
         {
-            Id = Guid.NewGuid().ToString(),
             Name = role.Name,
-            Permissions = role.Permissions,
+            Permissions = role.Permissions.ToArray(),
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
-            Settings = new RoleSettings()
-            {
-                Base = role.Settings.Base
-            }
+            IsBase = role.IsBase,
         };
     }
 }
 
-public class RoleDTO
+public class RoleDto
 {
-    [BsonElement("name")]
     [MaxLength(255)]
     public string Name { get; set; }
 
-    [BsonElement("settings")]
-    public RoleSettings Settings { get; set; }
+    public bool IsBase { get; set; }
 
-    [BsonElement("permissions")]
-    public HashSet<string> Permissions { get; set; }
+    public List<string> Permissions { get; set; }
 }

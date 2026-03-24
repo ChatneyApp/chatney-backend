@@ -10,27 +10,27 @@ public class RoleWorkspace
 {
     [BsonElement("roleId")]
     [MaxLength(36)]
-    public string RoleId { get; set; }
+    public int RoleId { get; set; }
 }
 
 public class RoleChannel
 {
     [BsonElement("roleId")]
     [MaxLength(36)]
-    public string RoleId { get; set; }
+    public int RoleId { get; set; }
 }
 
 public class RoleChannelType
 {
     [BsonElement("roleId")]
     [MaxLength(36)]
-    public string RoleId { get; set; }
+    public int RoleId { get; set; }
 }
 
 public class UserRole
 {
     [BsonElement("global")]
-    public string Global { get; set; }
+    public int Global { get; set; }
 
     [BsonElement("workspaces")]
     [NotMapped]
@@ -166,7 +166,7 @@ public class UserRegisterDTO : IDTO<User>
             {
                 Channel = new Dictionary<string, RoleChannel>(),
                 ChannelTypes = new Dictionary<string, RoleChannelType>(),
-                Global = string.Empty,
+                Global = 0,
                 Workspace = new  Dictionary<string, RoleWorkspace>(),
             },
             ChannelsSettings = new Dictionary<string, ChannelSettings>()
