@@ -1,28 +1,31 @@
 using System.ComponentModel.DataAnnotations;
 using ChatneyBackend.Infra;
+using RepoDb.Attributes;
 
 namespace ChatneyBackend.Domains.Roles;
 
 public class Role : IPgDatabaseItem<int>
 {
-    [Column("id")]
+    [Primary]
+    [Identity]
+    [Map("id")]
     [MaxLength(36)]
     public int Id { get; set; }
 
-    [Column("name")]
+    [Map("name")]
     [MaxLength(255)]
     public string Name { get; set; }
 
-    [Column("is_base")]
+    [Map("is_base")]
     public bool IsBase { get; set; }
 
-    [Column("permissions")]
+    [Map("permissions")]
     public string[] Permissions { get; set; } = [];
 
-    [Column("created_at")]
+    [Map("created_at")]
     public DateTime CreatedAt { get; set; }
 
-    [Column("updated_at")]
+    [Map("updated_at")]
     public DateTime UpdatedAt { get; set; }
 
     public static Role FromDTO(RoleDto role)

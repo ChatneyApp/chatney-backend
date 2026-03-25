@@ -21,7 +21,7 @@ using Amazon.Runtime;
 using Amazon.S3;
 using ChatneyBackend.Infra.Migrations;
 using ChatneyBackend.Infra;
-using Dapper;
+using RepoDb;
 using FluentMigrator.Runner;
 using Npgsql;
 
@@ -41,8 +41,7 @@ if (connectionString == null || postgresConnectionString == null || dbName == nu
 var url = new MongoUrl(connectionString);
 var settings = MongoClientSettings.FromUrl(url);
 var mongoClient = new MongoClient(settings);
-// snake_case to PascalCase automatic conversion
-DefaultTypeMap.MatchNamesWithUnderscores = true;
+GlobalConfiguration.Setup().UsePostgreSql();
 var db = mongoClient.GetDatabase(dbName);
 var pgDataSource = NpgsqlDataSource.Create(postgresConnectionString);
 

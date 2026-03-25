@@ -22,7 +22,7 @@ public class InstallWizardMutations
         {
             migrationRunner.MigrateUp();
 
-            Role? baseRole = await roleRepo.GetOne("name = @name", new {name = Roles.DomainSettings.BaseRoleName});
+            Role? baseRole = await roleRepo.GetOne(r => r.Name == Roles.DomainSettings.BaseRoleName);
 
             if (baseRole != null)
             {
