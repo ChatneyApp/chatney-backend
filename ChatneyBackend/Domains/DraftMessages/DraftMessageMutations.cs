@@ -2,6 +2,7 @@ using System.Security.Claims;
 using ChatneyBackend.Domains.Channels;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Domains.Users;
+using ChatneyBackend.Infra;
 using ChatneyInfra = ChatneyBackend.Infra;
 using ChatneyBackend.Infra.Middleware;
 using HotChocolate.Authorization;
@@ -22,13 +23,13 @@ public class DraftMessageMutations
         RoleManager roleManager,
         Repo<Channel> channelsRepo,
         Repo<DraftMessage> messagesRepo,
-        Repo<User> usersRepo,
+        PgRepo<User, Guid> usersRepo,
         ClaimsPrincipal principal,
         MessageDTO messageDto
     )
     {
         DraftMessage message = DraftMessage.FromDTO(messageDto, principal.GetUserId());
-        var user = await usersRepo.GetById(principal.GetUserId());
+        var user = await usersRepo.GetById(principal.GetUserGuid());
 
         var channel = await channelsRepo.GetById(message.ChannelId);
 

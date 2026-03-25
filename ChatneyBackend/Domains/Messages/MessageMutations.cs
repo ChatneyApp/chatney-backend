@@ -3,6 +3,7 @@ using ChatneyBackend.Domains.Attachments;
 using ChatneyBackend.Domains.Channels;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Domains.Users;
+using ChatneyBackend.Infra;
 using ChatneyInfra = ChatneyBackend.Infra;
 using ChatneyBackend.Infra.Middleware;
 using ChatneyBackend.Utils;
@@ -24,7 +25,7 @@ public class MessageMutations
         RoleManager roleManager,
         Repo<Channel> channelsRepo,
         Repo<Message> messagesRepo,
-        Repo<User> usersRepo,
+        PgRepo<User, Guid> usersRepo,
         Repo<UrlPreview> urlPreviewRepo,
         Repo<Attachment> attachmentRepo,
         ClaimsPrincipal principal,
@@ -33,7 +34,7 @@ public class MessageMutations
     )
     {
         Message message = Message.FromDTO(messageDto, principal.GetUserId());
-        var user = await usersRepo.GetById(principal.GetUserId());
+        var user = await usersRepo.GetById(principal.GetUserGuid());
 
         var channel = await channelsRepo.GetById(message.ChannelId);
 

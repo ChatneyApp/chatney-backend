@@ -1,4 +1,4 @@
-﻿using ChatneyBackend.Utils;
+using ChatneyBackend.Utils;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Infra;
 
@@ -6,7 +6,7 @@ namespace ChatneyBackend.Domains.Users;
 
 public class UserMutations
 {
-    public async Task<User> CreateUser(AppConfig appConfig, Repo<User> repo, CreateUserDTO userDto)
+    public async Task<User> CreateUser(AppConfig appConfig, PgRepo<User, Guid> repo, CreateUserDTO userDto)
     {
         var user = userDto.ToModel();
         user.Password = Helpers.GetMd5Hash(user.Password + appConfig.UserPasswordSalt);
@@ -15,26 +15,26 @@ public class UserMutations
         return user;
     }
 
-    public async Task<User> Register(AppConfig appConfig, Repo<User> repo, PgRepo<Role, int> rolesRepo, UserRegisterDTO userDto)
+    public async Task<User> Register(AppConfig appConfig, PgRepo<User, Guid> repo, PgRepo<Role, int> rolesRepo, UserRegisterDTO userDto)
     {
         var user = userDto.ToModel();
         user.Password = Helpers.GetMd5Hash(user.Password + appConfig.UserPasswordSalt);
 
-        // find a base role
         var userRole = await rolesRepo.GetOne(r => r.Name == Roles.DomainSettings.BaseRoleName);
         if (userRole == null)
         {
             throw new Exception("User role not found");
         }
-        user.Roles.Global = userRole.Id;
-
-        await repo.InsertOne(user);
+        user.GlobalRoleId = userRole.Id;
+    
+        var id = await repo.InsertOne(user);
+        user.Id = id;
         return user;
     }
 
-    public Task<bool> DeleteUser(Repo<User> repo, string id) => repo.DeleteById(id);
+    public Task<bool> DeleteUser(PgRepo<User, Guid> repo, Guid id) => repo.DeleteById(id);
 
-    public async Task<UserLoginResponse?> Login(AppConfig appConfig, Repo<User> repo, string login, string password)
+    public async Task<UserLoginResponse?> Login(AppConfig appConfig, PgRepo<User, Guid> repo, string login, string password)
     {
         var passwordHash = Helpers.GetMd5Hash(password + appConfig.UserPasswordSalt);
         var user = await repo.GetOne(u => (u.Email == login || u.Name == login) && u.Password == passwordHash);
@@ -46,7 +46,7 @@ public class UserMutations
         return new UserLoginResponse
         {
             Id = user.Id,
-            Token = JwtHelpers.GetJwtToken(user.Email, user.Id, appConfig.JwtSecret)
+            Token = JwtHelpers.GetJwtToken(user.Email, user.Id.ToString(), appConfig.JwtSecret)
         };
     }
 }

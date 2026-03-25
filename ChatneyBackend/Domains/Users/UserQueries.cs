@@ -1,5 +1,5 @@
-﻿using HotChocolate.Authorization;
-using MongoDB.Driver;
+using HotChocolate.Authorization;
+using ChatneyBackend.Infra;
 
 namespace ChatneyBackend.Domains.Users;
 
@@ -14,32 +14,18 @@ public record UserFilter
 public class UserQueries
 {
     [Authorize]
-    public async Task<User?> GetUserById(Repo<User> repo, string id) => await repo.GetById(id);
+    public async Task<User?> GetUserById(PgRepo<User, Guid> repo, Guid id) => await repo.GetById(id);
 
     [Authorize]
-    public async Task<User?> GetUserByName(Repo<User> repo, string name) => await repo.GetOne(u => u.Name == name);
+    public async Task<User?> GetUserByName(PgRepo<User, Guid> repo, string name) => await repo.GetOne(u => u.Name == name);
 
     [Authorize]
-    public async Task<List<User>> GetList(Repo<User> repo, UserFilter filter)
+    public async Task<List<User>> GetList(PgRepo<User, Guid> repo, UserFilter filter)
     {
-        var f = Builders<User>.Filter.Empty;
-        if (filter.Active != null)
-        {
-            f &= Builders<User>.Filter.Eq(u => u.Active, filter.Active);
-        }
-        if (filter.Banned != null)
-        {
-            f &= Builders<User>.Filter.Eq(u => u.Banned, filter.Banned);
-        }
-        if (filter.Email != null)
-        {
-            f &= Builders<User>.Filter.Eq(u => u.Email, filter.Email);
-        }
-        if (filter.Name != null)
-        {
-            f &= Builders<User>.Filter.Eq(u => u.Name, filter.Name);
-        }
-
-        return await repo.GetList(f);
+        return await repo.GetList(u =>
+            (filter.Active == null || u.Active == filter.Active) &&
+            (filter.Banned == null || u.Banned == filter.Banned) &&
+            (filter.Email == null || u.Email == filter.Email) &&
+            (filter.Name == null || u.Name == filter.Name));
     }
 }

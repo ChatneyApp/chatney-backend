@@ -19,22 +19,19 @@ public class RoleManager
         RoleScope roleScope
     )
     {
-        if (roleScope.ChannelId != null && user.Roles.Channel.ContainsKey(roleScope.ChannelId))
+        if (roleScope.ChannelId != null && (user.Roles.Channel?.ContainsKey(roleScope.ChannelId) ?? false))
         {
-            var channelRole = user.Roles.Channel[roleScope.ChannelId];
-            return await _roles.GetById(channelRole.RoleId);
+            return await _roles.GetById(user.Roles.Channel[roleScope.ChannelId]);
         }
 
-        if (roleScope.ChannelTypeId != null && user.Roles.ChannelTypes.ContainsKey(roleScope.ChannelTypeId))
+        if (roleScope.ChannelTypeId != null && (user.Roles.ChannelTypes?.ContainsKey(roleScope.ChannelTypeId) ?? false))
         {
-            var channelTypeRole = user.Roles.ChannelTypes[roleScope.ChannelTypeId];
-            return await _roles.GetById(channelTypeRole.RoleId);
+            return await _roles.GetById(user.Roles.ChannelTypes[roleScope.ChannelTypeId]);
         }
 
-        if (roleScope.WorkspaceId != null && user.Roles.Workspace.ContainsKey(roleScope.WorkspaceId))
+        if (roleScope.WorkspaceId != null && (user.Roles.Workspace?.ContainsKey(roleScope.WorkspaceId) ?? false))
         {
-            var workspaceRole = user.Roles.Workspace[roleScope.WorkspaceId];
-            return await _roles.GetById(workspaceRole.RoleId);
+            return await _roles.GetById(user.Roles.Workspace[roleScope.WorkspaceId]);
         }
 
         return await _roles.GetById(user.Roles.Global);

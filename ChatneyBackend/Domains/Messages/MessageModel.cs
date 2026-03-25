@@ -74,7 +74,7 @@ public class Message : DatabaseItem, IHasUserId
             ChannelId = message.ChannelId,
             UserId = userId,
             Content = message.Content,
-            AttachmentIds = message.AttachmentIds,
+            AttachmentIds = message.AttachmentIds!,
             Status = "sent", // TODO: Define status constants
             UrlPreviewIds = new List<string>(),
             CreatedAt = DateTime.UtcNow,
@@ -134,7 +134,7 @@ public class MessageWithUser : Message
         {
             Id = message.Id,
             ChannelId = message.ChannelId,
-            UserId = user.Id,
+            UserId = user.Id.ToString(),
             Content = message.Content,
             AttachmentIds = message.AttachmentIds,
             Attachments = attachments,
@@ -149,7 +149,7 @@ public class MessageWithUser : Message
             MyReactions = [],
             User = new MessageUser()
             {
-                Id = user.Id,
+                Id = user.Id.ToString(),
                 Name = user.Name,
                 AvatarUrl = user.AvatarUrl,
             }
