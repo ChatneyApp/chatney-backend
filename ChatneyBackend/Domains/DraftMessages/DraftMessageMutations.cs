@@ -2,6 +2,7 @@ using System.Security.Claims;
 using ChatneyBackend.Domains.Channels;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Domains.Users;
+using ChatneyBackend.Infra;
 using ChatneyInfra = ChatneyBackend.Infra;
 using ChatneyBackend.Infra.Middleware;
 using HotChocolate.Authorization;
@@ -22,13 +23,14 @@ public class DraftMessageMutations
         RoleManager roleManager,
         Repo<Channel> channelsRepo,
         Repo<DraftMessage> messagesRepo,
-        Repo<User> usersRepo,
+        PgRepo<User, Guid> usersRepo,
+        PgRepo<UserRole, UserRoleKey> userRolesRepo,
         ClaimsPrincipal principal,
         MessageDTO messageDto
     )
     {
-        DraftMessage message = DraftMessage.FromDTO(messageDto, principal.GetUserId());
-        var user = await usersRepo.GetById(principal.GetUserId());
+        DraftMessage message = DraftMessage.FromDTO(messageDto, principal.GetUserGuid());
+        var user = await usersRepo.GetById(principal.GetUserGuid());
 
         var channel = await channelsRepo.GetById(message.ChannelId);
 
@@ -37,7 +39,8 @@ public class DraftMessageMutations
             throw new InvalidOperationException("Channel or user is invalid");
         }
 
-        var currentRole = await roleManager.GetRelevantRole(user, new RoleScope(
+        var userRoles = await userRolesRepo.GetList(r => r.UserId == user.Id);
+        var currentRole = await roleManager.GetRelevantRole(user, userRoles, new RoleScope(
             WorkspaceId: channel.WorkspaceId,
             ChannelId: channel.Id,
             ChannelTypeId: channel.ChannelTypeId

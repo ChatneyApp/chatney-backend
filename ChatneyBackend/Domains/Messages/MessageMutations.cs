@@ -3,6 +3,7 @@ using ChatneyBackend.Domains.Attachments;
 using ChatneyBackend.Domains.Channels;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Domains.Users;
+using ChatneyBackend.Infra;
 using ChatneyInfra = ChatneyBackend.Infra;
 using ChatneyBackend.Infra.Middleware;
 using ChatneyBackend.Utils;
@@ -24,7 +25,8 @@ public class MessageMutations
         RoleManager roleManager,
         Repo<Channel> channelsRepo,
         Repo<Message> messagesRepo,
-        Repo<User> usersRepo,
+        PgRepo<User, Guid> usersRepo,
+        PgRepo<UserRole, UserRoleKey> userRolesRepo,
         Repo<UrlPreview> urlPreviewRepo,
         Repo<Attachment> attachmentRepo,
         ClaimsPrincipal principal,
@@ -32,8 +34,8 @@ public class MessageMutations
         WebSocketConnector webSocketConnector
     )
     {
-        Message message = Message.FromDTO(messageDto, principal.GetUserId());
-        var user = await usersRepo.GetById(principal.GetUserId());
+        Message message = Message.FromDTO(messageDto, principal.GetUserGuid());
+        var user = await usersRepo.GetById(principal.GetUserGuid());
 
         var channel = await channelsRepo.GetById(message.ChannelId);
 
@@ -42,7 +44,8 @@ public class MessageMutations
             throw new InvalidOperationException("Channel or user is invalid");
         }
 
-        var currentRole = await roleManager.GetRelevantRole(user, new RoleScope(
+        var userRoles = await userRolesRepo.GetList(r => r.UserId == user.Id);
+        var currentRole = await roleManager.GetRelevantRole(user, userRoles, new RoleScope(
             WorkspaceId: channel.WorkspaceId,
             ChannelId: channel.Id,
             ChannelTypeId: channel.ChannelTypeId

@@ -16,27 +16,37 @@ public class RoleManager
 
     public async Task<Role?> GetRelevantRole(
         User user,
+        List<UserRole> userRoles,
         RoleScope roleScope
     )
     {
-        if (roleScope.ChannelId != null && user.Roles.Channel.ContainsKey(roleScope.ChannelId))
+        if (roleScope.ChannelId != null)
         {
-            var channelRole = user.Roles.Channel[roleScope.ChannelId];
-            return await _roles.GetById(channelRole.RoleId);
+            var role = userRoles.Find(role => role.Type == "channel" && role.ItemId == roleScope.ChannelId);
+            if (role != null)
+            {
+                return await _roles.GetById(role.RoleId);
+            }
         }
 
-        if (roleScope.ChannelTypeId != null && user.Roles.ChannelTypes.ContainsKey(roleScope.ChannelTypeId))
+        if (roleScope.ChannelTypeId != null)
         {
-            var channelTypeRole = user.Roles.ChannelTypes[roleScope.ChannelTypeId];
-            return await _roles.GetById(channelTypeRole.RoleId);
+            var role = userRoles.Find(role => role.Type == "channel_type" && role.ItemId == roleScope.ChannelTypeId);
+            if (role != null)
+            {
+                return await _roles.GetById(role.RoleId);
+            }
         }
 
-        if (roleScope.WorkspaceId != null && user.Roles.Workspace.ContainsKey(roleScope.WorkspaceId))
+        if (roleScope.WorkspaceId != null)
         {
-            var workspaceRole = user.Roles.Workspace[roleScope.WorkspaceId];
-            return await _roles.GetById(workspaceRole.RoleId);
+            var role = userRoles.Find(role => role.Type == "workspace" && role.ItemId == roleScope.WorkspaceId);
+            if (role != null)
+            {
+                return await _roles.GetById(role.RoleId);
+            }
         }
 
-        return await _roles.GetById(user.Roles.Global);
+        return await _roles.GetById(user.RoleId);
     }
 }

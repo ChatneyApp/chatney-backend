@@ -12,7 +12,7 @@ public class MessageWithUserJsonTest
         {
             Id = "message-id",
             ChannelId = "channel-id",
-            UserId = "user-id",
+            UserId = Guid.NewGuid(),
             Content = "content",
             AttachmentIds = ["attachment-id"],
             UrlPreviewIds = ["preview-id"],
@@ -24,7 +24,7 @@ public class MessageWithUserJsonTest
             ChildrenCount = 0,
             User = new MessageUser
             {
-                Id = "user-id",
+                Id = Guid.NewGuid(),
                 Name = "User",
                 AvatarUrl = null
             },

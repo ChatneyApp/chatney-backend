@@ -1,10 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 using ChatneyBackend.Infra;
 using RepoDb.Attributes;
+using System.Linq.Expressions;
 
 namespace ChatneyBackend.Domains.Roles;
 
-public class Role : IPgDatabaseItem<int>
+public class Role : IPgKey<Role, int>, IPgTimestamped
 {
     [Primary]
     [Identity]
@@ -39,6 +40,8 @@ public class Role : IPgDatabaseItem<int>
             IsBase = role.IsBase,
         };
     }
+
+    public static Expression<Func<Role, bool>> MatchByKey(int key) => role => role.Id == key;
 }
 
 public class RoleDto

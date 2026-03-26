@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using Amazon.S3;
 using Amazon.S3.Model;
 using ChatneyBackend.Domains.Users;
+using ChatneyBackend.Infra;
 using ChatneyBackend.Infra.Middleware;
 using HotChocolate.Authorization;
 
@@ -18,17 +19,17 @@ public class AttachmentMutations
 
     [Authorize]
     public async Task<AttachmentUploadResponse> Upload(
-    Repo<User> usersRepo,
-    Repo<Attachment> attachmentsRepo,
-    ClaimsPrincipal principal,
-    IAmazonS3 s3Client,
-    IFile file
+        PgRepo<User, Guid> usersRepo,
+        Repo<Attachment> attachmentsRepo,
+        ClaimsPrincipal principal,
+        IAmazonS3 s3Client,
+        IFile file
     )
     {
         if (file == null || file.Length == 0)
             throw new Exception("File is empty.");
 
-        var userId = principal.GetUserId();
+        var userId = principal.GetUserGuid();
         var id = Guid.NewGuid().ToString();
         var bucketName = "chatney";
         var s3Folder = "attachments";

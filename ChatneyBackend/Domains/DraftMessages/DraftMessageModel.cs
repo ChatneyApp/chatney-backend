@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using ChatneyBackend.Domains.Users;
+using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace ChatneyBackend.Domains.DraftMessages;
@@ -16,8 +17,9 @@ public class DraftMessage : DatabaseItem, IHasUserId
     public required string ChannelId { get; set; }
 
     [BsonElement("userId")]
+    [BsonRepresentation(BsonType.String)]
     [MaxLength(36)]
-    public required string UserId { get; set; }
+    public required Guid UserId { get; set; }
 
     [BsonElement("content")]
     [MaxLength(4096)]
@@ -36,7 +38,7 @@ public class DraftMessage : DatabaseItem, IHasUserId
     [MaxLength(36)]
     public string? ParentId { get; set; }
 
-    public static DraftMessage FromDTO(MessageDTO message, string userId)
+    public static DraftMessage FromDTO(MessageDTO message, Guid userId)
     {
         return new DraftMessage()
         {

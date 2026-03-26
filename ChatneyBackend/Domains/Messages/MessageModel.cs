@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using ChatneyBackend.Domains.Attachments;
 using ChatneyBackend.Domains.Users;
+using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace ChatneyBackend.Domains.Messages;
@@ -28,8 +29,9 @@ public class Message : DatabaseItem, IHasUserId
     public required string ChannelId { get; set; }
 
     [BsonElement("userId")]
+    [BsonRepresentation(BsonType.String)]
     [MaxLength(36)]
-    public required string UserId { get; set; }
+    public required Guid UserId { get; set; }
 
     [BsonElement("content")]
     [MaxLength(4096)]
@@ -66,7 +68,7 @@ public class Message : DatabaseItem, IHasUserId
     [BsonElement("childrenCount")]
     public required int ChildrenCount { get; set; }
 
-    public static Message FromDTO(MessageDTO message, string userId)
+    public static Message FromDTO(MessageDTO message, Guid userId)
     {
         return new Message()
         {
@@ -108,7 +110,8 @@ public class MessageDTO
 public class MessageUser
 {
     [BsonElement("_id")]
-    public required string Id { get; set; }
+    [BsonRepresentation(BsonType.String)]
+    public required Guid Id { get; set; }
 
     [BsonElement("name")]
     public required string Name { get; set; }

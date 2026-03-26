@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using ChatneyBackend.Domains.Users;
+using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace ChatneyBackend.Domains.Attachments;
@@ -12,8 +13,9 @@ public class Attachment : DatabaseItem, IHasUserId
     public required string Id { get; set; }
 
     [BsonElement("userId")]
+    [BsonRepresentation(BsonType.String)]
     [MaxLength(36)]
-    public required string UserId { get; set; }
+    public required Guid UserId { get; set; }
 
     /// <summary>
     /// Path within the bucket: /media/{userId}/{date::YYYY-MM-DD}/{fileId}.{extension}

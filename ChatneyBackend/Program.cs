@@ -14,7 +14,6 @@ using ChannelDomainSettings = ChatneyBackend.Domains.Channels.DomainSettings;
 using ConfigsDomainSettings = ChatneyBackend.Domains.Configs.DomainSettings;
 using MessagesDomainSettings = ChatneyBackend.Domains.Messages.DomainSettings;
 using AttachmentsDomainSettings = ChatneyBackend.Domains.Attachments.DomainSettings;
-using UserDomainSettings = ChatneyBackend.Domains.Users.DomainSettings;
 using WorkspacesDomainSettings = ChatneyBackend.Domains.Workspaces.DomainSettings;
 using Microsoft.AspNetCore.WebSockets;
 using Amazon.Runtime;
@@ -43,7 +42,9 @@ var settings = MongoClientSettings.FromUrl(url);
 var mongoClient = new MongoClient(settings);
 GlobalConfiguration.Setup().UsePostgreSql();
 var db = mongoClient.GetDatabase(dbName);
-var pgDataSource = NpgsqlDataSource.Create(postgresConnectionString);
+var dataSourceBuilder = new NpgsqlDataSourceBuilder(postgresConnectionString);
+dataSourceBuilder.EnableParameterLogging();
+var pgDataSource = dataSourceBuilder.Build();
 
 await using (var pgConnection = await pgDataSource.OpenConnectionAsync())
 {
@@ -67,7 +68,8 @@ builder.Services.AddSingleton(_ => db);
 builder.Services.AddSingleton(pgDataSource);
 builder.Services.AddSingleton(_ => new AppConfig { UserPasswordSalt = userPasswordSalt, JwtSecret = jwtSecret });
 builder.Services.AddSingleton(_ => new RoleManager(rolesRepo));
-builder.Services.AddSingleton(_ => new Repo<User>(db, UserDomainSettings.UserCollectionName));
+builder.Services.AddSingleton(_ => new PgRepo<User, Guid>(pgDataSource, "users"));
+builder.Services.AddSingleton(_ => new PgRepo<UserRole, UserRoleKey>(pgDataSource, "user_roles"));
 builder.Services.AddSingleton(_ => new Repo<MessageReaction>(db, MessagesDomainSettings.ReactionCollectionName));
 builder.Services.AddSingleton(_ => new Repo<Channel>(db, ChannelDomainSettings.ChannelCollectionName));
 builder.Services.AddSingleton(_ => new Repo<ChannelType>(db, ChannelDomainSettings.ChannelTypeCollectionName));

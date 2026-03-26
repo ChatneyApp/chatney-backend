@@ -5,14 +5,18 @@ using RepoDb;
 
 namespace ChatneyBackend.Infra;
 
-public interface IPgDatabaseItem<T>
+public interface IPgTimestamped
 {
-    public T Id { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }
 
-public class PgRepo<T, TI> where T : class, IPgDatabaseItem<TI>
+public interface IPgKey<T, in TKey> where T : class
+{
+    static abstract Expression<Func<T, bool>> MatchByKey(TKey key);
+}
+
+public class PgRepo<T, TKey> where T : class, IPgKey<T, TKey>
 {
     private readonly NpgsqlDataSource _dataSource;
 
@@ -30,16 +34,15 @@ public class PgRepo<T, TI> where T : class, IPgDatabaseItem<TI>
 
     private async Task<NpgsqlConnection> OpenAsync() => await _dataSource.OpenConnectionAsync();
 
-    public async Task<T?> GetById(TI id)
+    public async Task<T?> GetById(TKey key)
     {
-        await using var conn = await OpenAsync();
-        return (await conn.QueryAsync<T>(id)).FirstOrDefault();
+        return await GetOne(T.MatchByKey(key));
     }
 
     public async Task<T?> GetOne(Expression<Func<T, bool>> where)
     {
         await using var conn = await OpenAsync();
-        return (await conn.QueryAsync<T>(where, top: 1)).FirstOrDefault();
+        return (await conn.QueryAsync(where, top: 1)).FirstOrDefault();
     }
 
     public async Task<List<T>> GetList()
@@ -51,53 +54,60 @@ public class PgRepo<T, TI> where T : class, IPgDatabaseItem<TI>
     public async Task<List<T>> GetList(Expression<Func<T, bool>> where)
     {
         await using var conn = await OpenAsync();
-        return (await conn.QueryAsync<T>(where)).ToList();
+        return (await conn.QueryAsync(where)).ToList();
     }
 
-    public async Task<TI> InsertOne(T record)
+    public async Task<TKey> InsertOne(T record)
     {
         await using var conn = await OpenAsync();
-        return await conn.InsertAsync<T, TI>(record);
+        return await conn.InsertAsync<T, TKey>(record);
     }
 
     public async Task InsertBulk(List<T> items)
     {
         if (items.Count == 0) return;
         await using var conn = await OpenAsync();
-        await conn.InsertAllAsync<T>(items);
+        await conn.InsertAllAsync(items);
     }
 
-    public async Task<bool> DeleteById(TI id)
+    public async Task<bool> DeleteById(TKey key)
     {
-        await using var conn = await OpenAsync();
-        return await conn.DeleteAsync<T>(id) > 0;
+        return await Delete(T.MatchByKey(key)) > 0;
     }
 
     public async Task<long> Delete(Expression<Func<T, bool>> where)
     {
         await using var conn = await OpenAsync();
-        return await conn.DeleteAsync<T>(where);
+        return await conn.DeleteAsync(where);
     }
 
     public async Task<bool> UpdateOne(T record)
     {
-        record.UpdatedAt = DateTime.UtcNow;
+        TouchUpdatedAt(record);
         await using var conn = await OpenAsync();
-        return await conn.UpdateAsync<T>(record) > 0;
+        return await conn.UpdateAsync(record) > 0;
     }
 
     public async Task UpdateBulk(List<T> items)
     {
         if (items.Count == 0) return;
-        foreach (var item in items) item.UpdatedAt = DateTime.UtcNow;
+        foreach (var item in items) TouchUpdatedAt(item);
         await using var conn = await OpenAsync();
-        await conn.UpdateAllAsync<T>(items);
+        await conn.UpdateAllAsync(items);
     }
 
-    public async Task<TI> Upsert(T record)
+    public async Task Upsert(T record)
     {
-        record.UpdatedAt = DateTime.UtcNow;
+        TouchUpdatedAt(record);
         await using var conn = await OpenAsync();
-        return await conn.MergeAsync<T, TI>(record);
+        await conn.MergeAsync(record);
+    }
+
+    private static void TouchUpdatedAt(T record)
+    {
+        if (record is IPgTimestamped timestamped)
+        {
+            timestamped.UpdatedAt = DateTime.UtcNow;
+        }
     }
 }

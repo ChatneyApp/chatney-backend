@@ -8,8 +8,8 @@ using Npgsql;
 
 namespace ChatneyBackend.Infra.Migrations;
 
-[Migration(202508180001)]
-public class _202508180001_CreateRolesTable : Migration
+[Migration(202603180001)]
+public class _202603180001_CreateRolesTable : Migration
 {
     public override void Up()
     {
@@ -20,7 +20,7 @@ public class _202508180001_CreateRolesTable : Migration
                 Connection = (NpgsqlConnection)connection
             };
             command.CommandText = """
-                CREATE TABLE IF NOT EXISTS roles (
+                CREATE TABLE roles (
                     id int GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
                     name varchar(255) NOT NULL,
                     is_base bool NOT NULL DEFAULT false,
@@ -37,8 +37,6 @@ public class _202508180001_CreateRolesTable : Migration
                 END;
                 $$ LANGUAGE plpgsql;
                    
-                DROP TRIGGER IF EXISTS trg_roles_set_updated_at ON roles;
-            
                 CREATE TRIGGER trg_roles_set_updated_at
                 BEFORE UPDATE ON roles
                 FOR EACH ROW

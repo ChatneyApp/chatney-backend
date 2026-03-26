@@ -100,6 +100,7 @@ public class WebSocketConnector
 
                 if (result.MessageType == WebSocketMessageType.Text)
                 {
+                    // TODO: review if this is ever used?
                     var jsonMessage = Encoding.UTF8.GetString(buffer, 0, result.Count);
                     Console.WriteLine($"Received from {userId}: {jsonMessage}");
 
@@ -110,7 +111,7 @@ public class WebSocketConnector
                         throw new Exception("Invalid message");
                     }
 
-                    var messageModel = Message.FromDTO(receivedObject, "ServerGeneratedId");
+                    var messageModel = Message.FromDTO(receivedObject, Guid.Parse(userId));
 
                     var jsonResponse = JsonSerializer.Serialize(messageModel);
                     await SendMessageAsync(webSocket, jsonResponse);
