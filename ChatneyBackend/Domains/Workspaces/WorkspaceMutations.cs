@@ -1,28 +1,22 @@
-using MongoDB.Driver;
+using ChatneyBackend.Infra;
 
 namespace ChatneyBackend.Domains.Workspaces;
 
 public class WorkspaceMutations
 {
-    public async Task<Workspace> AddWorkspace(Repo<Workspace> workspaceRepo, WorkspaceDTO workspaceDto)
+    public async Task<Workspace> AddWorkspace(PgRepo<Workspace, int> workspaceRepo, WorkspaceDTO workspaceDto)
     {
-        Workspace workspace = Workspace.FromDTO(workspaceDto);
-        await workspaceRepo.InsertOne(workspace);
+        var workspace = Workspace.FromDTO(workspaceDto);
+        workspace.Id = await workspaceRepo.InsertOne(workspace);
         return workspace;
     }
 
-    public async Task<Workspace?> UpdateWorkspace(IMongoDatabase mongoDatabase, Workspace workspace)
+    public async Task<Workspace?> UpdateWorkspace(PgRepo<Workspace, int> workspaceRepo, Workspace workspace)
     {
-        var collection = mongoDatabase.GetCollection<Workspace>(DomainSettings.WorkspaceCollectionName);
-        var filter = Builders<Workspace>.Filter.Eq("_id", workspace.Id);
-        var result = await collection.ReplaceOneAsync(filter, workspace);
-        return result.ModifiedCount > 0 ? workspace : null;
+        var updated = await workspaceRepo.UpdateOne(workspace);
+        return updated ? workspace : null;
     }
 
-    public async Task<bool> DeleteWorkspace(IMongoDatabase mongoDatabase, string id)
-    {
-        var collection = mongoDatabase.GetCollection<Workspace>(DomainSettings.WorkspaceCollectionName);
-        var result = await collection.DeleteOneAsync(c => c.Id == id);
-        return result.DeletedCount > 0;
-    }
+    public async Task<bool> DeleteWorkspace(PgRepo<Workspace, int> workspaceRepo, int id) =>
+        await workspaceRepo.DeleteById(id);
 }

@@ -12,6 +12,7 @@ using ChatneyBackend.Utils;
 using ChatneyBackend.Infra.Middleware;
 using ChannelDomainSettings = ChatneyBackend.Domains.Channels.DomainSettings;
 using ConfigsDomainSettings = ChatneyBackend.Domains.Configs.DomainSettings;
+using UsersDomainSettings = ChatneyBackend.Domains.Users.DomainSettings;
 using MessagesDomainSettings = ChatneyBackend.Domains.Messages.DomainSettings;
 using AttachmentsDomainSettings = ChatneyBackend.Domains.Attachments.DomainSettings;
 using WorkspacesDomainSettings = ChatneyBackend.Domains.Workspaces.DomainSettings;
@@ -68,8 +69,8 @@ builder.Services.AddSingleton(_ => db);
 builder.Services.AddSingleton(pgDataSource);
 builder.Services.AddSingleton(_ => new AppConfig { UserPasswordSalt = userPasswordSalt, JwtSecret = jwtSecret });
 builder.Services.AddSingleton(_ => new RoleManager(rolesRepo));
-builder.Services.AddSingleton(_ => new PgRepo<User, Guid>(pgDataSource, "users"));
-builder.Services.AddSingleton(_ => new PgRepo<UserRole, UserRoleKey>(pgDataSource, "user_roles"));
+builder.Services.AddSingleton(_ => new PgRepo<User, Guid>(pgDataSource, UsersDomainSettings.UserTableName));
+builder.Services.AddSingleton(_ => new PgRepo<UserRole, UserRoleKey>(pgDataSource, UsersDomainSettings.UserRoleTableName));
 builder.Services.AddSingleton(_ => new Repo<MessageReaction>(db, MessagesDomainSettings.ReactionCollectionName));
 builder.Services.AddSingleton(_ => new Repo<Channel>(db, ChannelDomainSettings.ChannelCollectionName));
 builder.Services.AddSingleton(_ => new Repo<ChannelType>(db, ChannelDomainSettings.ChannelTypeCollectionName));
@@ -79,7 +80,7 @@ builder.Services.AddSingleton(_ => new Repo<Message>(db, MessagesDomainSettings.
 builder.Services.AddSingleton(_ => new Repo<Attachment>(db, AttachmentsDomainSettings.AttachmentCollectionName));
 builder.Services.AddSingleton(_ => new Repo<UrlPreview>(db, MessagesDomainSettings.UrlPreviewsCollectionName));
 builder.Services.AddSingleton(_ => rolesRepo);
-builder.Services.AddSingleton(_ => new Repo<Workspace>(db, WorkspacesDomainSettings.WorkspaceCollectionName));
+builder.Services.AddSingleton(_ => new PgRepo<Workspace, int>(pgDataSource, WorkspacesDomainSettings.WorkspaceTableName));
 builder.Services
     .AddFluentMigratorCore()
     .ConfigureRunner(runner => runner

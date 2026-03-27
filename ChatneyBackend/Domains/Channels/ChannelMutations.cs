@@ -27,7 +27,7 @@ public class ChannelMutations
         return result.DeletedCount > 0;
     }
 
-    public async Task<Channel> AddChannel(IMongoDatabase mongoDatabase, ChannelDTO channelDto)
+    public async Task<Channel> AddChannel(IMongoDatabase mongoDatabase, ChannelDto channelDto)
     {
         var collection = mongoDatabase.GetCollection<Channel>(DomainSettings.ChannelCollectionName);
         Channel channel = channelDto.ToModel();

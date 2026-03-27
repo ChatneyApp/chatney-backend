@@ -22,7 +22,7 @@ public class ChannelQueries
             : null;
     }
 
-    public async Task<List<Channel>> GetWorkspaceChannelList(IMongoDatabase mongoDatabase, string workspaceId)
+    public async Task<List<Channel>> GetWorkspaceChannelList(IMongoDatabase mongoDatabase, int workspaceId)
     {
         var collection = mongoDatabase.GetCollection<Channel>(DomainSettings.ChannelCollectionName);
         var records = await collection.FindAsync(channel => channel.WorkspaceId == workspaceId);

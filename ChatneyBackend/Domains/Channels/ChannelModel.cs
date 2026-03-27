@@ -21,8 +21,7 @@ public class Channel : DatabaseItem
     public string ChannelTypeId { get; set; }
 
     [BsonElement("workspaceId")]
-    [MaxLength(36)]
-    public string WorkspaceId { get; set; }
+    public int WorkspaceId { get; set; }
 
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; }
@@ -31,19 +30,18 @@ public class Channel : DatabaseItem
     public DateTime UpdatedAt { get; set; }
 }
 
-public class ChannelDTO : IDTO<Channel>
+public class ChannelDto : IDTO<Channel>
 {
     [BsonElement("name")]
     [MaxLength(255)]
-    public string Name { get; set; }
+    public required string Name { get; set; }
 
     [BsonElement("channelTypeId")]
     [MaxLength(36)]
-    public string ChannelTypeId { get; set; }
+    public required string ChannelTypeId { get; set; }
 
     [BsonElement("workspaceId")]
-    [MaxLength(36)]
-    public string WorkspaceId { get; set; }
+    public int WorkspaceId { get; set; }
 
     public Channel ToModel()
     {

@@ -1,40 +1,42 @@
 using System.ComponentModel.DataAnnotations;
-using MongoDB.Bson.Serialization.Attributes;
+using System.Linq.Expressions;
+using ChatneyBackend.Infra;
+using RepoDb.Attributes;
 
 namespace ChatneyBackend.Domains.Workspaces;
 
-public class Workspace : DatabaseItem
+public class Workspace : IPgKey<Workspace, int>, IPgTimestamped
 {
-    [BsonElement("_id")]
-    [BsonId]
-    [MaxLength(36)]
-    public string Id { get; set; }
+    [Primary]
+    [Identity]
+    [Map("id")]
+    public int Id { get; set; }
 
-    [BsonElement("name")]
+    [Map("name")]
     [MaxLength(255)]
-    public string Name { get; set; }
+    public required string Name { get; set; }
 
-    [BsonElement("createdAt")]
+    [Map("created_at")]
     public DateTime CreatedAt { get; set; }
 
-    [BsonElement("updatedAt")]
+    [Map("updated_at")]
     public DateTime UpdatedAt { get; set; }
 
     public static Workspace FromDTO(WorkspaceDTO workspace)
     {
         return new Workspace()
         {
-            Id = Guid.NewGuid().ToString(),
             Name = workspace.Name,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
         };
     }
+
+    public static Expression<Func<Workspace, bool>> MatchByKey(int key) => workspace => workspace.Id == key;
 }
 
 public class WorkspaceDTO
 {
-    [BsonElement("name")]
     [MaxLength(255)]
-    public string Name { get; set; }
+    public required string Name { get; set; }
 }

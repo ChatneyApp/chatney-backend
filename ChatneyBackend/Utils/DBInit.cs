@@ -11,7 +11,7 @@ public static class DbInit
     {
         var db = mongoClient.GetDatabase(dbName);
         // == Users collection initialization ==
-        var usersCollection = db.GetCollection<User>(UsersDomainSettings.UserCollectionName);
+        var usersCollection = db.GetCollection<User>(UsersDomainSettings.UserTableName);
         // Create unique index on email field
         var emailIndex = Builders<User>.IndexKeys.Ascending(u => u.Email);
         var emailIndexOptions = new CreateIndexOptions { Unique = true };

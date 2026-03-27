@@ -67,4 +67,14 @@ public class InstallWizardMutations
             status = "success"
         };
     }
+
+    public async Task<InstallSystemResult> UnInstallSystem(IMigrationRunner migrationRunner)
+    {
+        migrationRunner.MigrateDown(0);
+
+        return new InstallSystemResult()
+        {
+            status = "success"
+        };
+    }
 }

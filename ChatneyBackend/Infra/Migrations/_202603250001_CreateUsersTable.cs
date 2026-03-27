@@ -18,7 +18,7 @@ public class _202603250001_CreateUsersTable : Migration
                 email varchar(255) NOT NULL,
                 avatar_url text NULL,
                 role_id int NOT NULL,
-                workspaces text[] NOT NULL DEFAULT '{}',
+                workspace_ids int[] NOT NULL DEFAULT '{}',
                 password text NOT NULL,
                 created_at timestamptz NOT NULL DEFAULT NOW(),
                 updated_at timestamptz NOT NULL DEFAULT NOW()

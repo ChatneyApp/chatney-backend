@@ -73,8 +73,8 @@ public class User : IPgKey<User, Guid>, IPgTimestamped, IType
     // [GraphQLIgnore]
     // public Dictionary<string, ChannelSettings>? ChannelsSettings { get; set; }
 
-    [Map("workspaces")]
-    public required string[] Workspaces { get; set; }
+    [Map("workspace_ids")]
+    public required int[] WorkspaceIds { get; set; }
 
     [Map("password")]
     [GraphQLIgnore]
@@ -117,7 +117,7 @@ public class UserRegisterDto : IDTO<User>
             Muted = false,
             Banned = false,
             Verified = false,
-            Workspaces = [],
+            WorkspaceIds = [],
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
             RoleId = 0,
@@ -147,7 +147,7 @@ public class CreateUserDto : IDTO<User>
 
     public Dictionary<string, ChannelSettings>? ChannelsSettings { get; set; }
 
-    public required string[] Workspaces { get; set; }
+    public required int[] WorkspaceIds { get; set; }
 
     public required string Password { get; set; }
 
@@ -159,7 +159,7 @@ public class CreateUserDto : IDTO<User>
             Name = Name,
             Email = Email,
             Password = Password,
-            Workspaces = Workspaces,
+            WorkspaceIds = WorkspaceIds,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
             RoleId = RoleId,

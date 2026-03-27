@@ -10,12 +10,11 @@ public class Role : IPgKey<Role, int>, IPgTimestamped
     [Primary]
     [Identity]
     [Map("id")]
-    [MaxLength(36)]
     public int Id { get; set; }
 
     [Map("name")]
     [MaxLength(255)]
-    public string Name { get; set; }
+    public required string Name { get; set; }
 
     [Map("is_base")]
     public bool IsBase { get; set; }
