@@ -41,15 +41,6 @@ public class _202603180001_CreateRolesTable : Migration
                 BEFORE UPDATE ON roles
                 FOR EACH ROW
                 EXECUTE FUNCTION set_updated_at();
-
-                INSERT INTO roles (name, is_base, permissions)
-                SELECT @name, TRUE, @permissions
-                WHERE NOT EXISTS (
-                    SELECT 1
-                    FROM roles
-                    WHERE name = @name
-                      AND is_base = TRUE
-                );
             """;
             command.Parameters.AddRange(new NpgsqlParameter[]
             {

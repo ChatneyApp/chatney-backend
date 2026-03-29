@@ -1,39 +1,38 @@
-﻿using System.ComponentModel.DataAnnotations;
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
+using System.ComponentModel.DataAnnotations;
+using System.Linq.Expressions;
+using ChatneyBackend.Infra;
+using RepoDb.Attributes;
 
 namespace ChatneyBackend.Domains.Channels;
 
-public class ChannelType : DatabaseItem
+public class ChannelType : IPgKey<ChannelType, int>, IPgTimestamped
 {
-    [BsonElement("_id")]
-    [BsonId]
-    [MaxLength(36)]
-    public string Id { get; set; }
+    [Primary]
+    [Identity]
+    [Map("id")]
+    public int Id { get; set; }
 
-    [BsonElement("name")]
+    [Map("name")]
     [MaxLength(255)]
-    public string Name { get; set; }
+    public required string Name { get; set; }
 
-    [BsonElement("key")]
+    [Map("key")]
     [MaxLength(255)]
-    public string Key { get; set; }
+    public required string Key { get; set; }
 
-    [BsonElement("baseRoleId")]
-    [MaxLength(36)]
-    public string BaseRoleId { get; set; }
+    [Map("base_role_id")]
+    public int BaseRoleId { get; set; }
 
-    [BsonElement("createdAt")]
+    [Map("created_at")]
     public DateTime CreatedAt { get; set; }
 
-    [BsonElement("updatedAt")]
+    [Map("updated_at")]
     public DateTime UpdatedAt { get; set; }
 
     public static ChannelType FromDTO(ChannelTypeDTO channelType)
     {
-        return new ChannelType()
+        return new ChannelType
         {
-            Id = Guid.NewGuid().ToString(),
             Name = channelType.Name,
             Key = channelType.Key,
             BaseRoleId = channelType.BaseRoleId,
@@ -41,20 +40,17 @@ public class ChannelType : DatabaseItem
             UpdatedAt = DateTime.UtcNow,
         };
     }
+
+    public static Expression<Func<ChannelType, bool>> MatchByKey(int key) => channelType => channelType.Id == key;
 }
 
 public class ChannelTypeDTO
 {
-    [BsonElement("name")]
     [MaxLength(255)]
-    public string Name { get; set; }
+    public required string Name { get; set; }
 
-    [BsonElement("key")]
     [MaxLength(255)]
-    public string Key { get; set; }
+    public required string Key { get; set; }
 
-    [BsonElement("baseRoleId")]
-    [MaxLength(36)]
-    public string BaseRoleId { get; set; }
-
+    public int BaseRoleId { get; set; }
 }

@@ -9,7 +9,7 @@ public class _202603250001_CreateUsersTable : Migration
     {
         var sql = """
             CREATE TABLE users (
-                id uuid PRIMARY KEY,
+                id uuid PRIMARY KEY DEFAULT uuidv7(),
                 name varchar(255) NOT NULL,
                 active boolean NOT NULL DEFAULT false,
                 verified boolean NOT NULL DEFAULT false,
@@ -41,7 +41,7 @@ public class _202603250001_CreateUsersTable : Migration
             CREATE TABLE user_roles (
                 user_id uuid NOT NULL,
                 type user_role_type NOT NULL,
-                item_id text NOT NULL,
+                item_id int NOT NULL,
                 role_id int NOT NULL,
                 PRIMARY KEY (user_id, type, item_id),
                 CONSTRAINT fk_user_roles_user_id
@@ -52,7 +52,7 @@ public class _202603250001_CreateUsersTable : Migration
 
             CREATE TABLE user_channel_settings (
                 user_id uuid NOT NULL,
-                channel_id uuid NOT NULL,
+                channel_id int NOT NULL,
                 last_seen_message timestamptz NOT NULL,
                 muted boolean NOT NULL DEFAULT false,
                 PRIMARY KEY (user_id, channel_id),

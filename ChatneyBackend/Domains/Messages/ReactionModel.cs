@@ -1,3 +1,4 @@
+using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
 public class MessageReaction : DatabaseItem
@@ -13,7 +14,8 @@ public class MessageReaction : DatabaseItem
     public required string Code { get; set; }
 
     [BsonElement("userId")]
-    public required string UserId { get; set; }
+    [BsonRepresentation(BsonType.String)]
+    public required Guid UserId { get; set; }
 
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; }
@@ -25,7 +27,7 @@ public class MessageReaction : DatabaseItem
 public class WebsocketReactionPayload
 {
     public required string Code { get; set; }
-    public required string UserId { get; set; }
+    public required Guid UserId { get; set; }
     public required string MessageId { get; set; }
-    public required string ChannelId { get; set; }
+    public required int ChannelId { get; set; }
 }

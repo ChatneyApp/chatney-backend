@@ -5,13 +5,14 @@ using System.Linq.Expressions;
 
 namespace ChatneyBackend.Domains.Users;
 
-public readonly record struct UserRoleKey(Guid UserId, string Type, string ItemId);
+public readonly record struct UserRoleKey(Guid UserId, string Type, int ItemId);
 
 public class UserRole : IPgKey<UserRole, UserRoleKey>
 {
     [Primary]
+    [Identity]
     [Map("user_id")]
-    public required Guid UserId { get; set; }
+    public Guid UserId { get; set; }
 
     /// <summary>
     /// "workspace" | "channel" | "channel_type"
@@ -22,7 +23,7 @@ public class UserRole : IPgKey<UserRole, UserRoleKey>
 
     [Primary]
     [Map("item_id")]
-    public required string ItemId { get; set; }
+    public required int ItemId { get; set; }
 
     [Map("role_id")]
     public required int RoleId { get; set; }
@@ -31,6 +32,7 @@ public class UserRole : IPgKey<UserRole, UserRoleKey>
         role => role.UserId == key.UserId && role.Type == key.Type && role.ItemId == key.ItemId;
 }
 
+// TODO: move to another model/table
 public class ChannelSettings
 {
     public string LastSeenMessage { get; set; }
@@ -41,6 +43,7 @@ public class ChannelSettings
 public class User : IPgKey<User, Guid>, IPgTimestamped, IType
 {
     [Primary]
+    [Identity]
     [Map("id")]
     public Guid Id { get; set; }
 
@@ -68,10 +71,6 @@ public class User : IPgKey<User, Guid>, IPgTimestamped, IType
     [Map("role_id")]
     [GraphQLIgnore]
     public required int RoleId { get; set; }
-
-    // [Map("channels_settings")]
-    // [GraphQLIgnore]
-    // public Dictionary<string, ChannelSettings>? ChannelsSettings { get; set; }
 
     [Map("workspace_ids")]
     public required int[] WorkspaceIds { get; set; }
@@ -121,7 +120,6 @@ public class UserRegisterDto : IDTO<User>
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
             RoleId = 0,
-            // ChannelsSettings = new Dictionary<string, ChannelSettings>()
         };
     }
 }
@@ -145,8 +143,6 @@ public class CreateUserDto : IDTO<User>
 
     public required int RoleId { get; set; }
 
-    public Dictionary<string, ChannelSettings>? ChannelsSettings { get; set; }
-
     public required int[] WorkspaceIds { get; set; }
 
     public required string Password { get; set; }
@@ -163,7 +159,6 @@ public class CreateUserDto : IDTO<User>
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
             RoleId = RoleId,
-            // ChannelsSettings = ChannelsSettings,
             Active = Active,
             Banned = Banned,
             Verified = Verified,

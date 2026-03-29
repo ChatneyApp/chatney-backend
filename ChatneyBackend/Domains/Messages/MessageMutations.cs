@@ -23,7 +23,7 @@ public class MessageMutations
     [Authorize]
     public async Task<Message?> AddMessage(
         RoleManager roleManager,
-        Repo<Channel> channelsRepo,
+        PgRepo<Channel, int> channelsRepo,
         Repo<Message> messagesRepo,
         PgRepo<User, Guid> usersRepo,
         PgRepo<UserRole, UserRoleKey> userRolesRepo,
@@ -208,7 +208,7 @@ public class MessageMutations
         try
         {
             // 1. Checking user is valid
-            var userId = principal.GetUserId();
+            var userId = principal.GetUserGuid();
 
             // 2. Trying to insert new reaction into message, if it fails - means duplicate
             var newReaction = new MessageReaction
@@ -321,7 +321,7 @@ public class MessageMutations
     {
         try
         {
-            var userId = principal.GetUserId();
+            var userId = principal.GetUserGuid();
 
             Message? message;
             try

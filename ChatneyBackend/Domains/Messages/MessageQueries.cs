@@ -16,11 +16,22 @@ public class MessageQueries
     }
 
     [Authorize]
-    public async Task<List<Message>> GetListChannelMessages(Repo<Message> repo, string channelId) =>
-        await repo.GetList(
-            Builders<Message>.Filter.Eq(m => m.ChannelId, channelId) &
-            Builders<Message>.Filter.Eq(m => m.ParentId, null)
-        );
+    public async Task<List<Message>> GetListChannelMessages(Repo<Message> repo, int channelId)
+    {
+        try
+        {
+            var result = await repo.GetList(
+                Builders<Message>.Filter.Eq(m => m.ChannelId, channelId) &
+                Builders<Message>.Filter.Eq(m => m.ParentId, null)
+            );
+            return result;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            return new List<Message>();
+        }
+    }
 
     [Authorize]
     public async Task<List<Message>> GetListThreadMessages(Repo<Message> repo, string threadId) =>

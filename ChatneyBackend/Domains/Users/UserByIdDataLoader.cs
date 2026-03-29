@@ -2,21 +2,30 @@
 
 namespace ChatneyBackend.Domains.Users;
 
-public class UserByIdDataLoader : BatchDataLoader<string, User>
+public class UserByIdDataLoader : BatchDataLoader<Guid, User>
 {
     private readonly PgRepo<User, Guid> _repo;
 
     public UserByIdDataLoader(IBatchScheduler batchScheduler, PgRepo<User, Guid> repo)
         : base(batchScheduler, new DataLoaderOptions()) => _repo = repo;
 
-    protected override async Task<IReadOnlyDictionary<string, User>> LoadBatchAsync(
-        IReadOnlyList<string> keys,
+    protected override async Task<IReadOnlyDictionary<Guid, User>> LoadBatchAsync(
+        IReadOnlyList<Guid> keys,
         CancellationToken cancellationToken
     )
     {
-        var guids = keys.Select(Guid.Parse).ToList();
-        var users = await _repo.GetList(u => guids.Contains(u.Id));
-        return users.ToDictionary(u => u.Id.ToString());
+        var guids = keys.ToList();
+        try
+        {
+            var users = await _repo.GetList(u => guids.Contains(u.Id));
+            return users.ToDictionary(u => u.Id);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+
+        return new List<User>().ToDictionary(u => u.Id);
     }
 }
 
@@ -29,7 +38,7 @@ public class HasUserIdTypeExtension<T> : ObjectTypeExtension<T> where T : class,
             {
                 var dataLoader = ctx.DataLoader<UserByIdDataLoader>();
                 var source = ctx.Parent<T>();
-                return await dataLoader.LoadAsync(source.UserId.ToString(), ctx.RequestAborted);
+                return await dataLoader.LoadAsync(source.UserId, ctx.RequestAborted);
             })
             .Type<NonNullType<ObjectType<User>>>();
     }

@@ -25,8 +25,7 @@ public class Message : DatabaseItem, IHasUserId
     public required string Id { get; set; }
 
     [BsonElement("channelId")]
-    [MaxLength(36)]
-    public required string ChannelId { get; set; }
+    public required int ChannelId { get; set; }
 
     [BsonElement("userId")]
     [BsonRepresentation(BsonType.String)]
@@ -91,8 +90,7 @@ public class Message : DatabaseItem, IHasUserId
 public class MessageDTO
 {
     [BsonElement("channelId")]
-    [MaxLength(36)]
-    public required string ChannelId { get; set; }
+    public required int ChannelId { get; set; }
 
     [BsonElement("content")]
     [MaxLength(4096)]
@@ -163,7 +161,7 @@ public class MessageWithUser : Message
 public class DeletedMessage
 {
     public required string MessageId { get; set; }
-    public required string ChannelId { get; set; }
+    public required int ChannelId { get; set; }
 }
 
 public class MessageChildrenCountUpdated

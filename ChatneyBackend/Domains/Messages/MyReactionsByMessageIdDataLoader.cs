@@ -28,7 +28,7 @@ public class MyReactionsByMessageIdDataLoader : GroupedDataLoader<string, string
             return Enumerable.Empty<MessageReaction>().ToLookup(r => r.MessageId, r => r.Code);
         }
 
-        var userId = user.GetUserId();
+        var userId = user.GetUserGuid();
         if (userId == null)
         {
             return Enumerable.Empty<MessageReaction>().ToLookup(r => r.MessageId, r => r.Code);
@@ -37,8 +37,18 @@ public class MyReactionsByMessageIdDataLoader : GroupedDataLoader<string, string
         var filter = Builders<MessageReaction>.Filter.In(x => x.MessageId, keys) &
                      Builders<MessageReaction>.Filter.Eq(x => x.UserId, userId);
 
-        var reactions = await _repo.GetList(filter);
-        return reactions.ToLookup(r => r.MessageId, r => r.Code);
+        try
+        {
+            var reactions = await _repo.GetList(filter);
+            return reactions.ToLookup(r => r.MessageId, r => r.Code);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+
+        return new List<MessageReaction>().ToLookup(r => r.MessageId, r => r.Code);
+
     }
 }
 

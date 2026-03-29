@@ -3,7 +3,7 @@ using ChatneyBackend.Domains.Users;
 
 namespace ChatneyBackend.Domains.Roles;
 
-public sealed record RoleScope(int? WorkspaceId, string? ChannelId, string? ChannelTypeId);
+public sealed record RoleScope(int? WorkspaceId, int? ChannelId, int? ChannelTypeId);
 
 public class RoleManager
 {
@@ -40,7 +40,7 @@ public class RoleManager
 
         if (roleScope.WorkspaceId != null)
         {
-            var role = userRoles.Find(role => role.Type == "workspace" && int.Parse(role.ItemId) == roleScope.WorkspaceId);
+            var role = userRoles.Find(role => role.Type == "workspace" && role.ItemId == roleScope.WorkspaceId);
             if (role != null)
             {
                 return await _roles.GetById(role.RoleId);

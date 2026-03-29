@@ -1,9 +1,13 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using ChatneyBackend.Domains.Channels;
 using ChatneyBackend.Domains.Messages;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Domains.Users;
 using ChatneyBackend.Domains.Workspaces;
 using ChatneyBackend.Infra;
+using ChatneyBackend.Utils;
 using FluentMigrator.Runner;
 
 namespace ChatneyBackend.Domains.InstallWizard;
@@ -16,7 +20,15 @@ public class InstallWizardMutations
         public string? message { get; set; }
     }
 
-    public async Task<InstallSystemResult> InstallSystem(PgRepo<Role, int> roleRepo, IMigrationRunner migrationRunner)
+    public async Task<InstallSystemResult> InstallSystem(
+        AppConfig appConfig,
+        PgRepo<Role, int> roleRepo,
+        PgRepo<User, Guid> userRepo,
+        PgRepo<Workspace, int> workspaceRepo,
+        PgRepo<ChannelType, int> channelTypeRepo,
+        PgRepo<Channel, int> channelRepo,
+        IMigrationRunner migrationRunner
+    )
     {
         try
         {
@@ -32,12 +44,13 @@ public class InstallWizardMutations
                 };
             }
 
-            await roleRepo.InsertOne(new Role
+            baseRole = new()
             {
                 UpdatedAt = DateTime.UtcNow,
                 CreatedAt = DateTime.UtcNow,
                 Name = Roles.DomainSettings.BaseRoleName,
-                Permissions = [
+                Permissions =
+                [
                     MessagePermissions.CreateMessage,
                     MessagePermissions.DeleteMessage,
                     MessagePermissions.EditMessage,
@@ -52,7 +65,92 @@ public class InstallWizardMutations
                     WorkspacePermissions.ReadWorkspace
                 ],
                 IsBase = true
-            });
+            };
+
+            await roleRepo.InsertOne(baseRole);
+
+            List<Workspace> workspaces = new List<Workspace>
+            {
+                new()
+                {
+                    Name = "Main",
+                },
+                new()
+                {
+                    Name = "Secondary",
+                },
+            };
+            await workspaceRepo.InsertBulk(workspaces);
+
+            List<ChannelType> channelTypes = new List<ChannelType>
+            {
+                new()
+                {
+                    Name = "public",
+                    Key = "public",
+                    BaseRoleId = baseRole.Id
+                },
+                new()
+                {
+                    Name = "private",
+                    Key = "private",
+                    BaseRoleId = baseRole.Id
+                },
+            };
+            await channelTypeRepo.InsertBulk(channelTypes);
+
+            List<Channel> channels = new List<Channel>()
+            {
+                new()
+                {
+                    Name = "public 1",
+                    ChannelTypeId = channelTypes[0].Id,
+                    WorkspaceId = workspaces[0].Id,
+                },
+                new()
+                {
+                    Name = "public 2",
+                    ChannelTypeId = channelTypes[0].Id,
+                    WorkspaceId = workspaces[0].Id,
+                },
+                new()
+                {
+                    Name = "private 1",
+                    ChannelTypeId = channelTypes[1].Id,
+                    WorkspaceId = workspaces[0].Id,
+                },
+                new()
+                {
+                    Name = "private 2",
+                    ChannelTypeId = channelTypes[1].Id,
+                    WorkspaceId = workspaces[0].Id,
+                },
+            };
+            await channelRepo.InsertBulk(channels);
+
+            var workspaceIds = workspaces.Select(w => w.Id).ToArray();
+            List<User> users = new()
+            {
+                new()
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "test user 1",
+                    Email = "test1@test.com",
+                    RoleId = baseRole.Id,
+                    WorkspaceIds = workspaceIds,
+                    Password = Helpers.GetMd5Hash("123" + appConfig.UserPasswordSalt),
+                },
+                new()
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "test user 2",
+                    Email = "test2@test.com",
+                    RoleId = baseRole.Id,
+                    WorkspaceIds = workspaceIds,
+                    Password = Helpers.GetMd5Hash("123" + appConfig.UserPasswordSalt),
+                },
+            };
+            await userRepo.InsertBulk(users);
         }
         catch (Exception e)
         {

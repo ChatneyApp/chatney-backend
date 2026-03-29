@@ -21,7 +21,7 @@ public class DraftMessageMutations
     [Authorize]
     public async Task<DraftMessage?> AddDraftMessage(
         RoleManager roleManager,
-        Repo<Channel> channelsRepo,
+        PgRepo<Channel, int> channelsRepo,
         Repo<DraftMessage> messagesRepo,
         PgRepo<User, Guid> usersRepo,
         PgRepo<UserRole, UserRoleKey> userRolesRepo,
@@ -29,10 +29,15 @@ public class DraftMessageMutations
         MessageDTO messageDto
     )
     {
+        if (!int.TryParse(messageDto.ChannelId, out var channelId))
+        {
+            throw new InvalidOperationException("Channel id is invalid");
+        }
+
         DraftMessage message = DraftMessage.FromDTO(messageDto, principal.GetUserGuid());
         var user = await usersRepo.GetById(principal.GetUserGuid());
 
-        var channel = await channelsRepo.GetById(message.ChannelId);
+        var channel = await channelsRepo.GetById(channelId);
 
         if (channel == null || user == null)
         {
