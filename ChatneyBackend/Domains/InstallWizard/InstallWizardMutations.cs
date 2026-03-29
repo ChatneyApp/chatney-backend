@@ -1,7 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using ChatneyBackend.Domains.Channels;
+using ChatneyBackend.Domains.Configs;
 using ChatneyBackend.Domains.Messages;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Domains.Users;
@@ -27,6 +25,7 @@ public class InstallWizardMutations
         PgRepo<Workspace, int> workspaceRepo,
         PgRepo<ChannelType, int> channelTypeRepo,
         PgRepo<Channel, int> channelRepo,
+        PgRepo<Config, int> configRepo,
         IMigrationRunner migrationRunner
     )
     {
@@ -151,6 +150,23 @@ public class InstallWizardMutations
                 },
             };
             await userRepo.InsertBulk(users);
+
+            List<Config> configs = new()
+            {
+                new()
+                {
+                    Name = "messages.sendCooldown",
+                    Value = "600",
+                    Type = "int",
+                },
+                new()
+                {
+                    Name = "events.typesEnabled",
+                    Value = "message.sent,message.edited,message.deleted",
+                    Type = "string[]",
+                },
+            };
+            await configRepo.InsertBulk(configs);
         }
         catch (Exception e)
         {

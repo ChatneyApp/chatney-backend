@@ -1,58 +1,36 @@
 using System.ComponentModel.DataAnnotations;
-using MongoDB.Bson.Serialization.Attributes;
+using System.Linq.Expressions;
+using ChatneyBackend.Infra;
+using RepoDb.Attributes;
 
 namespace ChatneyBackend.Domains.Configs;
 
-public class Config : DatabaseItem
+public class Config : IPgKey<Config, int>, IPgTimestamped
 {
-    [BsonElement("_id")]
-    [BsonId]
-    [MaxLength(36)]
-    public required string Id { get; set; }
+    [Primary]
+    [Identity]
+    [Map("id")]
+    public int Id { get; set; }
 
-    [BsonElement("name")]
+    [Map("name")]
     [MaxLength(255)]
     public required string Name { get; set; }
 
-    [BsonElement("value")]
+    [Map("value")]
     [MaxLength(2048)]
     public required string Value { get; set; }
 
-    [BsonElement("type")]
+    [Map("type")]
     [MaxLength(255)]
     public string? Type { get; set; }
 
-    [BsonElement("createdAt")]
+    [Map("created_at")]
+    [GraphQLIgnore]
     public DateTime CreatedAt { get; set; }
 
-    [BsonElement("updatedAt")]
+    [Map("updated_at")]
+    [GraphQLIgnore]
     public DateTime UpdatedAt { get; set; }
 
-    public static Config FromDTO(ConfigDTO role)
-    {
-        return new Config()
-        {
-            Id = Guid.NewGuid().ToString(),
-            Name = role.Name,
-            Value = role.Value,
-            Type = role.Type,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
-        };
-    }
-}
-
-public class ConfigDTO
-{
-    [BsonElement("name")]
-    [MaxLength(255)]
-    public required string Name { get; set; }
-
-    [BsonElement("value")]
-    [MaxLength(2048)]
-    public required string Value { get; set; }
-
-    [BsonElement("type")]
-    [MaxLength(255)]
-    public string? Type { get; set; }
+    public static Expression<Func<Config, bool>> MatchByKey(int key) => config => config.Id == key;
 }
