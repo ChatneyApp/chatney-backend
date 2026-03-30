@@ -10,7 +10,7 @@ public class UrlPreviewTypeExtension : ObjectTypeExtension<Message>
             .Resolve(async (ctx) =>
             {
                 var message = ctx.Parent<Message>();
-                if (message.UrlPreviewIds.Count == 0)
+                if (message.UrlPreviewIds.Length == 0)
                 {
                     return Array.Empty<UrlPreview>();
                 }

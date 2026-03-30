@@ -29,7 +29,7 @@ public class Channel : IPgKey<Channel, int>, IPgTimestamped
     [Map("updated_at")]
     public DateTime UpdatedAt { get; set; }
 
-    public static Channel FromDTO(ChannelDto channel)
+    public static Channel FromDto(ChannelDto channel)
     {
         return new Channel
         {
@@ -44,7 +44,7 @@ public class Channel : IPgKey<Channel, int>, IPgTimestamped
     public static Expression<Func<Channel, bool>> MatchByKey(int key) => channel => channel.Id == key;
 }
 
-public class ChannelDto : IDTO<Channel>
+public class ChannelDto : IDto<Channel>
 {
     [MaxLength(255)]
     public required string Name { get; set; }
@@ -53,5 +53,5 @@ public class ChannelDto : IDTO<Channel>
 
     public int WorkspaceId { get; set; }
 
-    public Channel ToModel() => Channel.FromDTO(this);
+    public Channel ToModel() => Channel.FromDto(this);
 }

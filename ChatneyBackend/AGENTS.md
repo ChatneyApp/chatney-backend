@@ -3,7 +3,7 @@
 ## Project Context
 This is a .NET 9 backend using GraphQL and PostgreSQL.
 - **GraphQL Library:** HotChocolate (https://chillicream.com/docs/hotchocolate)
-- **Database:** Dapper with PostgreSQL.
+- **Database:** Repo with PostgreSQL.
 - **Architecture:** Clean Architecture / Domain-Driven Design.
 
 ## Core Principles
@@ -29,3 +29,9 @@ This is a .NET 9 backend using GraphQL and PostgreSQL.
 ## Boundaries
 - Do not modify files in `../Tests` without understanding the testing strategy.
 - Do not add packages without checking if they are compatible with .NET 9.
+
+## Database
+- All database migrations should be created using FluentMigrator at the path `/Infra/Migrations/`.
+- Migration file name should start with the underscore and follow with the current date, followed with the migration number within that day, followed with the underscore and text comment on created/updated entities.
+- Database models use RepoDB for all the queries.
+- Default Identity approach: int auto increment primary keys, no GUIDs. Only use GUIDs if there is a specific reason (it will be specified explicitly).

@@ -1,133 +1,116 @@
 using System.ComponentModel.DataAnnotations;
+using System.Linq.Expressions;
 using System.Text.Json.Serialization;
 using ChatneyBackend.Domains.Attachments;
 using ChatneyBackend.Domains.Users;
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
+using ChatneyBackend.Infra;
+using RepoDb.Attributes;
 
 namespace ChatneyBackend.Domains.Messages;
 
 public class ReactionInMessage
 {
-    [BsonElement("code")]
+    [Map("code")]
     [MaxLength(255)]
     public required string Code { get; set; }
 
-    [BsonElement("count")]
+    [Map("count")]
     public required int Count { get; set; }
 }
 
-public class Message : DatabaseItem, IHasUserId
+public class Message : IPgKey<Message, int>, IPgTimestamped, IHasUserId
 {
-    [BsonElement("_id")]
-    [BsonId]
-    [MaxLength(36)]
-    public required string Id { get; set; }
+    [Primary]
+    [Identity]
+    [Map("id")]
+    public int Id { get; set; }
 
-    [BsonElement("channelId")]
+    [Map("channel_id")]
     public required int ChannelId { get; set; }
 
-    [BsonElement("userId")]
-    [BsonRepresentation(BsonType.String)]
-    [MaxLength(36)]
+    [Map("user_id")]
     public required Guid UserId { get; set; }
 
-    [BsonElement("content")]
+    [Map("content")]
     [MaxLength(4096)]
     public required string Content { get; set; }
 
-    [BsonElement("attachmentIds")]
+    [Map("attachment_ids")]
     [GraphQLIgnore]
     [JsonIgnore]
-    public List<string> AttachmentIds { get; set; } = new List<string>();
+    public string[] AttachmentIds { get; set; } = [];
 
-    [BsonElement("urlPreviewIds")]
+    [Map("url_preview_ids")]
     [GraphQLIgnore]
     [JsonIgnore]
-    public List<string> UrlPreviewIds { get; set; } = new();
+    public string[] UrlPreviewIds { get; set; } = [];
 
     // Used for soft delete, pending etc
-    [BsonElement("status")]
+    [Map("status")]
     [MaxLength(50)]
     public required string Status { get; set; }
 
-    [BsonElement("createdAt")]
+    [Map("created_at")]
     public DateTime CreatedAt { get; set; }
 
-    [BsonElement("updatedAt")]
+    [Map("updated_at")]
     public DateTime UpdatedAt { get; set; }
 
-    [BsonElement("reactions")]
-    public required List<ReactionInMessage> Reactions { get; set; } = new List<ReactionInMessage>();
+    [Map("parent_id")]
+    public int? ParentId { get; set; }
 
-    [BsonElement("parentId")]
-    [MaxLength(36)]
-    public string? ParentId { get; set; }
-
-    [BsonElement("childrenCount")]
+    [Map("children_count")]
     public required int ChildrenCount { get; set; }
 
-    public static Message FromDTO(MessageDTO message, Guid userId)
+    public static Message FromDto(MessageDto message, Guid userId)
     {
         return new Message()
         {
-            Id = Guid.NewGuid().ToString(),
             ChannelId = message.ChannelId,
             UserId = userId,
             Content = message.Content,
-            AttachmentIds = message.AttachmentIds,
+            AttachmentIds = message.AttachmentIds ?? [],
             Status = "sent", // TODO: Define status constants
-            UrlPreviewIds = new List<string>(),
+            UrlPreviewIds = [],
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
-            Reactions = new List<ReactionInMessage>(),
             ParentId = message.ParentId,
             ChildrenCount = 0
         };
     }
+
+    public static Expression<Func<Message, bool>> MatchByKey(int key) => message => message.Id == key;
 }
 
-public class MessageDTO
+public class MessageDto
 {
-    [BsonElement("channelId")]
     public required int ChannelId { get; set; }
 
-    [BsonElement("content")]
     [MaxLength(4096)]
     public required string Content { get; set; }
 
-    [BsonElement("attachmentIds")]
-    public List<string>? AttachmentIds { get; set; }
+    public string[]? AttachmentIds { get; set; }
 
-    [BsonElement("parentId")]
-    [MaxLength(36)]
-    public string? ParentId { get; set; }
+    public int? ParentId { get; set; }
 }
 
 
 public class MessageUser
 {
-    [BsonElement("_id")]
-    [BsonRepresentation(BsonType.String)]
     public required Guid Id { get; set; }
 
-    [BsonElement("name")]
     public required string Name { get; set; }
 
-    [BsonElement("avatarUrl")]
     public required string? AvatarUrl { get; set; }
 }
 
 public class MessageWithUser : Message
 {
-    [BsonElement("user")]
     public required MessageUser User { get; set; }
-    [BsonElement("myReactions")]
     public required string[] MyReactions { get; set; }
-    [BsonElement("urlPreviews")]
     public required List<UrlPreview> UrlPreviews { get; set; }
-    [BsonElement("attachments")]
     public required List<Attachment> Attachments { get; set; }
+    public required List<ReactionInMessage> Reactions { get; set; }
 
     public static MessageWithUser Create(Message message, User user, List<UrlPreview> urlPreviews, List<Attachment> attachments)
     {
@@ -144,7 +127,7 @@ public class MessageWithUser : Message
             UrlPreviews = urlPreviews,
             CreatedAt = message.CreatedAt,
             UpdatedAt = message.UpdatedAt,
-            Reactions = message.Reactions,
+            Reactions = [],
             ParentId = message.ParentId,
             ChildrenCount = message.ChildrenCount,
             MyReactions = [],
@@ -160,12 +143,12 @@ public class MessageWithUser : Message
 
 public class DeletedMessage
 {
-    public required string MessageId { get; set; }
+    public required int MessageId { get; set; }
     public required int ChannelId { get; set; }
 }
 
 public class MessageChildrenCountUpdated
 {
-    public required string MessageId { get; set; }
+    public required int MessageId { get; set; }
     public required int ChildrenCount { get; set; }
 }

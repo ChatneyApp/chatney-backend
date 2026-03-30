@@ -1,5 +1,9 @@
+using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
 using Npgsql;
 using RepoDb;
 
@@ -101,6 +105,18 @@ public class PgRepo<T, TKey> where T : class, IPgKey<T, TKey>
         TouchUpdatedAt(record);
         await using var conn = await OpenAsync();
         await conn.MergeAsync(record);
+    }
+
+    public async Task<TResult?> ExecuteScalarAsync<TResult>(string sql, object? param = null)
+    {
+        await using var conn = await OpenAsync();
+        return await conn.ExecuteScalarAsync<TResult>(sql, param);
+    }
+
+    public async Task<int> ExecuteAsync(string sql, object? param = null)
+    {
+        await using var conn = await OpenAsync();
+        return await conn.ExecuteNonQueryAsync(sql, param);
     }
 
     private static void TouchUpdatedAt(T record)

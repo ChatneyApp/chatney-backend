@@ -96,7 +96,7 @@ public class User : IPgKey<User, Guid>, IPgTimestamped, IType
 /// <summary>
 /// User registers themselves
 /// </summary>
-public class UserRegisterDto : IDTO<User>
+public class UserRegisterDto : IDto<User>
 {
     public required string Name { get; set; }
 
@@ -127,7 +127,7 @@ public class UserRegisterDto : IDTO<User>
 /// <summary>
 /// Admin creates a user
 /// </summary>
-public class CreateUserDto : IDTO<User>
+public class CreateUserDto : IDto<User>
 {
     public required string Name { get; set; }
 

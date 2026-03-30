@@ -104,14 +104,14 @@ public class WebSocketConnector
                     var jsonMessage = Encoding.UTF8.GetString(buffer, 0, result.Count);
                     Console.WriteLine($"Received from {userId}: {jsonMessage}");
 
-                    var receivedObject = JsonSerializer.Deserialize<MessageDTO>(jsonMessage);
+                    var receivedObject = JsonSerializer.Deserialize<MessageDto>(jsonMessage);
 
                     if (receivedObject == null)
                     {
                         throw new Exception("Invalid message");
                     }
 
-                    var messageModel = Message.FromDTO(receivedObject, Guid.Parse(userId));
+                    var messageModel = Message.FromDto(receivedObject, Guid.Parse(userId));
 
                     var jsonResponse = JsonSerializer.Serialize(messageModel);
                     await SendMessageAsync(webSocket, jsonResponse);

@@ -31,7 +31,7 @@ public class ChannelGroup : IPgKey<ChannelGroup, int>, IPgTimestamped
     [Map("updated_at")]
     public DateTime UpdatedAt { get; set; }
 
-    public static ChannelGroup FromDTO(ChannelGroupDTO channelGroup)
+    public static ChannelGroup FromDto(ChannelGroupDto channelGroup)
     {
         return new ChannelGroup
         {
@@ -47,7 +47,7 @@ public class ChannelGroup : IPgKey<ChannelGroup, int>, IPgTimestamped
     public static Expression<Func<ChannelGroup, bool>> MatchByKey(int key) => group => group.Id == key;
 }
 
-public class ChannelGroupDTO
+public class ChannelGroupDto
 {
     [MaxLength(255)]
     public required string Name { get; set; }

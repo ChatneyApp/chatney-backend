@@ -28,7 +28,7 @@ public class Role : IPgKey<Role, int>, IPgTimestamped
     [Map("updated_at")]
     public DateTime UpdatedAt { get; set; }
 
-    public static Role FromDTO(RoleDto role)
+    public static Role FromDto(RoleDto role)
     {
         return new Role()
         {

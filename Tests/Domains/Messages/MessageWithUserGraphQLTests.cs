@@ -10,7 +10,7 @@ public class MessageWithUserJsonTest
     {
         public MessageWithUser Message() => new()
         {
-            Id = "message-id",
+            Id = 1,
             ChannelId = 0,
             UserId = Guid.NewGuid(),
             Content = "content",

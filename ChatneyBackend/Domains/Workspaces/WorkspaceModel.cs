@@ -22,7 +22,7 @@ public class Workspace : IPgKey<Workspace, int>, IPgTimestamped
     [Map("updated_at")]
     public DateTime UpdatedAt { get; set; }
 
-    public static Workspace FromDTO(WorkspaceDTO workspace)
+    public static Workspace FromDto(WorkspaceDto workspace)
     {
         return new Workspace()
         {
@@ -35,7 +35,7 @@ public class Workspace : IPgKey<Workspace, int>, IPgTimestamped
     public static Expression<Func<Workspace, bool>> MatchByKey(int key) => workspace => workspace.Id == key;
 }
 
-public class WorkspaceDTO
+public class WorkspaceDto
 {
     [MaxLength(255)]
     public required string Name { get; set; }

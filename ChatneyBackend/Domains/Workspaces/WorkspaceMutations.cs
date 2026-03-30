@@ -4,9 +4,9 @@ namespace ChatneyBackend.Domains.Workspaces;
 
 public class WorkspaceMutations
 {
-    public async Task<Workspace> AddWorkspace(PgRepo<Workspace, int> workspaceRepo, WorkspaceDTO workspaceDto)
+    public async Task<Workspace> AddWorkspace(PgRepo<Workspace, int> workspaceRepo, WorkspaceDto workspaceDto)
     {
-        var workspace = Workspace.FromDTO(workspaceDto);
+        var workspace = Workspace.FromDto(workspaceDto);
         workspace.Id = await workspaceRepo.InsertOne(workspace);
         return workspace;
     }

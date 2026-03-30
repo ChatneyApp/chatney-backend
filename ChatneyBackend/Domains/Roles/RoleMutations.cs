@@ -6,7 +6,7 @@ public class RoleMutations
 {
     public async Task<Role> AddRole(PgRepo<Role, int> rolesRepo, RoleDto roleDto)
     {
-        var role = Role.FromDTO(roleDto);
+        var role = Role.FromDto(roleDto);
         await rolesRepo.InsertOne(role);
         return role;
     }

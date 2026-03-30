@@ -1,33 +1,41 @@
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
+using System.Linq.Expressions;
+using ChatneyBackend.Infra;
+using RepoDb.Attributes;
 
-public class MessageReaction : DatabaseItem
+namespace ChatneyBackend.Domains.Messages;
+
+public readonly record struct MessageReactionKey(int MessageId, Guid UserId, string Code);
+
+public class MessageReaction : IPgKey<MessageReaction, MessageReactionKey>, IPgTimestamped
 {
-    [BsonElement("_id")]
-    [BsonId]
-    public required string Id { get; set; }
+    [Primary]
+    [Map("message_id")]
+    public required int MessageId { get; set; }
 
-    [BsonElement("messageId")]
-    public required string MessageId { get; set; }
-
-    [BsonElement("code")]
-    public required string Code { get; set; }
-
-    [BsonElement("userId")]
-    [BsonRepresentation(BsonType.String)]
+    [Primary]
+    [Map("user_id")]
     public required Guid UserId { get; set; }
 
-    [BsonElement("createdAt")]
+    [Primary]
+    [Map("code")]
+    public required string Code { get; set; }
+
+    [Map("created_at")]
     public DateTime CreatedAt { get; set; }
 
-    [BsonElement("updatedAt")]
+    [Map("updated_at")]
     public DateTime UpdatedAt { get; set; }
+
+    public static Expression<Func<MessageReaction, bool>> MatchByKey(MessageReactionKey key) =>
+        reaction => reaction.MessageId == key.MessageId &&
+                    reaction.UserId == key.UserId &&
+                    reaction.Code == key.Code;
 }
 
 public class WebsocketReactionPayload
 {
     public required string Code { get; set; }
     public required Guid UserId { get; set; }
-    public required string MessageId { get; set; }
+    public required int MessageId { get; set; }
     public required int ChannelId { get; set; }
 }

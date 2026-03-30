@@ -4,9 +4,9 @@ namespace ChatneyBackend.Domains.Channels;
 
 public class ChannelMutations
 {
-    public async Task<ChannelType> AddChannelType(PgRepo<ChannelType, int> channelTypeRepo, ChannelTypeDTO channelTypeDto)
+    public async Task<ChannelType> AddChannelType(PgRepo<ChannelType, int> channelTypeRepo, ChannelTypeDto channelTypeDto)
     {
-        var channelType = ChannelType.FromDTO(channelTypeDto);
+        var channelType = ChannelType.FromDto(channelTypeDto);
         channelType.Id = await channelTypeRepo.InsertOne(channelType);
         return channelType;
     }
@@ -35,9 +35,9 @@ public class ChannelMutations
 
     public async Task<bool> DeleteChannel(PgRepo<Channel, int> channelRepo, int id) => await channelRepo.DeleteById(id);
 
-    public async Task<ChannelGroup> AddChannelGroup(PgRepo<ChannelGroup, int> channelGroupRepo, ChannelGroupDTO channelGroupDto)
+    public async Task<ChannelGroup> AddChannelGroup(PgRepo<ChannelGroup, int> channelGroupRepo, ChannelGroupDto channelGroupDto)
     {
-        var channelGroup = ChannelGroup.FromDTO(channelGroupDto);
+        var channelGroup = ChannelGroup.FromDto(channelGroupDto);
         channelGroup.Id = await channelGroupRepo.InsertOne(channelGroup);
         return channelGroup;
     }

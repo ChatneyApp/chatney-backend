@@ -26,7 +26,7 @@ public class DraftMessageMutations
         PgRepo<User, Guid> usersRepo,
         PgRepo<UserRole, UserRoleKey> userRolesRepo,
         ClaimsPrincipal principal,
-        MessageDTO messageDto
+        MessageDto messageDto
     )
     {
         if (!int.TryParse(messageDto.ChannelId, out var channelId))
@@ -34,7 +34,7 @@ public class DraftMessageMutations
             throw new InvalidOperationException("Channel id is invalid");
         }
 
-        DraftMessage message = DraftMessage.FromDTO(messageDto, principal.GetUserGuid());
+        DraftMessage message = DraftMessage.FromDto(messageDto, principal.GetUserGuid());
         var user = await usersRepo.GetById(principal.GetUserGuid());
 
         var channel = await channelsRepo.GetById(channelId);

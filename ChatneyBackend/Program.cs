@@ -45,6 +45,7 @@ GlobalConfiguration.Setup().UsePostgreSql();
 var db = mongoClient.GetDatabase(dbName);
 var dataSourceBuilder = new NpgsqlDataSourceBuilder(postgresConnectionString);
 dataSourceBuilder.EnableParameterLogging();
+dataSourceBuilder.EnableDynamicJson();
 var pgDataSource = dataSourceBuilder.Build();
 
 await using (var pgConnection = await pgDataSource.OpenConnectionAsync())
@@ -64,19 +65,18 @@ var wsConfig = new WebSocketConnector();
 var rolesRepo = new PgRepo<Role, int>(pgDataSource, "roles");
 
 // Database
-DbInit.Init(mongoClient, dbName);
 builder.Services.AddSingleton(_ => db);
 builder.Services.AddSingleton(pgDataSource);
 builder.Services.AddSingleton(_ => new AppConfig { UserPasswordSalt = userPasswordSalt, JwtSecret = jwtSecret });
 builder.Services.AddSingleton(_ => new RoleManager(rolesRepo));
 builder.Services.AddSingleton(_ => new PgRepo<User, Guid>(pgDataSource, UsersDomainSettings.UserTableName));
 builder.Services.AddSingleton(_ => new PgRepo<UserRole, UserRoleKey>(pgDataSource, UsersDomainSettings.UserRoleTableName));
-builder.Services.AddSingleton(_ => new Repo<MessageReaction>(db, MessagesDomainSettings.ReactionCollectionName));
+builder.Services.AddSingleton(_ => new PgRepo<MessageReaction, MessageReactionKey>(pgDataSource, MessagesDomainSettings.ReactionTableName));
 builder.Services.AddSingleton(_ => new PgRepo<Channel, int>(pgDataSource, ChannelDomainSettings.ChannelTableName));
 builder.Services.AddSingleton(_ => new PgRepo<ChannelType, int>(pgDataSource, ChannelDomainSettings.ChannelTypeTableName));
 builder.Services.AddSingleton(_ => new PgRepo<ChannelGroup, int>(pgDataSource, ChannelDomainSettings.ChannelGroupTableName));
 builder.Services.AddSingleton(_ => new PgRepo<Config, int>(pgDataSource, ConfigsDomainSettings.ConfigTableName));
-builder.Services.AddSingleton(_ => new Repo<Message>(db, MessagesDomainSettings.MessageCollectionName));
+builder.Services.AddSingleton(_ => new PgRepo<Message, int>(pgDataSource, MessagesDomainSettings.MessageTableName));
 builder.Services.AddSingleton(_ => new Repo<Attachment>(db, AttachmentsDomainSettings.AttachmentCollectionName));
 builder.Services.AddSingleton(_ => new Repo<UrlPreview>(db, MessagesDomainSettings.UrlPreviewsCollectionName));
 builder.Services.AddSingleton(_ => rolesRepo);
@@ -155,10 +155,12 @@ builder.Services
     .AddMutationType<Mutation>()
     .AddTypeExtension<HasUserIdTypeExtension<Message>>()
     .AddTypeExtension<MessageReactionsTypeExtension>()
+    .AddTypeExtension<MessageReactionSummaryTypeExtension>()
     .AddTypeExtension<UrlPreviewTypeExtension>()
     .AddTypeExtension<AttachmentDataLoader>()
     .AddDataLoader<UserByIdDataLoader>()
     .AddDataLoader<MyReactionsByMessageIdDataLoader>()
+    .AddDataLoader<MessageReactionsByMessageIdDataLoader>()
     .AddDataLoader<UrlPreviewsByUrlPreviewIdDataLoader>()
     .AddDataLoader<AttachmentsByAttachmentIdDataLoader>()
     .AddType<UploadType>();

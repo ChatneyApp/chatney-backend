@@ -11,7 +11,7 @@ public class AttachmentDataLoader : ObjectTypeExtension<Message>
             .Resolve(async (ctx) =>
             {
                 var message = ctx.Parent<Message>();
-                if (message.AttachmentIds.Count == 0)
+                if (message.AttachmentIds.Length == 0)
                 {
                     return Array.Empty<Attachment>();
                 }

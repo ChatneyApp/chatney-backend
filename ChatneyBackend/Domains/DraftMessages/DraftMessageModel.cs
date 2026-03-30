@@ -38,9 +38,8 @@ public class DraftMessage : DatabaseItem, IHasUserId
     [MaxLength(36)]
     public string? ParentId { get; set; }
 
-    public static DraftMessage FromDTO(MessageDTO message, Guid userId)
-    {
-        return new DraftMessage()
+    public static DraftMessage FromDto(MessageDto message, Guid userId) =>
+        new()
         {
             Id = Guid.NewGuid().ToString(),
             ChannelId = message.ChannelId,
@@ -51,23 +50,18 @@ public class DraftMessage : DatabaseItem, IHasUserId
             UpdatedAt = DateTime.UtcNow,
             ParentId = message.ParentId,
         };
-    }
 }
 
-public class MessageDTO
+public class MessageDto
 {
-    [BsonElement("channelId")]
     [MaxLength(36)]
     public required string ChannelId { get; set; }
 
-    [BsonElement("content")]
     [MaxLength(4096)]
     public required string Content { get; set; }
 
-    [BsonElement("attachments")]
     public List<string>? Attachments { get; set; }
 
-    [BsonElement("parentId")]
     [MaxLength(36)]
     public string? ParentId { get; set; }
 }

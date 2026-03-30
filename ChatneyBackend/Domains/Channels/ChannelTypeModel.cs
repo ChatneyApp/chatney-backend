@@ -29,7 +29,7 @@ public class ChannelType : IPgKey<ChannelType, int>, IPgTimestamped
     [Map("updated_at")]
     public DateTime UpdatedAt { get; set; }
 
-    public static ChannelType FromDTO(ChannelTypeDTO channelType)
+    public static ChannelType FromDto(ChannelTypeDto channelType)
     {
         return new ChannelType
         {
@@ -44,7 +44,7 @@ public class ChannelType : IPgKey<ChannelType, int>, IPgTimestamped
     public static Expression<Func<ChannelType, bool>> MatchByKey(int key) => channelType => channelType.Id == key;
 }
 
-public class ChannelTypeDTO
+public class ChannelTypeDto
 {
     [MaxLength(255)]
     public required string Name { get; set; }
