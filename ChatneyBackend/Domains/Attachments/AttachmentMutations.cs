@@ -14,13 +14,13 @@ public class AttachmentMutations
     public class AttachmentUploadResponse
     {
         public required string S3Url { get; set; }
-        public required string AttachmentId { get; set; }
+        public required int AttachmentId { get; set; }
     }
 
     [Authorize]
     public async Task<AttachmentUploadResponse> Upload(
         PgRepo<User, Guid> usersRepo,
-        Repo<Attachment> attachmentsRepo,
+        PgRepo<Attachment, int> attachmentsRepo,
         ClaimsPrincipal principal,
         IAmazonS3 s3Client,
         IFile file
@@ -30,7 +30,7 @@ public class AttachmentMutations
             throw new Exception("File is empty.");
 
         var userId = principal.GetUserGuid();
-        var id = Guid.NewGuid().ToString();
+        var fileId = Guid.NewGuid().ToString();
         var bucketName = "chatney";
         var s3Folder = "attachments";
         var dateString = DateTime.UtcNow.ToString("yyyy-MM-dd");
@@ -39,7 +39,7 @@ public class AttachmentMutations
         string fullExt = ext == "" ? "" : "." + ext;
         string type = "image";
 
-        var s3Key = $"{s3Folder}/{userId}/{dateString}/{id}{fullExt}";
+        var s3Key = $"{s3Folder}/{userId}/{dateString}/{fileId}{fullExt}";
 
         using (var fileStream = file.OpenReadStream())
         {
@@ -59,14 +59,14 @@ public class AttachmentMutations
             UserId = userId,
             Extension = ext,
             MimeType = file.ContentType,
-            Id = id,
             OriginalFileName = file.Name,
             CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
             Type = type,
             UrlPath = s3Key
         };
 
-        await attachmentsRepo.InsertOne(attachment);
+        attachment.Id = await attachmentsRepo.InsertOne(attachment);
 
         var serviceUrl = s3Client.Config.ServiceURL.TrimEnd('/');
 

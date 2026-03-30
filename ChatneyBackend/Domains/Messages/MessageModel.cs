@@ -38,12 +38,12 @@ public class Message : IPgKey<Message, int>, IPgTimestamped, IHasUserId
     [Map("attachment_ids")]
     [GraphQLIgnore]
     [JsonIgnore]
-    public string[] AttachmentIds { get; set; } = [];
+    public int[] AttachmentIds { get; set; } = [];
 
     [Map("url_preview_ids")]
     [GraphQLIgnore]
     [JsonIgnore]
-    public string[] UrlPreviewIds { get; set; } = [];
+    public int[] UrlPreviewIds { get; set; } = [];
 
     // Used for soft delete, pending etc
     [Map("status")]
@@ -89,7 +89,7 @@ public class MessageDto
     [MaxLength(4096)]
     public required string Content { get; set; }
 
-    public string[]? AttachmentIds { get; set; }
+    public int[]? AttachmentIds { get; set; }
 
     public int? ParentId { get; set; }
 }

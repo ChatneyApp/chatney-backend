@@ -8,7 +8,6 @@ using ChatneyInfra = ChatneyBackend.Infra;
 using ChatneyBackend.Infra.Middleware;
 using ChatneyBackend.Utils;
 using HotChocolate.Authorization;
-using MongoDB.Driver;
 
 namespace ChatneyBackend.Domains.Messages;
 
@@ -27,8 +26,8 @@ public class MessageMutations
         PgRepo<Message, int> messagesRepo,
         PgRepo<User, Guid> usersRepo,
         PgRepo<UserRole, UserRoleKey> userRolesRepo,
-        Repo<UrlPreview> urlPreviewRepo,
-        Repo<Attachment> attachmentRepo,
+        PgRepo<UrlPreview, int> urlPreviewRepo,
+        PgRepo<Attachment, int> attachmentRepo,
         ClaimsPrincipal principal,
         MessageDto messageDto,
         WebSocketConnector webSocketConnector
@@ -81,10 +80,8 @@ public class MessageMutations
             List<UrlPreview> newUrlPreviews = new List<UrlPreview>();
             List<UrlPreview> urlPreviews = new List<UrlPreview>();
 
-            List<string> urlPreviewIds = new List<string>();
-            var existingUrlPreviews = await urlPreviewRepo.GetList(
-                Builders<UrlPreview>.Filter.In(x => x.Url, urls)
-            );
+            List<int> urlPreviewIds = new List<int>();
+            var existingUrlPreviews = await urlPreviewRepo.GetList(x => urls.Contains(x.Url));
             foreach (var url in urls)
             {
                 var urlPreview = existingUrlPreviews.FirstOrDefault(x => x.Url == url);
@@ -123,9 +120,7 @@ public class MessageMutations
             {
                 message.Id = await messagesRepo.InsertOne(message);
                 // TODO: add fullUrl for the frontend based on domain, bucket, s3 key, etc
-                var attachments = await attachmentRepo.GetList(
-                    Builders<Attachment>.Filter.In(x => x.Id, message.AttachmentIds)
-                );
+                var attachments = await attachmentRepo.GetList(x => message.AttachmentIds.Contains(x.Id));
                 await webSocketConnector.SendMessageAsync(MessageWithUser.Create(message, user, urlPreviews, attachments));
                 return message;
             }

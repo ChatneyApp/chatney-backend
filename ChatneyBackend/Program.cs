@@ -77,8 +77,8 @@ builder.Services.AddSingleton(_ => new PgRepo<ChannelType, int>(pgDataSource, Ch
 builder.Services.AddSingleton(_ => new PgRepo<ChannelGroup, int>(pgDataSource, ChannelDomainSettings.ChannelGroupTableName));
 builder.Services.AddSingleton(_ => new PgRepo<Config, int>(pgDataSource, ConfigsDomainSettings.ConfigTableName));
 builder.Services.AddSingleton(_ => new PgRepo<Message, int>(pgDataSource, MessagesDomainSettings.MessageTableName));
-builder.Services.AddSingleton(_ => new Repo<Attachment>(db, AttachmentsDomainSettings.AttachmentCollectionName));
-builder.Services.AddSingleton(_ => new Repo<UrlPreview>(db, MessagesDomainSettings.UrlPreviewsCollectionName));
+builder.Services.AddSingleton(_ => new PgRepo<Attachment, int>(pgDataSource, AttachmentsDomainSettings.AttachmentTableName));
+builder.Services.AddSingleton(_ => new PgRepo<UrlPreview, int>(pgDataSource, MessagesDomainSettings.UrlPreviewTableName));
 builder.Services.AddSingleton(_ => rolesRepo);
 builder.Services.AddSingleton(_ => new PgRepo<Workspace, int>(pgDataSource, WorkspacesDomainSettings.WorkspaceTableName));
 builder.Services

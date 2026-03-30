@@ -1,39 +1,38 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
+using System.Linq.Expressions;
 using ChatneyBackend.Domains.Users;
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
+using ChatneyBackend.Infra;
+using RepoDb.Attributes;
 
 namespace ChatneyBackend.Domains.Attachments;
 
-public class Attachment : DatabaseItem, IHasUserId
+public class Attachment : IPgKey<Attachment, int>, IPgTimestamped, IHasUserId
 {
-    [BsonElement("_id")]
-    [BsonId]
-    [MaxLength(36)]
-    public required string Id { get; set; }
+    [Primary]
+    [Identity]
+    [Map("id")]
+    public int Id { get; set; }
 
-    [BsonElement("userId")]
-    [BsonRepresentation(BsonType.String)]
-    [MaxLength(36)]
+    [Map("user_id")]
     public required Guid UserId { get; set; }
 
     /// <summary>
     /// Path within the bucket: /media/{userId}/{date::YYYY-MM-DD}/{fileId}.{extension}
     /// This can be used to determine how to display the attachment in the frontend.
     /// </summary>
-    [BsonElement("urlPath")]
+    [Map("url_path")]
     [MaxLength(4096)]
     public required string UrlPath { get; set; }
 
-    [BsonElement("originalFileName")]
+    [Map("original_file_name")]
     [MaxLength(4096)]
     public required string OriginalFileName { get; set; }
 
-    [BsonElement("extension")]
+    [Map("extension")]
     [MaxLength(4096)]
     public required string Extension { get; set; }
 
-    [BsonElement("mimeType")]
+    [Map("mime_type")]
     [MaxLength(4096)]
     public required string MimeType { get; set; }
 
@@ -41,13 +40,15 @@ public class Attachment : DatabaseItem, IHasUserId
     /// The type of the attachment, e.g., "image", "video", "file", etc.
     /// This can be used to determine how to display the attachment in the frontend.
     /// </summary>
-    [BsonElement("type")]
+    [Map("type")]
     [MaxLength(4096)]
     public required string Type { get; set; }
 
-    [BsonElement("createdAt")]
+    [Map("created_at")]
     public DateTime CreatedAt { get; set; }
 
-    [BsonElement("updatedAt")]
+    [Map("updated_at")]
     public DateTime UpdatedAt { get; set; }
+
+    public static Expression<Func<Attachment, bool>> MatchByKey(int key) => attachment => attachment.Id == key;
 }
