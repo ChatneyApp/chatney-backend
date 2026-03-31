@@ -2,12 +2,12 @@ using ChatneyBackend.Domains.Channels;
 using ChatneyBackend.Domains.Configs;
 using ChatneyBackend.Domains.Messages;
 using ChatneyBackend.Domains.Attachments;
+using ChatneyBackend.Domains.DraftMessages;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Domains.Users;
 using ChatneyBackend.Domains.Workspaces;
 using HotChocolate.AspNetCore;
 using ChatneyBackend.Setup;
-using MongoDB.Driver;
 using ChatneyBackend.Utils;
 using ChatneyBackend.Infra.Middleware;
 using ChannelDomainSettings = ChatneyBackend.Domains.Channels.DomainSettings;
@@ -15,6 +15,7 @@ using ConfigsDomainSettings = ChatneyBackend.Domains.Configs.DomainSettings;
 using UsersDomainSettings = ChatneyBackend.Domains.Users.DomainSettings;
 using MessagesDomainSettings = ChatneyBackend.Domains.Messages.DomainSettings;
 using AttachmentsDomainSettings = ChatneyBackend.Domains.Attachments.DomainSettings;
+using DraftMessagesDomainSettings = ChatneyBackend.Domains.DraftMessages.DomainSettings;
 using WorkspacesDomainSettings = ChatneyBackend.Domains.Workspaces.DomainSettings;
 using Microsoft.AspNetCore.WebSockets;
 using Amazon.Runtime;
@@ -27,22 +28,17 @@ using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var connectionString = builder.Configuration.GetConnectionString("MongoDB");
 var postgresConnectionString = builder.Configuration.GetConnectionString("Postgres");
 var dbName = builder.Configuration.GetConnectionString("dbName");
 var userPasswordSalt = builder.Configuration.GetSection("UserPasswordSalt").Value;
 var jwtSecret = builder.Configuration.GetSection("JwtSecret").Value;
 
-if (connectionString == null || postgresConnectionString == null || dbName == null || userPasswordSalt == null || jwtSecret == null)
+if (postgresConnectionString == null || dbName == null || userPasswordSalt == null || jwtSecret == null)
 {
     throw new ArgumentException("App settings are invalid");
 }
 
-var url = new MongoUrl(connectionString);
-var settings = MongoClientSettings.FromUrl(url);
-var mongoClient = new MongoClient(settings);
 GlobalConfiguration.Setup().UsePostgreSql();
-var db = mongoClient.GetDatabase(dbName);
 var dataSourceBuilder = new NpgsqlDataSourceBuilder(postgresConnectionString);
 dataSourceBuilder.EnableParameterLogging();
 dataSourceBuilder.EnableDynamicJson();
@@ -65,7 +61,6 @@ var wsConfig = new WebSocketConnector();
 var rolesRepo = new PgRepo<Role, int>(pgDataSource, "roles");
 
 // Database
-builder.Services.AddSingleton(_ => db);
 builder.Services.AddSingleton(pgDataSource);
 builder.Services.AddSingleton(_ => new AppConfig { UserPasswordSalt = userPasswordSalt, JwtSecret = jwtSecret });
 builder.Services.AddSingleton(_ => new RoleManager(rolesRepo));
@@ -77,6 +72,7 @@ builder.Services.AddSingleton(_ => new PgRepo<ChannelType, int>(pgDataSource, Ch
 builder.Services.AddSingleton(_ => new PgRepo<ChannelGroup, int>(pgDataSource, ChannelDomainSettings.ChannelGroupTableName));
 builder.Services.AddSingleton(_ => new PgRepo<Config, int>(pgDataSource, ConfigsDomainSettings.ConfigTableName));
 builder.Services.AddSingleton(_ => new PgRepo<Message, int>(pgDataSource, MessagesDomainSettings.MessageTableName));
+builder.Services.AddSingleton(_ => new PgRepo<DraftMessage, int>(pgDataSource, DraftMessagesDomainSettings.MessageTableName));
 builder.Services.AddSingleton(_ => new PgRepo<Attachment, int>(pgDataSource, AttachmentsDomainSettings.AttachmentTableName));
 builder.Services.AddSingleton(_ => new PgRepo<UrlPreview, int>(pgDataSource, MessagesDomainSettings.UrlPreviewTableName));
 builder.Services.AddSingleton(_ => rolesRepo);

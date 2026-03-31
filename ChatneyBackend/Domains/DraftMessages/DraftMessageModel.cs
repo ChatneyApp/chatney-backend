@@ -1,67 +1,63 @@
 using System.ComponentModel.DataAnnotations;
+using System.Linq.Expressions;
 using ChatneyBackend.Domains.Users;
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
+using ChatneyBackend.Infra;
+using RepoDb.Attributes;
 
 namespace ChatneyBackend.Domains.DraftMessages;
 
-public class DraftMessage : DatabaseItem, IHasUserId
+public class DraftMessage : IPgKey<DraftMessage, int>, IPgTimestamped, IHasUserId
 {
-    [BsonElement("_id")]
-    [BsonId]
-    [MaxLength(36)]
-    public required string Id { get; set; }
+    [Primary]
+    [Identity]
+    [Map("id")]
+    public int Id { get; set; }
 
-    [BsonElement("channelId")]
-    [MaxLength(36)]
-    public required string ChannelId { get; set; }
+    [Map("channel_id")]
+    public required int ChannelId { get; set; }
 
-    [BsonElement("userId")]
-    [BsonRepresentation(BsonType.String)]
-    [MaxLength(36)]
+    [Map("user_id")]
     public required Guid UserId { get; set; }
 
-    [BsonElement("content")]
+    [Map("content")]
     [MaxLength(4096)]
     public required string Content { get; set; }
 
-    [BsonElement("attachments")]
-    public List<string> Attachments { get; set; } = new List<string>();
+    [Map("attachment_ids")]
+    public int[] AttachmentIds { get; set; } = [];
 
-    [BsonElement("createdAt")]
+    [Map("created_at")]
     public DateTime CreatedAt { get; set; }
 
-    [BsonElement("updatedAt")]
+    [Map("updated_at")]
     public DateTime UpdatedAt { get; set; }
 
-    [BsonElement("parentId")]
-    [MaxLength(36)]
-    public string? ParentId { get; set; }
+    [Map("parent_id")]
+    public int? ParentId { get; set; }
 
-    public static DraftMessage FromDto(MessageDto message, Guid userId) =>
+    public static DraftMessage FromDto(DraftMessageDto message, Guid userId) =>
         new()
         {
-            Id = Guid.NewGuid().ToString(),
             ChannelId = message.ChannelId,
             UserId = userId,
             Content = message.Content,
-            Attachments = message.Attachments,
+            AttachmentIds = message.AttachmentIds ?? [],
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
             ParentId = message.ParentId,
         };
+
+    public static Expression<Func<DraftMessage, bool>> MatchByKey(int key) => message => message.Id == key;
 }
 
-public class MessageDto
+public class DraftMessageDto
 {
-    [MaxLength(36)]
-    public required string ChannelId { get; set; }
+    public required int ChannelId { get; set; }
 
     [MaxLength(4096)]
     public required string Content { get; set; }
 
-    public List<string>? Attachments { get; set; }
+    public int[]? AttachmentIds { get; set; }
 
-    [MaxLength(36)]
-    public string? ParentId { get; set; }
+    public int? ParentId { get; set; }
 }
