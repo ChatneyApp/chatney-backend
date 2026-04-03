@@ -2,6 +2,7 @@ using ChatneyBackend.Domains.Channels;
 using ChatneyBackend.Domains.Configs;
 using ChatneyBackend.Domains.Messages;
 using ChatneyBackend.Domains.Attachments;
+using ChatneyBackend.Domains.DraftMessages;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Domains.Users;
 using ChatneyBackend.Domains.Workspaces;
@@ -14,6 +15,7 @@ public class Mutation
     public ChannelMutations Channels() => new();
     public ConfigMutations Configs() => new();
     public MessageMutations Messages() => new();
+    public DraftMessageMutations DraftMessages() => new();
     public AttachmentMutations Attachments() => new();
     public RoleMutations Roles() => new();
     public UserMutations Users() => new UserMutations();

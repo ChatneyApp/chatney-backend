@@ -1,24 +1,22 @@
-
-using System.Security.Claims;
+using ChatneyBackend.Infra;
 using ChatneyBackend.Infra.Middleware;
-using MongoDB.Driver;
 
 namespace ChatneyBackend.Domains.Messages;
 
-public class MyReactionsByMessageIdDataLoader : GroupedDataLoader<string, string>
+public class MyReactionsByMessageIdDataLoader : GroupedDataLoader<int, string>
 {
-    private readonly Repo<MessageReaction> _repo;
+    private readonly PgRepo<MessageReaction, MessageReactionKey> _repo;
     private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public MyReactionsByMessageIdDataLoader(IBatchScheduler batchScheduler, Repo<MessageReaction> repo, IHttpContextAccessor httpContextAccessor)
+    public MyReactionsByMessageIdDataLoader(IBatchScheduler batchScheduler, PgRepo<MessageReaction, MessageReactionKey> repo, IHttpContextAccessor httpContextAccessor)
         : base(batchScheduler, new DataLoaderOptions())
     {
         _repo = repo;
         _httpContextAccessor = httpContextAccessor;
     }
 
-    protected override async Task<ILookup<string, string>> LoadGroupedBatchAsync(
-        IReadOnlyList<string> keys,
+    protected override async Task<ILookup<int, string>> LoadGroupedBatchAsync(
+        IReadOnlyList<int> keys,
         CancellationToken cancellationToken
     )
     {
@@ -28,17 +26,19 @@ public class MyReactionsByMessageIdDataLoader : GroupedDataLoader<string, string
             return Enumerable.Empty<MessageReaction>().ToLookup(r => r.MessageId, r => r.Code);
         }
 
-        var userId = user.GetUserId();
-        if (userId == null)
+        var userId = user.GetUserGuid();
+
+        try
         {
-            return Enumerable.Empty<MessageReaction>().ToLookup(r => r.MessageId, r => r.Code);
+            var reactions = await _repo.GetList(r => keys.Contains(r.MessageId) && r.UserId == userId);
+            return reactions.ToLookup(r => r.MessageId, r => r.Code);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
         }
 
-        var filter = Builders<MessageReaction>.Filter.In(x => x.MessageId, keys) &
-                     Builders<MessageReaction>.Filter.Eq(x => x.UserId, userId);
-
-        var reactions = await _repo.GetList(filter);
-        return reactions.ToLookup(r => r.MessageId, r => r.Code);
+        return new List<MessageReaction>().ToLookup(r => r.MessageId, r => r.Code);
     }
 }
 

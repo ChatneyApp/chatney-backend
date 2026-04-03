@@ -1,58 +1,57 @@
 using System.ComponentModel.DataAnnotations;
+using System.Linq.Expressions;
+using ChatneyBackend.Infra;
 using ChatneyBackend.Utils;
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
+using RepoDb.Attributes;
 
 namespace ChatneyBackend.Domains.Channels;
 
-public class Channel : DatabaseItem
+public class Channel : IPgKey<Channel, int>, IPgTimestamped
 {
-    [BsonElement("_id")]
-    [BsonId]
-    [MaxLength(36)]
-    public string Id { get; set; }
+    [Primary]
+    [Identity]
+    [Map("id")]
+    public int Id { get; set; }
 
-    [BsonElement("name")]
+    [Map("name")]
     [MaxLength(255)]
-    public string Name { get; set; }
+    public required string Name { get; set; }
 
-    [BsonElement("channelTypeId")]
-    [MaxLength(36)]
-    public string ChannelTypeId { get; set; }
+    [Map("channel_type_id")]
+    public int ChannelTypeId { get; set; }
 
-    [BsonElement("workspaceId")]
-    [MaxLength(36)]
-    public string WorkspaceId { get; set; }
+    [Map("workspace_id")]
+    public int WorkspaceId { get; set; }
 
-    [BsonElement("createdAt")]
+    [Map("created_at")]
     public DateTime CreatedAt { get; set; }
 
-    [BsonElement("updatedAt")]
+    [Map("updated_at")]
     public DateTime UpdatedAt { get; set; }
-}
 
-public class ChannelDTO : IDTO<Channel>
-{
-    [BsonElement("name")]
-    [MaxLength(255)]
-    public string Name { get; set; }
-
-    [BsonElement("channelTypeId")]
-    [MaxLength(36)]
-    public string ChannelTypeId { get; set; }
-
-    [BsonElement("workspaceId")]
-    [MaxLength(36)]
-    public string WorkspaceId { get; set; }
-
-    public Channel ToModel()
+    public static Channel FromDto(ChannelDto channel)
     {
-        return new Channel()
+        return new Channel
         {
-            Id = Guid.NewGuid().ToString(),
-            Name = Name,
-            WorkspaceId = WorkspaceId,
-            ChannelTypeId = ChannelTypeId,
+            Name = channel.Name,
+            WorkspaceId = channel.WorkspaceId,
+            ChannelTypeId = channel.ChannelTypeId,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
         };
     }
+
+    public static Expression<Func<Channel, bool>> MatchByKey(int key) => channel => channel.Id == key;
+}
+
+public class ChannelDto : IDto<Channel>
+{
+    [MaxLength(255)]
+    public required string Name { get; set; }
+
+    public int ChannelTypeId { get; set; }
+
+    public int WorkspaceId { get; set; }
+
+    public Channel ToModel() => Channel.FromDto(this);
 }

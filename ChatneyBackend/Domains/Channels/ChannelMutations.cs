@@ -1,75 +1,53 @@
-using MongoDB.Driver;
+using ChatneyBackend.Infra;
 
 namespace ChatneyBackend.Domains.Channels;
 
 public class ChannelMutations
 {
-    public async Task<ChannelType> AddChannelType(IMongoDatabase mongoDatabase, ChannelTypeDTO channelTypeDto)
+    public async Task<ChannelType> AddChannelType(PgRepo<ChannelType, int> channelTypeRepo, ChannelTypeDto channelTypeDto)
     {
-        var collection = mongoDatabase.GetCollection<ChannelType>(DomainSettings.ChannelTypeCollectionName);
-        ChannelType channelType = ChannelType.FromDTO(channelTypeDto);
-        await collection.InsertOneAsync(channelType);
+        var channelType = ChannelType.FromDto(channelTypeDto);
+        channelType.Id = await channelTypeRepo.InsertOne(channelType);
         return channelType;
     }
 
-    public async Task<ChannelType?> UpdateChannelType(IMongoDatabase mongoDatabase, ChannelType channelType)
+    public async Task<ChannelType?> UpdateChannelType(PgRepo<ChannelType, int> channelTypeRepo, ChannelType channelType)
     {
-        var collection = mongoDatabase.GetCollection<ChannelType>(DomainSettings.ChannelTypeCollectionName);
-        var filter = Builders<ChannelType>.Filter.Eq("_id", channelType.Id);
-        var result = await collection.ReplaceOneAsync(filter, channelType);
-        return result.ModifiedCount > 0 ? channelType : null;
+        var updated = await channelTypeRepo.UpdateOne(channelType);
+        return updated ? channelType : null;
     }
 
-    public async Task<bool> DeleteChannelType(IMongoDatabase mongoDatabase, string id)
-    {
-        var collection = mongoDatabase.GetCollection<ChannelType>(DomainSettings.ChannelTypeCollectionName);
-        var result = await collection.DeleteOneAsync(c => c.Id == id);
-        return result.DeletedCount > 0;
-    }
+    public async Task<bool> DeleteChannelType(PgRepo<ChannelType, int> channelTypeRepo, int id) =>
+        await channelTypeRepo.DeleteById(id);
 
-    public async Task<Channel> AddChannel(IMongoDatabase mongoDatabase, ChannelDTO channelDto)
+    public async Task<Channel> AddChannel(PgRepo<Channel, int> channelRepo, ChannelDto channelDto)
     {
-        var collection = mongoDatabase.GetCollection<Channel>(DomainSettings.ChannelCollectionName);
-        Channel channel = channelDto.ToModel();
-        await collection.InsertOneAsync(channel);
+        var channel = channelDto.ToModel();
+        channel.Id = await channelRepo.InsertOne(channel);
         return channel;
     }
 
-    public async Task<Channel?> UpdateChannel(IMongoDatabase mongoDatabase, Channel channel)
+    public async Task<Channel?> UpdateChannel(PgRepo<Channel, int> channelRepo, Channel channel)
     {
-        var collection = mongoDatabase.GetCollection<Channel>(DomainSettings.ChannelCollectionName);
-        var filter = Builders<Channel>.Filter.Eq("_id", channel.Id);
-        var result = await collection.ReplaceOneAsync(filter, channel);
-        return result.ModifiedCount > 0 ? channel : null;
+        var updated = await channelRepo.UpdateOne(channel);
+        return updated ? channel : null;
     }
 
-    public async Task<bool> DeleteChannel(IMongoDatabase mongoDatabase, string id)
-    {
-        var collection = mongoDatabase.GetCollection<Channel>(DomainSettings.ChannelCollectionName);
-        var result = await collection.DeleteOneAsync(c => c.Id == id);
-        return result.DeletedCount > 0;
-    }
+    public async Task<bool> DeleteChannel(PgRepo<Channel, int> channelRepo, int id) => await channelRepo.DeleteById(id);
 
-    public async Task<ChannelGroup> AddChannelGroup(IMongoDatabase mongoDatabase, ChannelGroupDTO channelGroupDto)
+    public async Task<ChannelGroup> AddChannelGroup(PgRepo<ChannelGroup, int> channelGroupRepo, ChannelGroupDto channelGroupDto)
     {
-        var collection = mongoDatabase.GetCollection<ChannelGroup>(DomainSettings.ChannelGroupCollectionName);
-        ChannelGroup channelGroup = ChannelGroup.FromDTO(channelGroupDto);
-        await collection.InsertOneAsync(channelGroup);
+        var channelGroup = ChannelGroup.FromDto(channelGroupDto);
+        channelGroup.Id = await channelGroupRepo.InsertOne(channelGroup);
         return channelGroup;
     }
 
-    public async Task<ChannelGroup?> UpdateChannelGroup(IMongoDatabase mongoDatabase, ChannelGroup channelGroup)
+    public async Task<ChannelGroup?> UpdateChannelGroup(PgRepo<ChannelGroup, int> channelGroupRepo, ChannelGroup channelGroup)
     {
-        var collection = mongoDatabase.GetCollection<ChannelGroup>(DomainSettings.ChannelGroupCollectionName);
-        var filter = Builders<ChannelGroup>.Filter.Eq("_id", channelGroup.Id);
-        var result = await collection.ReplaceOneAsync(filter, channelGroup);
-        return result.ModifiedCount > 0 ? channelGroup : null;
+        var updated = await channelGroupRepo.UpdateOne(channelGroup);
+        return updated ? channelGroup : null;
     }
 
-    public async Task<bool> DeleteChannelGroup(IMongoDatabase mongoDatabase, string id)
-    {
-        var collection = mongoDatabase.GetCollection<ChannelGroup>(DomainSettings.ChannelGroupCollectionName);
-        var result = await collection.DeleteOneAsync(c => c.Id == id);
-        return result.DeletedCount > 0;
-    }
+    public async Task<bool> DeleteChannelGroup(PgRepo<ChannelGroup, int> channelGroupRepo, int id) =>
+        await channelGroupRepo.DeleteById(id);
 }

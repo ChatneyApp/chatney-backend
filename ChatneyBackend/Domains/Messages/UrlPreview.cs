@@ -1,59 +1,63 @@
-﻿using System.ComponentModel.DataAnnotations;
-using MongoDB.Bson.Serialization.Attributes;
+using System.ComponentModel.DataAnnotations;
+using System.Linq.Expressions;
+using ChatneyBackend.Infra;
+using RepoDb.Attributes;
 
 namespace ChatneyBackend.Domains.Messages;
 
-public class UrlPreviewMediaSize
+public class UrlPreview : IPgKey<UrlPreview, int>, IPgTimestamped
 {
-    [BsonElement("width")]
-    public int Width { get; set; }
-    [BsonElement("height")]
-    public int Height { get; set; }
-}
+    [Primary]
+    [Identity]
+    [Map("id")]
+    public int Id { get; set; }
 
-public class UrlPreview : DatabaseItem
-{
-    [BsonElement("_id")]
-    [BsonId]
-    [MaxLength(36)]
-    public required string Id { get; set; }
-
-    [BsonElement("createdAt")]
+    [Map("created_at")]
     public DateTime CreatedAt { get; set; }
 
-    [BsonElement("updatedAt")]
+    [Map("updated_at")]
     public DateTime UpdatedAt { get; set; }
 
-    [BsonElement("url")]
-    public string Url { get; set; }    // Нормализованный URL (без query params если нужно)
+    [Map("url")]
+    [MaxLength(4096)]
+    public required string Url { get; set; }
 
-    [BsonElement("title")]
-    public string? Title { get; set; }            // Заголовок страницы
+    [Map("title")]
+    [MaxLength(4096)]
+    public string? Title { get; set; }
 
-    [BsonElement("description")]
-    public string? Description { get; set; }      // Описание страницы
+    [Map("description")]
+    public string? Description { get; set; }
 
-    [BsonElement("thumbnailUrl")]
-    public string? ThumbnailUrl { get; set; }         // URL главного изображения
+    [Map("thumbnail_url")]
+    [MaxLength(4096)]
+    public string? ThumbnailUrl { get; set; }
 
-    [BsonElement("videoThumbnailUrl")]
-    public string? VideoThumbnailUrl { get; set; }         // URL главного изображения
+    [Map("video_thumbnail_url")]
+    [MaxLength(4096)]
+    public string? VideoThumbnailUrl { get; set; }
 
-    [BsonElement("siteName")]
-    public string? SiteName { get; set; }         // Название сайта
+    [Map("site_name")]
+    [MaxLength(4096)]
+    public string? SiteName { get; set; }
 
-    [BsonElement("favIconUrl")]
-    public string? FavIconUrl { get; set; }       // URL фавикона
+    [Map("fav_icon_url")]
+    [MaxLength(4096)]
+    public string? FavIconUrl { get; set; }
 
-    [BsonElement("type")]
-    public string? Type { get; set; }             // Тип контента (article, website, video и т.д.)
+    [Map("type")]
+    [MaxLength(255)]
+    public string? Type { get; set; }
 
-    [BsonElement("author")]
-    public string? Author { get; set; }           // Автор контента
+    [Map("author")]
+    [MaxLength(4096)]
+    public string? Author { get; set; }
 
-    [BsonElement("thumbnailWidth")]
+    [Map("thumbnail_width")]
     public int? ThumbnailWidth { get; set; }
 
-    [BsonElement("thumbnailHeight")]
+    [Map("thumbnail_height")]
     public int? ThumbnailHeight { get; set; }
+
+    public static Expression<Func<UrlPreview, bool>> MatchByKey(int key) => preview => preview.Id == key;
 }

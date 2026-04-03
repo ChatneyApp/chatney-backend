@@ -1,4 +1,4 @@
-using MongoDB.Driver;
+using ChatneyBackend.Infra;
 
 namespace ChatneyBackend.Domains.Messages;
 
@@ -10,7 +10,7 @@ public class UrlPreviewTypeExtension : ObjectTypeExtension<Message>
             .Resolve(async (ctx) =>
             {
                 var message = ctx.Parent<Message>();
-                if (message.UrlPreviewIds.Count == 0)
+                if (message.UrlPreviewIds.Length == 0)
                 {
                     return Array.Empty<UrlPreview>();
                 }
@@ -23,22 +23,21 @@ public class UrlPreviewTypeExtension : ObjectTypeExtension<Message>
     }
 }
 
-public class UrlPreviewsByUrlPreviewIdDataLoader : BatchDataLoader<string, UrlPreview>
+public class UrlPreviewsByUrlPreviewIdDataLoader : BatchDataLoader<int, UrlPreview>
 {
-    private readonly Repo<UrlPreview> _repo;
+    private readonly PgRepo<UrlPreview, int> _repo;
 
-    public UrlPreviewsByUrlPreviewIdDataLoader(IBatchScheduler batchScheduler, Repo<UrlPreview> repo)
+    public UrlPreviewsByUrlPreviewIdDataLoader(IBatchScheduler batchScheduler, PgRepo<UrlPreview, int> repo)
         : base(batchScheduler, new DataLoaderOptions())
     {
         _repo = repo;
     }
 
-    protected override async Task<IReadOnlyDictionary<string, UrlPreview>> LoadBatchAsync(
-        IReadOnlyList<string> keys,
+    protected override async Task<IReadOnlyDictionary<int, UrlPreview>> LoadBatchAsync(
+        IReadOnlyList<int> keys,
         CancellationToken cancellationToken)
     {
-        var filter = Builders<UrlPreview>.Filter.In(x => x.Id, keys);
-        var previews = await _repo.GetList(filter);
+        var previews = await _repo.GetList(x => keys.Contains(x.Id));
         return previews.ToDictionary(p => p.Id);
     }
 }

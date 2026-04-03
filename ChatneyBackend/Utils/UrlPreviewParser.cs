@@ -43,7 +43,6 @@ public static class UrlPreviewExtractor
     {
         var preview = new UrlPreview
         {
-            Id = Guid.NewGuid().ToString(),
             Url = url,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,

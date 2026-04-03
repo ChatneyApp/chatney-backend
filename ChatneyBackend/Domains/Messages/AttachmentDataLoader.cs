@@ -1,5 +1,5 @@
 using ChatneyBackend.Domains.Attachments;
-using MongoDB.Driver;
+using ChatneyBackend.Infra;
 
 namespace ChatneyBackend.Domains.Messages;
 
@@ -11,7 +11,7 @@ public class AttachmentDataLoader : ObjectTypeExtension<Message>
             .Resolve(async (ctx) =>
             {
                 var message = ctx.Parent<Message>();
-                if (message.AttachmentIds.Count == 0)
+                if (message.AttachmentIds.Length == 0)
                 {
                     return Array.Empty<Attachment>();
                 }
@@ -25,22 +25,21 @@ public class AttachmentDataLoader : ObjectTypeExtension<Message>
     }
 }
 
-public class AttachmentsByAttachmentIdDataLoader : BatchDataLoader<string, Attachment>
+public class AttachmentsByAttachmentIdDataLoader : BatchDataLoader<int, Attachment>
 {
-    private readonly Repo<Attachment> _repo;
+    private readonly PgRepo<Attachment, int> _repo;
 
-    public AttachmentsByAttachmentIdDataLoader(IBatchScheduler batchScheduler, Repo<Attachment> repo)
+    public AttachmentsByAttachmentIdDataLoader(IBatchScheduler batchScheduler, PgRepo<Attachment, int> repo)
         : base(batchScheduler, new DataLoaderOptions())
     {
         _repo = repo;
     }
 
-    protected override async Task<IReadOnlyDictionary<string, Attachment>> LoadBatchAsync(
-        IReadOnlyList<string> keys,
+    protected override async Task<IReadOnlyDictionary<int, Attachment>> LoadBatchAsync(
+        IReadOnlyList<int> keys,
         CancellationToken cancellationToken)
     {
-        var filter = Builders<Attachment>.Filter.In(x => x.Id, keys);
-        var previews = await _repo.GetList(filter);
-        return previews.ToDictionary(p => p.Id);
+        var attachments = await _repo.GetList(x => keys.Contains(x.Id));
+        return attachments.ToDictionary(p => p.Id);
     }
 }

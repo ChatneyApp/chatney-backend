@@ -2,63 +2,88 @@ using ChatneyBackend.Domains.Channels;
 using ChatneyBackend.Domains.Configs;
 using ChatneyBackend.Domains.Messages;
 using ChatneyBackend.Domains.Attachments;
+using ChatneyBackend.Domains.DraftMessages;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Domains.Users;
 using ChatneyBackend.Domains.Workspaces;
 using HotChocolate.AspNetCore;
 using ChatneyBackend.Setup;
-using MongoDB.Driver;
 using ChatneyBackend.Utils;
 using ChatneyBackend.Infra.Middleware;
 using ChannelDomainSettings = ChatneyBackend.Domains.Channels.DomainSettings;
 using ConfigsDomainSettings = ChatneyBackend.Domains.Configs.DomainSettings;
+using UsersDomainSettings = ChatneyBackend.Domains.Users.DomainSettings;
 using MessagesDomainSettings = ChatneyBackend.Domains.Messages.DomainSettings;
 using AttachmentsDomainSettings = ChatneyBackend.Domains.Attachments.DomainSettings;
-using RolesDomainSettings = ChatneyBackend.Domains.Roles.DomainSettings;
-using UserDomainSettings = ChatneyBackend.Domains.Users.DomainSettings;
+using DraftMessagesDomainSettings = ChatneyBackend.Domains.DraftMessages.DomainSettings;
 using WorkspacesDomainSettings = ChatneyBackend.Domains.Workspaces.DomainSettings;
 using Microsoft.AspNetCore.WebSockets;
 using Amazon.Runtime;
 using Amazon.S3;
+using ChatneyBackend.Infra.Migrations;
+using ChatneyBackend.Infra;
+using RepoDb;
+using FluentMigrator.Runner;
+using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var connectionString = builder.Configuration.GetConnectionString("MongoDB");
+var postgresConnectionString = builder.Configuration.GetConnectionString("Postgres");
 var dbName = builder.Configuration.GetConnectionString("dbName");
 var userPasswordSalt = builder.Configuration.GetSection("UserPasswordSalt").Value;
 var jwtSecret = builder.Configuration.GetSection("JwtSecret").Value;
 
-if (connectionString == null || dbName == null || userPasswordSalt == null || jwtSecret == null)
+if (postgresConnectionString == null || dbName == null || userPasswordSalt == null || jwtSecret == null)
 {
     throw new ArgumentException("App settings are invalid");
 }
 
-var url = new MongoUrl(connectionString);
-var settings = MongoClientSettings.FromUrl(url);
-var mongoClient = new MongoClient(settings);
-var db = mongoClient.GetDatabase(dbName);
+GlobalConfiguration.Setup().UsePostgreSql();
+var dataSourceBuilder = new NpgsqlDataSourceBuilder(postgresConnectionString);
+dataSourceBuilder.EnableParameterLogging();
+dataSourceBuilder.EnableDynamicJson();
+var pgDataSource = dataSourceBuilder.Build();
+
+await using (var pgConnection = await pgDataSource.OpenConnectionAsync())
+{
+    var ping = await pgConnection.ExecuteScalarAsync<int>("SELECT 1");
+    if (ping == 1)
+    {
+        Console.WriteLine("pg connection is OK");
+    }
+}
 
 var wsConfig = new WebSocketConnector();
 
 // var bucket = builder.Configuration.GetSection("AWS").GetValue<string>("Bucket");
 // Console.WriteLine(bucket);
 
+var rolesRepo = new PgRepo<Role, int>(pgDataSource, "roles");
+
 // Database
-DbInit.Init(mongoClient, dbName);
-builder.Services.AddSingleton(_ => db);
+builder.Services.AddSingleton(pgDataSource);
 builder.Services.AddSingleton(_ => new AppConfig { UserPasswordSalt = userPasswordSalt, JwtSecret = jwtSecret });
-builder.Services.AddSingleton(_ => new RoleManager(db));
-builder.Services.AddSingleton(_ => new Repo<User>(db, UserDomainSettings.UserCollectionName));
-builder.Services.AddSingleton(_ => new Repo<MessageReaction>(db, MessagesDomainSettings.ReactionCollectionName));
-builder.Services.AddSingleton(_ => new Repo<Channel>(db, ChannelDomainSettings.ChannelCollectionName));
-builder.Services.AddSingleton(_ => new Repo<ChannelType>(db, ChannelDomainSettings.ChannelTypeCollectionName));
-builder.Services.AddSingleton(_ => new Repo<ChannelGroup>(db, ChannelDomainSettings.ChannelGroupCollectionName));
-builder.Services.AddSingleton(_ => new Repo<Config>(db, ConfigsDomainSettings.ConfigCollectionName));
-builder.Services.AddSingleton(_ => new Repo<Message>(db, MessagesDomainSettings.MessageCollectionName));
-builder.Services.AddSingleton(_ => new Repo<Attachment>(db, AttachmentsDomainSettings.AttachmentCollectionName));
-builder.Services.AddSingleton(_ => new Repo<UrlPreview>(db, MessagesDomainSettings.UrlPreviewsCollectionName));
-builder.Services.AddSingleton(_ => new Repo<Role>(db, RolesDomainSettings.RoleCollectionName));
-builder.Services.AddSingleton(_ => new Repo<Workspace>(db, WorkspacesDomainSettings.WorkspaceCollectionName));
+builder.Services.AddSingleton(_ => new RoleManager(rolesRepo));
+builder.Services.AddSingleton(_ => new PgRepo<User, Guid>(pgDataSource, UsersDomainSettings.UserTableName));
+builder.Services.AddSingleton(_ => new PgRepo<UserRole, UserRoleKey>(pgDataSource, UsersDomainSettings.UserRoleTableName));
+builder.Services.AddSingleton(_ => new PgRepo<MessageReaction, MessageReactionKey>(pgDataSource, MessagesDomainSettings.ReactionTableName));
+builder.Services.AddSingleton(_ => new PgRepo<Channel, int>(pgDataSource, ChannelDomainSettings.ChannelTableName));
+builder.Services.AddSingleton(_ => new PgRepo<ChannelType, int>(pgDataSource, ChannelDomainSettings.ChannelTypeTableName));
+builder.Services.AddSingleton(_ => new PgRepo<ChannelGroup, int>(pgDataSource, ChannelDomainSettings.ChannelGroupTableName));
+builder.Services.AddSingleton(_ => new PgRepo<Config, int>(pgDataSource, ConfigsDomainSettings.ConfigTableName));
+builder.Services.AddSingleton(_ => new PgRepo<Message, int>(pgDataSource, MessagesDomainSettings.MessageTableName));
+builder.Services.AddSingleton(_ => new PgRepo<DraftMessage, int>(pgDataSource, DraftMessagesDomainSettings.MessageTableName));
+builder.Services.AddSingleton(_ => new PgRepo<Attachment, int>(pgDataSource, AttachmentsDomainSettings.AttachmentTableName));
+builder.Services.AddSingleton(_ => new PgRepo<UrlPreview, int>(pgDataSource, MessagesDomainSettings.UrlPreviewTableName));
+builder.Services.AddSingleton(_ => rolesRepo);
+builder.Services.AddSingleton(_ => new PgRepo<Workspace, int>(pgDataSource, WorkspacesDomainSettings.WorkspaceTableName));
+builder.Services
+    .AddFluentMigratorCore()
+    .ConfigureRunner(runner => runner
+        .AddPostgres()
+        .WithGlobalConnectionString(postgresConnectionString)
+        .ScanIn(typeof(Program).Assembly).For.Migrations())
+        .ConfigureRunner(rb => rb.WithVersionTable(new CustomVersionTable()));
 // WebSocket
 builder.Services.AddSingleton(_ => wsConfig);
 // AWS S3 setup
@@ -126,10 +151,12 @@ builder.Services
     .AddMutationType<Mutation>()
     .AddTypeExtension<HasUserIdTypeExtension<Message>>()
     .AddTypeExtension<MessageReactionsTypeExtension>()
+    .AddTypeExtension<MessageReactionSummaryTypeExtension>()
     .AddTypeExtension<UrlPreviewTypeExtension>()
     .AddTypeExtension<AttachmentDataLoader>()
     .AddDataLoader<UserByIdDataLoader>()
     .AddDataLoader<MyReactionsByMessageIdDataLoader>()
+    .AddDataLoader<MessageReactionsByMessageIdDataLoader>()
     .AddDataLoader<UrlPreviewsByUrlPreviewIdDataLoader>()
     .AddDataLoader<AttachmentsByAttachmentIdDataLoader>()
     .AddType<UploadType>();

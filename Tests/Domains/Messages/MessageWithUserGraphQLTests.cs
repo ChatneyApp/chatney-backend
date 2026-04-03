@@ -10,12 +10,12 @@ public class MessageWithUserJsonTest
     {
         public MessageWithUser Message() => new()
         {
-            Id = "message-id",
-            ChannelId = "channel-id",
-            UserId = "user-id",
+            Id = 1,
+            ChannelId = 0,
+            UserId = Guid.NewGuid(),
             Content = "content",
-            AttachmentIds = ["attachment-id"],
-            UrlPreviewIds = ["preview-id"],
+            AttachmentIds = [1],
+            UrlPreviewIds = [1],
             Status = "sent",
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
@@ -24,7 +24,7 @@ public class MessageWithUserJsonTest
             ChildrenCount = 0,
             User = new MessageUser
             {
-                Id = "user-id",
+                Id = Guid.NewGuid(),
                 Name = "User",
                 AvatarUrl = null
             },

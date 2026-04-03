@@ -1,21 +1,31 @@
-﻿using MongoDB.Driver;
+﻿using ChatneyBackend.Infra;
 
 namespace ChatneyBackend.Domains.Users;
 
-public class UserByIdDataLoader : BatchDataLoader<string, User>
+public class UserByIdDataLoader : BatchDataLoader<Guid, User>
 {
-    private readonly Repo<User> _repo;
+    private readonly PgRepo<User, Guid> _repo;
 
-    public UserByIdDataLoader(IBatchScheduler batchScheduler, Repo<User> repo)
+    public UserByIdDataLoader(IBatchScheduler batchScheduler, PgRepo<User, Guid> repo)
         : base(batchScheduler, new DataLoaderOptions()) => _repo = repo;
 
-    protected override async Task<IReadOnlyDictionary<string, User>> LoadBatchAsync(
-        IReadOnlyList<string> keys,
+    protected override async Task<IReadOnlyDictionary<Guid, User>> LoadBatchAsync(
+        IReadOnlyList<Guid> keys,
         CancellationToken cancellationToken
     )
     {
-        var users = await _repo.GetList(Builders<User>.Filter.In(x => x.Id, keys));
-        return users.ToDictionary(u => u.Id);
+        var guids = keys.ToList();
+        try
+        {
+            var users = await _repo.GetList(u => guids.Contains(u.Id));
+            return users.ToDictionary(u => u.Id);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+
+        return new List<User>().ToDictionary(u => u.Id);
     }
 }
 

@@ -1,28 +1,16 @@
 services:
-  mongo:
-    image: mongo:6
-    container_name: mongodb-chatney
+  postgres:
+    image: postgres:18-alpine
+    container_name: postgres-chatney
     restart: unless-stopped
     ports:
-      - "27017:27017"
+      - "5432:5432"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: pass
+      POSTGRES_DB: chatney
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: pass
     volumes:
-      - mongo_data:/data/db
-  
-  mongo_express:
-    image: mongo-express
-    container_name: mongo_admin_dashboard
-    restart: unless-stopped
-    ports:
-      - "8081:8081"
-    environment:
-      ME_CONFIG_OPTIONS_EDITORTHEME: ambiance
-      ME_CONFIG_MONGODB_ADMINUSERNAME: root
-      ME_CONFIG_MONGODB_ADMINPASSWORD: pass
-      ME_CONFIG_MONGODB_URL: mongodb://root:pass@mongo:27017/
-      ME_CONFIG_BASICAUTH: false
+      - postgres_data:/var/lib/postgresql/data
 
   kafka:
     image: apache/kafka
@@ -45,5 +33,5 @@ services:
 volumes:
   rustfs_data:
     driver: local
-  mongo_data:
+  postgres_data:
     driver: local

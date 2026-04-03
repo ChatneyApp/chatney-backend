@@ -1,157 +1,114 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using ChatneyBackend.Infra;
+using RepoDb.Attributes;
 using ChatneyBackend.Utils;
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
+using System.Linq.Expressions;
 
 namespace ChatneyBackend.Domains.Users;
 
-public class RoleWorkspace
+public readonly record struct UserRoleKey(Guid UserId, string Type, int ItemId);
+
+public class UserRole : IPgKey<UserRole, UserRoleKey>
 {
-    [BsonElement("roleId")]
-    [MaxLength(36)]
-    public string RoleId { get; set; }
+    [Primary]
+    [Identity]
+    [Map("user_id")]
+    public Guid UserId { get; set; }
+
+    /// <summary>
+    /// "workspace" | "channel" | "channel_type"
+    /// </summary>
+    [Primary]
+    [Map("type")]
+    public required string Type { get; set; }
+
+    [Primary]
+    [Map("item_id")]
+    public required int ItemId { get; set; }
+
+    [Map("role_id")]
+    public required int RoleId { get; set; }
+
+    public static Expression<Func<UserRole, bool>> MatchByKey(UserRoleKey key) =>
+        role => role.UserId == key.UserId && role.Type == key.Type && role.ItemId == key.ItemId;
 }
 
-public class RoleChannel
-{
-    [BsonElement("roleId")]
-    [MaxLength(36)]
-    public string RoleId { get; set; }
-}
-
-public class RoleChannelType
-{
-    [BsonElement("roleId")]
-    [MaxLength(36)]
-    public string RoleId { get; set; }
-}
-
-public class UserRole
-{
-    [BsonElement("global")]
-    public string Global { get; set; }
-
-    [BsonElement("workspaces")]
-    [NotMapped]
-    public Dictionary<string, RoleWorkspace> Workspace { get; set; }
-
-    [BsonElement("channels")]
-    [NotMapped]
-    public Dictionary<string, RoleChannel> Channel { get; set; }
-
-    [BsonElement("channelTypes")]
-    [NotMapped]
-    public Dictionary<string, RoleChannelType> ChannelTypes { get; set; }
-}
-
+// TODO: move to another model/table
 public class ChannelSettings
 {
-    [BsonElement("lastSeenMessage")]
     public string LastSeenMessage { get; set; }
 
-    [BsonElement("muted")]
     public bool Muted { get; set; }
 }
 
-public class UserResponse
+public class User : IPgKey<User, Guid>, IPgTimestamped, IType
 {
-    public string Id { get; set; }
+    [Primary]
+    [Identity]
+    [Map("id")]
+    public Guid Id { get; set; }
 
-    public string Name { get; set; }
+    [Map("name")]
+    public required string Name { get; set; }
 
-    public bool Active { get; set; }
-    public bool Verified { get; set; }
-    public bool Banned { get; set; }
-    public bool Muted { get; set; }
-
-    public string Email { get; set; }
-
-    public UserRole Roles { get; set; }
-
-    [NotMapped] // hot chocolate attribute
-    public Dictionary<string, ChannelSettings>? ChannelsSettings { get; set; }
-
-    public List<string> Workspaces { get; set; }
-}
-
-public class User : DatabaseItem, IType
-{
-    [BsonElement("_id")]
-    [BsonId]
-    [MaxLength(36)]
-    public string Id { get; set; }
-
-    [BsonElement("name")]
-    public string Name { get; set; }
-
-    [BsonElement("active")]
-    [BsonRepresentation(BsonType.Boolean)]
+    [Map("active")]
     public bool Active { get; set; }
 
-    [BsonElement("verified")]
-    [BsonRepresentation(BsonType.Boolean)]
+    [Map("verified")]
     public bool Verified { get; set; }
 
-    [BsonElement("banned")]
-    [BsonRepresentation(BsonType.Boolean)]
+    [Map("banned")]
     public bool Banned { get; set; }
 
-    [BsonElement("muted")]
-    [BsonRepresentation(BsonType.Boolean)]
+    [Map("muted")]
     public bool Muted { get; set; }
 
-    [BsonElement("email")]
-    public string Email { get; set; }
+    [Map("email")]
+    public required string Email { get; set; }
 
-    [BsonElement("avatarUrl")]
+    [Map("avatar_url")]
     public string? AvatarUrl { get; set; }
 
-    [BsonElement("roles")]
-    public UserRole Roles { get; set; }
-
-    [BsonElement("channelsSettings")]
-    [NotMapped]
-    public Dictionary<string, ChannelSettings>? ChannelsSettings { get; set; }
-
-    [BsonElement("workspaces")]
-    public List<string> Workspaces { get; set; }
-
-    [BsonElement("password")]
+    [Map("role_id")]
     [GraphQLIgnore]
-    public string Password { get; set; }
+    public required int RoleId { get; set; }
 
-    [BsonElement("createdAt")]
+    [Map("workspace_ids")]
+    public required int[] WorkspaceIds { get; set; }
+
+    [Map("password")]
+    [GraphQLIgnore]
+    public required string Password { get; set; }
+
+    [Map("created_at")]
     [GraphQLIgnore]
     public DateTime CreatedAt { get; set; }
 
-    [BsonElement("updatedAt")]
+    [Map("updated_at")]
     [GraphQLIgnore]
     public DateTime UpdatedAt { get; set; }
 
     [GraphQLIgnore]
     public TypeKind Kind { get; }
+
+    public static Expression<Func<User, bool>> MatchByKey(Guid key) => user => user.Id == key;
 }
 
 /// <summary>
 /// User registers themselves
 /// </summary>
-public class UserRegisterDTO : IDTO<User>
+public class UserRegisterDto : IDto<User>
 {
-    [BsonElement("name")]
-    public string Name { get; set; }
+    public required string Name { get; set; }
 
-    [BsonElement("email")]
-    public string Email { get; set; }
+    public required string Email { get; set; }
 
-    [BsonElement("password")]
-    public string Password { get; set; }
+    public required string Password { get; set; }
 
     public User ToModel()
     {
         return new User
         {
-            Id = Guid.NewGuid().ToString(),
+            Id = Guid.NewGuid(),
             Name = Name,
             Email = Email,
             Password = Password,
@@ -159,17 +116,10 @@ public class UserRegisterDTO : IDTO<User>
             Muted = false,
             Banned = false,
             Verified = false,
-            Workspaces = [],
+            WorkspaceIds = [],
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
-            Roles = new UserRole()
-            {
-                Channel = new Dictionary<string, RoleChannel>(),
-                ChannelTypes = new Dictionary<string, RoleChannelType>(),
-                Global = string.Empty,
-                Workspace = new  Dictionary<string, RoleWorkspace>(),
-            },
-            ChannelsSettings = new Dictionary<string, ChannelSettings>()
+            RoleId = 0,
         };
     }
 }
@@ -177,56 +127,38 @@ public class UserRegisterDTO : IDTO<User>
 /// <summary>
 /// Admin creates a user
 /// </summary>
-public class CreateUserDTO : IDTO<User>
+public class CreateUserDto : IDto<User>
 {
-    [BsonElement("name")]
-    public string Name { get; set; }
+    public required string Name { get; set; }
 
-    [BsonElement("active")]
-    [BsonRepresentation(BsonType.Boolean)]
     public bool Active { get; set; }
 
-    [BsonElement("verified")]
-    [BsonRepresentation(BsonType.Boolean)]
     public bool Verified { get; set; }
 
-    [BsonElement("banned")]
-    [BsonRepresentation(BsonType.Boolean)]
     public bool Banned { get; set; }
 
-    [BsonElement("muted")]
-    [BsonRepresentation(BsonType.Boolean)]
     public bool Muted { get; set; }
 
-    [BsonElement("email")]
-    public string Email { get; set; }
+    public required string Email { get; set; }
 
-    [BsonElement("roles")]
-    public UserRole Roles { get; set; }
+    public required int RoleId { get; set; }
 
-    [BsonElement("channelsSettings")]
-    [NotMapped]
-    public Dictionary<string, ChannelSettings>? ChannelsSettings { get; set; }
+    public required int[] WorkspaceIds { get; set; }
 
-    [BsonElement("workspaces")]
-    public List<string> Workspaces { get; set; }
-
-    [BsonElement("password")]
-    public string Password { get; set; }
+    public required string Password { get; set; }
 
     public User ToModel()
     {
         return new User
         {
-            Id = Guid.NewGuid().ToString(),
+            Id = Guid.NewGuid(),
             Name = Name,
             Email = Email,
             Password = Password,
-            Workspaces = Workspaces,
+            WorkspaceIds = WorkspaceIds,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
-            Roles = Roles,
-            ChannelsSettings = ChannelsSettings,
+            RoleId = RoleId,
             Active = Active,
             Banned = Banned,
             Verified = Verified,
@@ -237,12 +169,12 @@ public class CreateUserDTO : IDTO<User>
 
 public class UserLoginResponse
 {
-    public string Id { get; set; }
+    public required string Id { get; set; }
 
-    public string Token { get; set; }
+    public required string Token { get; set; }
 }
 
 public interface IHasUserId
 {
-    string UserId { get; }
+    Guid UserId { get; }
 }

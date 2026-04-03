@@ -1,64 +1,54 @@
 using System.ComponentModel.DataAnnotations;
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
+using ChatneyBackend.Infra;
+using RepoDb.Attributes;
+using System.Linq.Expressions;
 
 namespace ChatneyBackend.Domains.Roles;
 
-public class RoleSettings
+public class Role : IPgKey<Role, int>, IPgTimestamped
 {
-    [BsonElement("base")]
-    public bool Base { get; set; }
-}
+    [Primary]
+    [Identity]
+    [Map("id")]
+    public int Id { get; set; }
 
-public class Role : DatabaseItem
-{
-    [BsonElement("_id")]
-    [BsonId]
-    [MaxLength(36)]
-    public string Id { get; set; }
-
-    [BsonElement("name")]
+    [Map("name")]
     [MaxLength(255)]
-    public string Name { get; set; }
+    public required string Name { get; set; }
 
-    [BsonElement("settings")]
-    public RoleSettings Settings { get; set; }
+    [Map("is_base")]
+    public bool IsBase { get; set; }
 
-    [BsonElement("permissions")]
-    public HashSet<string> Permissions { get; set; }
+    [Map("permissions")]
+    public string[] Permissions { get; set; } = [];
 
-    [BsonElement("createdAt")]
+    [Map("created_at")]
     public DateTime CreatedAt { get; set; }
 
-    [BsonElement("updatedAt")]
+    [Map("updated_at")]
     public DateTime UpdatedAt { get; set; }
 
-    public static Role FromDTO(RoleDTO role)
+    public static Role FromDto(RoleDto role)
     {
         return new Role()
         {
-            Id = Guid.NewGuid().ToString(),
             Name = role.Name,
-            Permissions = role.Permissions,
+            Permissions = role.Permissions.ToArray(),
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
-            Settings = new RoleSettings()
-            {
-                Base = role.Settings.Base
-            }
+            IsBase = role.IsBase,
         };
     }
+
+    public static Expression<Func<Role, bool>> MatchByKey(int key) => role => role.Id == key;
 }
 
-public class RoleDTO
+public class RoleDto
 {
-    [BsonElement("name")]
     [MaxLength(255)]
     public string Name { get; set; }
 
-    [BsonElement("settings")]
-    public RoleSettings Settings { get; set; }
+    public bool IsBase { get; set; }
 
-    [BsonElement("permissions")]
-    public HashSet<string> Permissions { get; set; }
+    public List<string> Permissions { get; set; }
 }

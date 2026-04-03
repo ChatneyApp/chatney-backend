@@ -1,41 +1,40 @@
-﻿using System.ComponentModel.DataAnnotations;
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
+using System.ComponentModel.DataAnnotations;
+using System.Linq.Expressions;
+using ChatneyBackend.Infra;
+using RepoDb.Attributes;
 
 namespace ChatneyBackend.Domains.Channels;
 
-public class ChannelGroup : DatabaseItem
+public class ChannelGroup : IPgKey<ChannelGroup, int>, IPgTimestamped
 {
-    [BsonElement("_id")]
-    [BsonId]
-    [MaxLength(36)]
-    public string Id { get; set; }
+    [Primary]
+    [Identity]
+    [Map("id")]
+    public int Id { get; set; }
 
-    [BsonElement("name")]
+    [Map("name")]
     [MaxLength(255)]
-    public string Name { get; set; }
+    public required string Name { get; set; }
 
-    [BsonElement("workspaceId")]
-    [MaxLength(36)]
-    public string WorkspaceId { get; set; }
+    [Map("workspace_id")]
+    public int WorkspaceId { get; set; }
 
-    [BsonElement("channelIds")]
-    public string[] ChannelIds { get; set; }
+    [Map("channel_ids")]
+    public required int[] ChannelIds { get; set; }
 
-    [BsonElement("order")]
+    [Map("order")]
     public int Order { get; set; }
 
-    [BsonElement("createdAt")]
+    [Map("created_at")]
     public DateTime CreatedAt { get; set; }
 
-    [BsonElement("updatedAt")]
+    [Map("updated_at")]
     public DateTime UpdatedAt { get; set; }
 
-    public static ChannelGroup FromDTO(ChannelGroupDTO channelGroup)
+    public static ChannelGroup FromDto(ChannelGroupDto channelGroup)
     {
-        return new ChannelGroup()
+        return new ChannelGroup
         {
-            Id = Guid.NewGuid().ToString(),
             Name = channelGroup.Name,
             WorkspaceId = channelGroup.WorkspaceId,
             ChannelIds = channelGroup.ChannelIds,
@@ -44,21 +43,18 @@ public class ChannelGroup : DatabaseItem
             UpdatedAt = DateTime.UtcNow,
         };
     }
+
+    public static Expression<Func<ChannelGroup, bool>> MatchByKey(int key) => group => group.Id == key;
 }
 
-public class ChannelGroupDTO
+public class ChannelGroupDto
 {
-    [BsonElement("name")]
     [MaxLength(255)]
-    public string Name { get; set; }
+    public required string Name { get; set; }
 
-    [BsonElement("workspaceId")]
-    [MaxLength(36)]
-    public string WorkspaceId { get; set; }
+    public int WorkspaceId { get; set; }
 
-    [BsonElement("channelIds")]
-    public string[] ChannelIds { get; set; }
+    public required int[] ChannelIds { get; set; }
 
-    [BsonElement("order")]
     public int Order { get; set; }
 }

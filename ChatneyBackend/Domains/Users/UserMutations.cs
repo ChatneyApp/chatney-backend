@@ -1,20 +1,21 @@
 ﻿using ChatneyBackend.Utils;
 using ChatneyBackend.Domains.Roles;
+using ChatneyBackend.Infra;
 
 namespace ChatneyBackend.Domains.Users;
 
 public class UserMutations
 {
-    public async Task<User> CreateUser(AppConfig appConfig, Repo<User> repo, CreateUserDTO userDto)
+    public async Task<User> CreateUser(AppConfig appConfig, PgRepo<User, Guid> repo, CreateUserDto userDto)
     {
         var user = userDto.ToModel();
         user.Password = Helpers.GetMd5Hash(user.Password + appConfig.UserPasswordSalt);
 
-        await repo.InsertOne(user);
+        user.Id = await repo.InsertOne(user);
         return user;
     }
 
-    public async Task<User> Register(AppConfig appConfig, Repo<User> repo, Repo<Role> rolesRepo, UserRegisterDTO userDto)
+    public async Task<User> Register(AppConfig appConfig, PgRepo<User, Guid> repo, PgRepo<Role, int> rolesRepo, UserRegisterDto userDto)
     {
         var user = userDto.ToModel();
         user.Password = Helpers.GetMd5Hash(user.Password + appConfig.UserPasswordSalt);
@@ -25,15 +26,15 @@ public class UserMutations
         {
             throw new Exception("User role not found");
         }
-        user.Roles.Global = userRole.Id;
+        user.RoleId = userRole.Id;
 
-        await repo.InsertOne(user);
+        user.Id = await repo.InsertOne(user);
         return user;
     }
 
-    public Task<bool> DeleteUser(Repo<User> repo, string id) => repo.DeleteById(id);
+    public Task<bool> DeleteUser(PgRepo<User, Guid> repo, Guid id) => repo.DeleteById(id);
 
-    public async Task<UserLoginResponse?> Login(AppConfig appConfig, Repo<User> repo, string login, string password)
+    public async Task<UserLoginResponse?> Login(AppConfig appConfig, PgRepo<User, Guid> repo, string login, string password)
     {
         var passwordHash = Helpers.GetMd5Hash(password + appConfig.UserPasswordSalt);
         var user = await repo.GetOne(u => (u.Email == login || u.Name == login) && u.Password == passwordHash);
@@ -44,8 +45,8 @@ public class UserMutations
         }
         return new UserLoginResponse
         {
-            Id = user.Id,
-            Token = JwtHelpers.GetJwtToken(user.Email, user.Id, appConfig.JwtSecret)
+            Id = user.Id.ToString(),
+            Token = JwtHelpers.GetJwtToken(user.Email, user.Id.ToString(), appConfig.JwtSecret)
         };
     }
 }

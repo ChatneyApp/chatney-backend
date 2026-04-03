@@ -1,7 +1,6 @@
 using System.Security.Claims;
 using ChatneyBackend.Domains.Users;
 using ChatneyBackend.Utils;
-using MongoDB.Driver;
 
 namespace ChatneyBackend.Infra.Middleware;
 
@@ -21,6 +20,11 @@ public static class ClaimsPincipalExtensions
         return user.Claims.First(claim => claim.Type == ClaimTypes.Sid).Value;
     }
 
+    public static Guid GetUserGuid(this ClaimsPrincipal user)
+    {
+        return Guid.Parse(user.GetUserId());
+    }
+
     public static string GetUserEmail(this ClaimsPrincipal user)
     {
         return user.Claims.First(claim => claim.Type == ClaimTypes.Email).Value;
@@ -36,7 +40,7 @@ public class AuthMiddleware
         _next = next;
     }
 
-    public async Task InvokeAsync(HttpContext context, AppConfig config, IMongoDatabase mongo)
+    public async Task InvokeAsync(HttpContext context, AppConfig config, PgRepo<User, Guid> usersRepo)
     {
         try
         {
@@ -59,13 +63,13 @@ public class AuthMiddleware
                         }, "CustomAuth");
 
                         context.User = new ClaimsPrincipal(identity);
-                        var user = (await mongo.GetCollection<User>(DomainSettings.UserCollectionName).FindAsync(u => u.Id == sub.Value)).ToList();
-                        context.Items["CurrentUser"] = user[0];
+                        var user = await usersRepo.GetById(Guid.Parse(sub.Value));
+                        context.Items["CurrentUser"] = user;
                     }
                 }
             }
         }
-        catch (Exception error)
+        catch (Exception)
         {
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             context.Response.ContentType = "application/json";
