@@ -1,6 +1,6 @@
 dev:
-	env-cmd -f .env.test wgo run server.go
-gen:
-	go run github.com/99designs/gqlgen generate
-install:
+	cd ChatneyBackend && dotnet run watch
+compose:
 	docker compose up -d
+restore:
+	dotnet restore

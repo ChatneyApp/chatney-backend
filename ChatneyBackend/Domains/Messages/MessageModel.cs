@@ -18,7 +18,7 @@ public class ReactionInMessage
     public required int Count { get; set; }
 }
 
-public class Message : IPgKey<Message, int>, IPgTimestamped, IHasUserId
+public class Message : IPgKey<Message, int>, IPgTimestamped
 {
     [Primary]
     [Identity]
