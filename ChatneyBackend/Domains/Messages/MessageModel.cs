@@ -62,6 +62,9 @@ public class Message : IPgKey<Message, int>, IPgTimestamped
     [Map("children_count")]
     public required int ChildrenCount { get; set; }
 
+    [Map("reply_to")]
+    public int? ReplyTo { get; set; }
+
     public static Message FromDto(MessageDto message, Guid userId)
     {
         return new Message()
@@ -75,7 +78,8 @@ public class Message : IPgKey<Message, int>, IPgTimestamped
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
             ParentId = message.ParentId,
-            ChildrenCount = 0
+            ChildrenCount = 0,
+            ReplyTo = message.ReplyTo
         };
     }
 
@@ -92,6 +96,8 @@ public class MessageDto
     public int[]? AttachmentIds { get; set; }
 
     public int? ParentId { get; set; }
+
+    public int? ReplyTo { get; set; }
 }
 
 
@@ -102,6 +108,19 @@ public class MessageUser
     public required string Name { get; set; }
 
     public required string? AvatarUrl { get; set; }
+}
+
+public class ReplyToMessage
+{
+    public required int Id { get; set; }
+    public required Guid UserId { get; set; }
+    public required string Content { get; set; }
+}
+
+public class MessagesResult
+{
+    public required List<MessageWithUser> Messages { get; set; }
+    public required List<ReplyToMessage> Refs { get; set; }
 }
 
 public class MessageWithUser : Message
@@ -130,6 +149,7 @@ public class MessageWithUser : Message
             Reactions = [],
             ParentId = message.ParentId,
             ChildrenCount = message.ChildrenCount,
+            ReplyTo = message.ReplyTo,
             MyReactions = [],
             User = new MessageUser()
             {

@@ -13,7 +13,7 @@ public class MessageQueries
     // public async Task<Message?> GetMessageById(PgRepo<Message, int> repo, int id) => await repo.GetById(id);
 
     [Authorize]
-    public async Task<List<MessageWithUser>> GetListChannelMessages(
+    public async Task<MessagesResult> GetListChannelMessages(
         PgRepo<Message, int> repo,
         PgRepo<Attachment, int> attachmentRepo,
         PgRepo<User, Guid> usersRepo,
@@ -26,7 +26,7 @@ public class MessageQueries
             m => m.ChannelId == channelId && m.ParentId == null);
 
     [Authorize]
-    public async Task<List<MessageWithUser>> GetListThreadMessages(
+    public async Task<MessagesResult> GetListThreadMessages(
         PgRepo<Message, int> repo,
         PgRepo<Attachment, int> attachmentRepo,
         PgRepo<User, Guid> usersRepo,
@@ -38,7 +38,7 @@ public class MessageQueries
             principal.GetUserGuid(),
             m => m.ParentId == threadId);
 
-    private static async Task<List<MessageWithUser>> GetMessagesHydrated(
+    private static async Task<MessagesResult> GetMessagesHydrated(
         PgRepo<Message, int> messageRepo,
         PgRepo<Attachment, int> attachmentRepo,
         PgRepo<User, Guid> usersRepo,
@@ -53,6 +53,7 @@ public class MessageQueries
         var allAttachmentIds = messages.SelectMany(m => m.AttachmentIds).Distinct().ToArray();
         var allUrlPreviewIds = messages.SelectMany(m => m.UrlPreviewIds).Distinct().ToArray();
         var allUserIds = messages.Select(m => m.UserId).Distinct().ToArray();
+        var allReplyToIds = messages.Select(m => m.ReplyTo).Where(id => id != null).Select(id => id!.Value).Distinct().ToArray();
 
         var attachmentsByIdTask = allAttachmentIds.Length > 0
             ? attachmentRepo.GetList(a => allAttachmentIds.Contains(a.Id))
@@ -70,15 +71,22 @@ public class MessageQueries
             ? reactionRepo.GetList(r => allMessageIds.Contains(r.MessageId))
             : Task.FromResult(new List<MessageReaction>());
 
-        await Task.WhenAll(attachmentsByIdTask, urlPreviewsByIdTask, usersByIdTask, reactionsByIdTask);
+        var replyToMessagesTask = allReplyToIds.Length > 0
+            ? messageRepo.GetList(m => allReplyToIds.Contains(m.Id))
+            : Task.FromResult(new List<Message>());
+
+        await Task.WhenAll(attachmentsByIdTask, urlPreviewsByIdTask, usersByIdTask, reactionsByIdTask, replyToMessagesTask);
 
         var attachmentsById = (await attachmentsByIdTask).ToDictionary(a => a.Id);
         var urlPreviewsById = (await urlPreviewsByIdTask).ToDictionary(u => u.Id);
         var usersById = (await usersByIdTask).ToDictionary(u => u.Id);
         var reactionsByMessageId = (await reactionsByIdTask).GroupBy(r => r.MessageId)
             .ToDictionary(g => g.Key, g => g.ToList());
+        var replyToMessages = (await replyToMessagesTask)
+            .Select(m => new ReplyToMessage { Id = m.Id, UserId = m.UserId, Content = m.Content })
+            .ToList();
 
-        return messages
+        var hydratedMessages = messages
             .Where(m => usersById.ContainsKey(m.UserId))
             .Select(m =>
             {
@@ -110,5 +118,7 @@ public class MessageQueries
                 return messageWithUser;
             })
             .ToList();
+
+        return new MessagesResult { Messages = hydratedMessages, Refs = replyToMessages };
     }
 }

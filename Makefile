@@ -1,5 +1,5 @@
 dev:
-	cd ChatneyBackend && dotnet run watch
+	dotnet watch run --project ChatneyBackend
 compose:
 	docker compose up -d
 restore:
