@@ -161,6 +161,12 @@ public class MessageWithUser : Message
     }
 }
 
+public class NewMessagePayload
+{
+    public required MessageWithUser Message { get; set; }
+    public ReplyToMessage? ReplyTo { get; set; }
+}
+
 public class DeletedMessage
 {
     public required int MessageId { get; set; }
