@@ -6,7 +6,7 @@ using RepoDb.Attributes;
 
 namespace ChatneyBackend.Domains.DraftMessages;
 
-public class DraftMessage : IPgKey<DraftMessage, int>, IPgTimestamped, IHasUserId
+public class DraftMessage : IPgKey<DraftMessage, int>, IPgTimestamped
 {
     [Primary]
     [Identity]

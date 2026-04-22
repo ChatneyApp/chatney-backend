@@ -6,7 +6,7 @@ using RepoDb.Attributes;
 
 namespace ChatneyBackend.Domains.Attachments;
 
-public class Attachment : IPgKey<Attachment, int>, IPgTimestamped, IHasUserId
+public class Attachment : IPgKey<Attachment, int>, IPgTimestamped
 {
     [Primary]
     [Identity]

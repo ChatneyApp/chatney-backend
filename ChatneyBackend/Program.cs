@@ -149,16 +149,6 @@ builder.Services
     .AddAuthorization()
     .AddQueryType<Query>()
     .AddMutationType<Mutation>()
-    .AddTypeExtension<HasUserIdTypeExtension<Message>>()
-    .AddTypeExtension<MessageReactionsTypeExtension>()
-    .AddTypeExtension<MessageReactionSummaryTypeExtension>()
-    .AddTypeExtension<UrlPreviewTypeExtension>()
-    .AddTypeExtension<AttachmentDataLoader>()
-    .AddDataLoader<UserByIdDataLoader>()
-    .AddDataLoader<MyReactionsByMessageIdDataLoader>()
-    .AddDataLoader<MessageReactionsByMessageIdDataLoader>()
-    .AddDataLoader<UrlPreviewsByUrlPreviewIdDataLoader>()
-    .AddDataLoader<AttachmentsByAttachmentIdDataLoader>()
     .AddType<UploadType>();
 
 
