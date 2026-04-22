@@ -28,6 +28,7 @@ public class MessageMutations
         PgRepo<UserRole, UserRoleKey> userRolesRepo,
         PgRepo<UrlPreview, int> urlPreviewRepo,
         PgRepo<Attachment, int> attachmentRepo,
+        PgRepo<MessageReaction, MessageReactionKey> reactionRepo,
         ClaimsPrincipal principal,
         MessageDto messageDto,
         WebSocketConnector webSocketConnector
@@ -120,11 +121,18 @@ public class MessageMutations
             try
             {
                 message.Id = await messagesRepo.InsertOne(message);
-                // TODO: add fullUrl for the frontend based on domain, bucket, s3 key, etc
-                var attachments = await attachmentRepo.GetList(x => message.AttachmentIds.Contains(x.Id));
-                var messageWithUser = MessageWithUser.Create(message, user, urlPreviews, attachments);
+                var result = await MessageHydrator.HydrateAsync(
+                    [message], messagesRepo, attachmentRepo, usersRepo, urlPreviewRepo, reactionRepo,
+                    principal.GetUserGuid());
 
-                await webSocketConnector.SendMessageAsync(messageWithUser);
+                var messageWithUser = result.Messages.First();
+                var replyRef = result.Refs.FirstOrDefault();
+
+                await webSocketConnector.SendNewMessageAsync(new NewMessagePayload
+                {
+                    Message = messageWithUser,
+                    ReplyTo = replyRef,
+                });
                 return messageWithUser;
             }
             catch (Exception ex)

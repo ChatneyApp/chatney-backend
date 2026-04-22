@@ -153,6 +153,10 @@ public class WebSocketConnector
     {
         await SendToAllAsync(WebSocketPayloadType.NewMessage, message);
     }
+    public async Task SendNewMessageAsync(NewMessagePayload payload)
+    {
+        await SendToAllAsync(WebSocketPayloadType.NewMessage, payload);
+    }
     public async Task DeleteMessageAsync(DeletedMessage message)
     {
         await SendToAllAsync(WebSocketPayloadType.DeletedMessage, message);
