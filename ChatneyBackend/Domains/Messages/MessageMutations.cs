@@ -20,7 +20,7 @@ public class MessageMutations
     }
 
     [Authorize]
-    public async Task<Message?> AddMessage(
+    public async Task<MessageWithUser?> AddMessage(
         RoleManager roleManager,
         PgRepo<Channel, int> channelsRepo,
         PgRepo<Message, int> messagesRepo,
@@ -116,13 +116,16 @@ public class MessageMutations
 
             message.UrlPreviewIds = urlPreviewIds.ToArray();
 
+
             try
             {
                 message.Id = await messagesRepo.InsertOne(message);
                 // TODO: add fullUrl for the frontend based on domain, bucket, s3 key, etc
                 var attachments = await attachmentRepo.GetList(x => message.AttachmentIds.Contains(x.Id));
-                await webSocketConnector.SendMessageAsync(MessageWithUser.Create(message, user, urlPreviews, attachments));
-                return message;
+                var messageWithUser = MessageWithUser.Create(message, user, urlPreviews, attachments);
+
+                await webSocketConnector.SendMessageAsync(messageWithUser);
+                return messageWithUser;
             }
             catch (Exception ex)
             {

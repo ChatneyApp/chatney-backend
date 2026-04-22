@@ -35,7 +35,7 @@ public class UserRole : IPgKey<UserRole, UserRoleKey>
 // TODO: move to another model/table
 public class ChannelSettings
 {
-    public string LastSeenMessage { get; set; }
+    public required string LastSeenMessage { get; set; }
 
     public bool Muted { get; set; }
 }
@@ -172,9 +172,4 @@ public class UserLoginResponse
     public required string Id { get; set; }
 
     public required string Token { get; set; }
-}
-
-public interface IHasUserId
-{
-    Guid UserId { get; }
 }
