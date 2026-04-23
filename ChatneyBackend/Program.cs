@@ -58,25 +58,27 @@ var wsConfig = new WebSocketConnector();
 // var bucket = builder.Configuration.GetSection("AWS").GetValue<string>("Bucket");
 // Console.WriteLine(bucket);
 
-var rolesRepo = new PgRepo<Role, int>(pgDataSource, "roles");
+var appRepos = new AppRepos(
+    users: new PgRepo<User, Guid>(pgDataSource, UsersDomainSettings.UserTableName),
+    userRoles: new PgRepo<UserRole, UserRoleKey>(pgDataSource, UsersDomainSettings.UserRoleTableName),
+    roles: new PgRepo<Role, int>(pgDataSource, "roles"),
+    messages: new PgRepo<Message, int>(pgDataSource, MessagesDomainSettings.MessageTableName),
+    draftMessages: new PgRepo<DraftMessage, int>(pgDataSource, DraftMessagesDomainSettings.MessageTableName),
+    reactions: new PgRepo<MessageReaction, MessageReactionKey>(pgDataSource, MessagesDomainSettings.ReactionTableName),
+    attachments: new PgRepo<Attachment, int>(pgDataSource, AttachmentsDomainSettings.AttachmentTableName),
+    urlPreviews: new PgRepo<UrlPreview, int>(pgDataSource, MessagesDomainSettings.UrlPreviewTableName),
+    channels: new PgRepo<Channel, int>(pgDataSource, ChannelDomainSettings.ChannelTableName),
+    channelTypes: new PgRepo<ChannelType, int>(pgDataSource, ChannelDomainSettings.ChannelTypeTableName),
+    channelGroups: new PgRepo<ChannelGroup, int>(pgDataSource, ChannelDomainSettings.ChannelGroupTableName),
+    configs: new PgRepo<Config, int>(pgDataSource, ConfigsDomainSettings.ConfigTableName),
+    workspaces: new PgRepo<Workspace, int>(pgDataSource, WorkspacesDomainSettings.WorkspaceTableName)
+);
 
 // Database
 builder.Services.AddSingleton(pgDataSource);
 builder.Services.AddSingleton(_ => new AppConfig { UserPasswordSalt = userPasswordSalt, JwtSecret = jwtSecret });
-builder.Services.AddSingleton(_ => new RoleManager(rolesRepo));
-builder.Services.AddSingleton(_ => new PgRepo<User, Guid>(pgDataSource, UsersDomainSettings.UserTableName));
-builder.Services.AddSingleton(_ => new PgRepo<UserRole, UserRoleKey>(pgDataSource, UsersDomainSettings.UserRoleTableName));
-builder.Services.AddSingleton(_ => new PgRepo<MessageReaction, MessageReactionKey>(pgDataSource, MessagesDomainSettings.ReactionTableName));
-builder.Services.AddSingleton(_ => new PgRepo<Channel, int>(pgDataSource, ChannelDomainSettings.ChannelTableName));
-builder.Services.AddSingleton(_ => new PgRepo<ChannelType, int>(pgDataSource, ChannelDomainSettings.ChannelTypeTableName));
-builder.Services.AddSingleton(_ => new PgRepo<ChannelGroup, int>(pgDataSource, ChannelDomainSettings.ChannelGroupTableName));
-builder.Services.AddSingleton(_ => new PgRepo<Config, int>(pgDataSource, ConfigsDomainSettings.ConfigTableName));
-builder.Services.AddSingleton(_ => new PgRepo<Message, int>(pgDataSource, MessagesDomainSettings.MessageTableName));
-builder.Services.AddSingleton(_ => new PgRepo<DraftMessage, int>(pgDataSource, DraftMessagesDomainSettings.MessageTableName));
-builder.Services.AddSingleton(_ => new PgRepo<Attachment, int>(pgDataSource, AttachmentsDomainSettings.AttachmentTableName));
-builder.Services.AddSingleton(_ => new PgRepo<UrlPreview, int>(pgDataSource, MessagesDomainSettings.UrlPreviewTableName));
-builder.Services.AddSingleton(_ => rolesRepo);
-builder.Services.AddSingleton(_ => new PgRepo<Workspace, int>(pgDataSource, WorkspacesDomainSettings.WorkspaceTableName));
+builder.Services.AddSingleton(_ => appRepos);
+builder.Services.AddSingleton(_ => new RoleManager(appRepos.Roles));
 builder.Services
     .AddFluentMigratorCore()
     .ConfigureRunner(runner => runner

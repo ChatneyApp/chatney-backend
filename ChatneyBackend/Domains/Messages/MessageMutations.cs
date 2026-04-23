@@ -1,8 +1,6 @@
 using System.Security.Claims;
-using ChatneyBackend.Domains.Attachments;
 using ChatneyBackend.Domains.Channels;
 using ChatneyBackend.Domains.Roles;
-using ChatneyBackend.Domains.Users;
 using ChatneyBackend.Infra;
 using ChatneyInfra = ChatneyBackend.Infra;
 using ChatneyBackend.Infra.Middleware;
@@ -21,30 +19,24 @@ public class MessageMutations
 
     [Authorize]
     public async Task<MessageWithUser?> AddMessage(
+        AppRepos repos,
         RoleManager roleManager,
-        PgRepo<Channel, int> channelsRepo,
-        PgRepo<Message, int> messagesRepo,
-        PgRepo<User, Guid> usersRepo,
-        PgRepo<UserRole, UserRoleKey> userRolesRepo,
-        PgRepo<UrlPreview, int> urlPreviewRepo,
-        PgRepo<Attachment, int> attachmentRepo,
-        PgRepo<MessageReaction, MessageReactionKey> reactionRepo,
         ClaimsPrincipal principal,
         MessageDto messageDto,
         WebSocketConnector webSocketConnector
     )
     {
         Message message = Message.FromDto(messageDto, principal.GetUserGuid());
-        var user = await usersRepo.GetById(principal.GetUserGuid());
+        var user = await repos.Users.GetById(principal.GetUserGuid());
 
-        var channel = await channelsRepo.GetById(message.ChannelId);
+        var channel = await repos.Channels.GetById(message.ChannelId);
 
         if (channel == null || user == null)
         {
             throw new InvalidOperationException("Channel or user is invalid");
         }
 
-        var userRoles = await userRolesRepo.GetList(r => r.UserId == user.Id);
+        var userRoles = await repos.UserRoles.GetList(r => r.UserId == user.Id);
         var currentRole = await roleManager.GetRelevantRole(user, userRoles, new RoleScope(
             WorkspaceId: channel.WorkspaceId,
             ChannelId: channel.Id,
@@ -55,12 +47,12 @@ public class MessageMutations
         if ((currentRole?.Permissions ?? []).Contains(MessagePermissions.CreateMessage))
         {
             var parentMessage = message.ParentId != null
-                ? await messagesRepo.GetById(message.ParentId.Value)
+                ? await repos.Messages.GetById(message.ParentId.Value)
                 : null;
 
             if (parentMessage != null)
             {
-                var childrenCount = await messagesRepo.ExecuteScalarAsync<int>(
+                var childrenCount = await repos.Messages.ExecuteScalarAsync<int>(
                     """
                     UPDATE messages
                     SET children_count = children_count + 1,
@@ -82,7 +74,7 @@ public class MessageMutations
             List<UrlPreview> urlPreviews = new List<UrlPreview>();
 
             List<int> urlPreviewIds = new List<int>();
-            var existingUrlPreviews = await urlPreviewRepo.GetList(x => urls.Contains(x.Url));
+            var existingUrlPreviews = await repos.UrlPreviews.GetList(x => urls.Contains(x.Url));
             foreach (var url in urls)
             {
                 var urlPreview = existingUrlPreviews.FirstOrDefault(x => x.Url == url);
@@ -112,7 +104,7 @@ public class MessageMutations
 
             if (newUrlPreviews.Count > 0)
             {
-                await urlPreviewRepo.InsertBulk(newUrlPreviews);
+                await repos.UrlPreviews.InsertBulk(newUrlPreviews);
             }
 
             message.UrlPreviewIds = urlPreviewIds.ToArray();
@@ -120,10 +112,8 @@ public class MessageMutations
 
             try
             {
-                message.Id = await messagesRepo.InsertOne(message);
-                var result = await MessageHydrator.HydrateAsync(
-                    [message], messagesRepo, attachmentRepo, usersRepo, urlPreviewRepo, reactionRepo,
-                    principal.GetUserGuid());
+                message.Id = await repos.Messages.InsertOne(message);
+                var result = await MessageHydrator.HydrateAsync([message], repos, principal.GetUserGuid());
 
                 var messageWithUser = result.Messages.First();
                 var replyRef = result.Refs.FirstOrDefault();
@@ -149,17 +139,17 @@ public class MessageMutations
     }
 
     [Authorize]
-    public async Task<Message?> UpdateMessage(PgRepo<Message, int> repo, Message message)
+    public async Task<Message?> UpdateMessage(AppRepos repos, Message message)
     {
-        return await repo.UpdateOne(message)
+        return await repos.Messages.UpdateOne(message)
             ? message
             : null;
     }
 
     [Authorize]
-    public async Task<bool> DeleteMessage(WebSocketConnector webSocketConnector, PgRepo<Message, int> repo, int id)
+    public async Task<bool> DeleteMessage(WebSocketConnector webSocketConnector, AppRepos repos, int id)
     {
-        var message = await repo.GetById(id);
+        var message = await repos.Messages.GetById(id);
         if (message == null) return false;
 
         try
@@ -167,17 +157,17 @@ public class MessageMutations
             // remove all children messages under this thread
             if (message.ParentId == null)
             {
-                await repo.Delete(r => r.ParentId == id);
+                await repos.Messages.Delete(r => r.ParentId == id);
             }
             else
             {
                 // decrease children count in parent message if applicable
                 var parentMessage = message.ParentId != null
-                    ? await repo.GetById(message.ParentId.Value)
+                    ? await repos.Messages.GetById(message.ParentId.Value)
                     : null;
                 if (parentMessage != null)
                 {
-                    var childrenCount = await repo.ExecuteScalarAsync<int>(
+                    var childrenCount = await repos.Messages.ExecuteScalarAsync<int>(
                         """
                         UPDATE messages
                         SET children_count = GREATEST(children_count - 1, 0),
@@ -195,7 +185,7 @@ public class MessageMutations
                 }
             }
 
-            var result = await repo.DeleteById(id);
+            var result = await repos.Messages.DeleteById(id);
             await webSocketConnector.DeleteMessageAsync(new DeletedMessage
             {
                 ChannelId = message.ChannelId,
@@ -213,19 +203,16 @@ public class MessageMutations
     [Authorize]
     public async Task<ReactionEndpointOutput> AddReaction(
         WebSocketConnector webSocketConnector,
-        PgRepo<MessageReaction, MessageReactionKey> reactionRepo,
-        PgRepo<Message, int> messageRepo,
+        AppRepos repos,
         string code,
         int messageId,
         ClaimsPrincipal principal)
     {
         try
         {
-            // 1. Checking user is valid
             var userId = principal.GetUserGuid();
 
-            // 2. Checking message exists.
-            var message = await messageRepo.GetById(messageId);
+            var message = await repos.Messages.GetById(messageId);
 
             if (message == null)
             {
@@ -236,8 +223,7 @@ public class MessageMutations
                 };
             }
 
-            // 3. Upsert aggregate reaction in postgres.
-            await reactionRepo.ExecuteAsync(
+            await repos.Reactions.ExecuteAsync(
                 """
                 INSERT INTO message_reactions (message_id, user_id, code)
                 VALUES (@MessageId, @UserId, @Code)
@@ -252,7 +238,6 @@ public class MessageMutations
                 }
             );
 
-            // 4. Send websocket update
             await webSocketConnector.AddReactionAsync(new WebsocketReactionPayload()
             {
                 Code = code,
@@ -279,8 +264,7 @@ public class MessageMutations
     [Authorize]
     public async Task<ReactionEndpointOutput> DeleteReaction(
         WebSocketConnector webSocketConnector,
-        PgRepo<MessageReaction, MessageReactionKey> reactionRepo,
-        PgRepo<Message, int> messageRepo,
+        AppRepos repos,
         string code,
         int messageId,
         ClaimsPrincipal principal)
@@ -289,7 +273,7 @@ public class MessageMutations
         {
             var userId = principal.GetUserGuid();
 
-            var message = await messageRepo.GetById(messageId);
+            var message = await repos.Messages.GetById(messageId);
 
             if (message == null)
             {
@@ -300,8 +284,7 @@ public class MessageMutations
                 };
             }
 
-            // 2. Remove the user's reaction in postgres.
-            var deletedAggregate = await reactionRepo.ExecuteAsync(
+            var deletedAggregate = await repos.Reactions.ExecuteAsync(
                 """
                 DELETE FROM message_reactions
                 WHERE message_id = @MessageId
@@ -325,7 +308,6 @@ public class MessageMutations
                 };
             }
 
-            // 4. Notify websocket listeners
             await webSocketConnector.DeleteReactionAsync(new WebsocketReactionPayload()
             {
                 Code = code,

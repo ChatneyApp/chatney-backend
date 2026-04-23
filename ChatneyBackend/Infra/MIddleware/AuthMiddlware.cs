@@ -40,7 +40,7 @@ public class AuthMiddleware
         _next = next;
     }
 
-    public async Task InvokeAsync(HttpContext context, AppConfig config, PgRepo<User, Guid> usersRepo)
+    public async Task InvokeAsync(HttpContext context, AppConfig config, AppRepos repos)
     {
         try
         {
@@ -63,7 +63,7 @@ public class AuthMiddleware
                         }, "CustomAuth");
 
                         context.User = new ClaimsPrincipal(identity);
-                        var user = await usersRepo.GetById(Guid.Parse(sub.Value));
+                        var user = await repos.Users.GetById(Guid.Parse(sub.Value));
                         context.Items["CurrentUser"] = user;
                     }
                 }

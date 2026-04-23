@@ -1,5 +1,4 @@
 using ChatneyBackend.Domains.Channels;
-using ChatneyBackend.Domains.Configs;
 using ChatneyBackend.Domains.Messages;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Domains.Users;
@@ -20,12 +19,7 @@ public class InstallWizardMutations
 
     public async Task<InstallSystemResult> InstallSystem(
         AppConfig appConfig,
-        PgRepo<Role, int> roleRepo,
-        PgRepo<User, Guid> userRepo,
-        PgRepo<Workspace, int> workspaceRepo,
-        PgRepo<ChannelType, int> channelTypeRepo,
-        PgRepo<Channel, int> channelRepo,
-        PgRepo<Config, int> configRepo,
+        AppRepos repos,
         IMigrationRunner migrationRunner
     )
     {
@@ -33,7 +27,7 @@ public class InstallWizardMutations
         {
             migrationRunner.MigrateUp();
 
-            Role? baseRole = await roleRepo.GetOne(r => r.Name == Roles.DomainSettings.BaseRoleName);
+            Role? baseRole = await repos.Roles.GetOne(r => r.Name == Roles.DomainSettings.BaseRoleName);
 
             if (baseRole != null)
             {
@@ -66,22 +60,16 @@ public class InstallWizardMutations
                 IsBase = true
             };
 
-            await roleRepo.InsertOne(baseRole);
+            await repos.Roles.InsertOne(baseRole);
 
             List<Workspace> workspaces = new List<Workspace>
             {
-                new()
-                {
-                    Name = "Main",
-                },
-                new()
-                {
-                    Name = "Secondary",
-                },
+                new() { Name = "Main" },
+                new() { Name = "Secondary" },
             };
-            await workspaceRepo.InsertBulk(workspaces);
+            await repos.Workspaces.InsertBulk(workspaces);
 
-            List<ChannelType> channelTypes = new List<ChannelType>
+            List<Channels.ChannelType> channelTypes = new List<Channels.ChannelType>
             {
                 new()
                 {
@@ -96,9 +84,9 @@ public class InstallWizardMutations
                     BaseRoleId = baseRole.Id
                 },
             };
-            await channelTypeRepo.InsertBulk(channelTypes);
+            await repos.ChannelTypes.InsertBulk(channelTypes);
 
-            List<Channel> channels = new List<Channel>()
+            List<Channels.Channel> channels = new List<Channels.Channel>()
             {
                 new()
                 {
@@ -125,10 +113,10 @@ public class InstallWizardMutations
                     WorkspaceId = workspaces[0].Id,
                 },
             };
-            await channelRepo.InsertBulk(channels);
+            await repos.Channels.InsertBulk(channels);
 
             var workspaceIds = workspaces.Select(w => w.Id).ToArray();
-            List<User> users = new()
+            List<Users.User> users = new()
             {
                 new()
                 {
@@ -149,9 +137,9 @@ public class InstallWizardMutations
                     Password = Helpers.GetMd5Hash("123" + appConfig.UserPasswordSalt),
                 },
             };
-            await userRepo.InsertBulk(users);
+            await repos.Users.InsertBulk(users);
 
-            List<Config> configs = new()
+            List<Configs.Config> configs = new()
             {
                 new()
                 {
@@ -166,7 +154,7 @@ public class InstallWizardMutations
                     Type = "string[]",
                 },
             };
-            await configRepo.InsertBulk(configs);
+            await repos.Configs.InsertBulk(configs);
         }
         catch (Exception e)
         {

@@ -1,6 +1,4 @@
 using System.Security.Claims;
-using ChatneyBackend.Domains.Channels;
-using ChatneyBackend.Domains.Users;
 using ChatneyBackend.Infra;
 using ChatneyBackend.Infra.Middleware;
 using HotChocolate.Authorization;
@@ -11,23 +9,21 @@ public class DraftMessageMutations
 {
     [Authorize]
     public async Task<DraftMessage?> UpdateDraftMessage(
-        PgRepo<Channel, int> channelsRepo,
-        PgRepo<DraftMessage, int> messagesRepo,
-        PgRepo<User, Guid> usersRepo,
+        AppRepos repos,
         ClaimsPrincipal principal,
         DraftMessageDto messageDto
     )
     {
-        var user = await usersRepo.GetById(principal.GetUserGuid());
+        var user = await repos.Users.GetById(principal.GetUserGuid());
 
-        var channel = await channelsRepo.GetById(messageDto.ChannelId);
+        var channel = await repos.Channels.GetById(messageDto.ChannelId);
 
         if (channel == null || user == null)
         {
             throw new InvalidOperationException("Channel or user is invalid");
         }
 
-        var existingMessage = await messagesRepo.GetOne(m =>
+        var existingMessage = await repos.DraftMessages.GetOne(m =>
             m.UserId == principal.GetUserGuid() &&
             m.ChannelId == messageDto.ChannelId &&
             m.ParentId == messageDto.ParentId
@@ -36,24 +32,24 @@ public class DraftMessageMutations
         {
             existingMessage.Content = messageDto.Content;
             existingMessage.AttachmentIds = messageDto.AttachmentIds ?? [];
-            await messagesRepo.UpdateOne(existingMessage);
+            await repos.DraftMessages.UpdateOne(existingMessage);
             return existingMessage;
         }
         DraftMessage message = DraftMessage.FromDto(messageDto, principal.GetUserGuid());
-        await messagesRepo.InsertOne(message);
+        await repos.DraftMessages.InsertOne(message);
         return message;
     }
 
     [Authorize]
-    public async Task<bool> DeleteMessage(ClaimsPrincipal principal, PgRepo<DraftMessage, int> repo, int id)
+    public async Task<bool> DeleteMessage(ClaimsPrincipal principal, AppRepos repos, int id)
     {
-        var message = await repo.GetById(id);
+        var message = await repos.DraftMessages.GetById(id);
         if (message == null) return false;
         if (message.UserId != principal.GetUserGuid()) return false;
 
         try
         {
-            return await repo.DeleteById(id);
+            return await repos.DraftMessages.DeleteById(id);
         }
         catch (Exception exception)
         {

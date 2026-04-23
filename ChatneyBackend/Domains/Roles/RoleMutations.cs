@@ -4,21 +4,21 @@ namespace ChatneyBackend.Domains.Roles;
 
 public class RoleMutations
 {
-    public async Task<Role> AddRole(PgRepo<Role, int> rolesRepo, RoleDto roleDto)
+    public async Task<Role> AddRole(AppRepos repos, RoleDto roleDto)
     {
         var role = Role.FromDto(roleDto);
-        await rolesRepo.InsertOne(role);
+        await repos.Roles.InsertOne(role);
         return role;
     }
 
-    public async Task<Role> UpdateRole(PgRepo<Role, int> rolesRepo, Role role)
+    public async Task<Role> UpdateRole(AppRepos repos, Role role)
     {
-        await rolesRepo.UpdateOne(role);
+        await repos.Roles.UpdateOne(role);
         return role;
     }
 
-    public async Task<bool> DeleteRole(PgRepo<Role, int> rolesRepo, int id)
+    public async Task<bool> DeleteRole(AppRepos repos, int id)
     {
-        return await rolesRepo.DeleteById(id);
+        return await repos.Roles.DeleteById(id);
     }
 }

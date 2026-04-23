@@ -8,8 +8,8 @@ namespace ChatneyBackend.Domains.DraftMessages;
 public class DraftMessageQueries
 {
     [Authorize]
-    public async Task<List<DraftMessage>> GetDraftMessages(ClaimsPrincipal principal, PgRepo<DraftMessage, int> repo) =>
-        await repo.GetList(
+    public async Task<List<DraftMessage>> GetDraftMessages(ClaimsPrincipal principal, AppRepos repos) =>
+        await repos.DraftMessages.GetList(
             m => m.UserId == principal.GetUserGuid()
         );
 }

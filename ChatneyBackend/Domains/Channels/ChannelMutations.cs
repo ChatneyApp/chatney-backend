@@ -4,50 +4,50 @@ namespace ChatneyBackend.Domains.Channels;
 
 public class ChannelMutations
 {
-    public async Task<ChannelType> AddChannelType(PgRepo<ChannelType, int> channelTypeRepo, ChannelTypeDto channelTypeDto)
+    public async Task<ChannelType> AddChannelType(AppRepos repos, ChannelTypeDto channelTypeDto)
     {
         var channelType = ChannelType.FromDto(channelTypeDto);
-        channelType.Id = await channelTypeRepo.InsertOne(channelType);
+        channelType.Id = await repos.ChannelTypes.InsertOne(channelType);
         return channelType;
     }
 
-    public async Task<ChannelType?> UpdateChannelType(PgRepo<ChannelType, int> channelTypeRepo, ChannelType channelType)
+    public async Task<ChannelType?> UpdateChannelType(AppRepos repos, ChannelType channelType)
     {
-        var updated = await channelTypeRepo.UpdateOne(channelType);
+        var updated = await repos.ChannelTypes.UpdateOne(channelType);
         return updated ? channelType : null;
     }
 
-    public async Task<bool> DeleteChannelType(PgRepo<ChannelType, int> channelTypeRepo, int id) =>
-        await channelTypeRepo.DeleteById(id);
+    public async Task<bool> DeleteChannelType(AppRepos repos, int id) =>
+        await repos.ChannelTypes.DeleteById(id);
 
-    public async Task<Channel> AddChannel(PgRepo<Channel, int> channelRepo, ChannelDto channelDto)
+    public async Task<Channel> AddChannel(AppRepos repos, ChannelDto channelDto)
     {
         var channel = channelDto.ToModel();
-        channel.Id = await channelRepo.InsertOne(channel);
+        channel.Id = await repos.Channels.InsertOne(channel);
         return channel;
     }
 
-    public async Task<Channel?> UpdateChannel(PgRepo<Channel, int> channelRepo, Channel channel)
+    public async Task<Channel?> UpdateChannel(AppRepos repos, Channel channel)
     {
-        var updated = await channelRepo.UpdateOne(channel);
+        var updated = await repos.Channels.UpdateOne(channel);
         return updated ? channel : null;
     }
 
-    public async Task<bool> DeleteChannel(PgRepo<Channel, int> channelRepo, int id) => await channelRepo.DeleteById(id);
+    public async Task<bool> DeleteChannel(AppRepos repos, int id) => await repos.Channels.DeleteById(id);
 
-    public async Task<ChannelGroup> AddChannelGroup(PgRepo<ChannelGroup, int> channelGroupRepo, ChannelGroupDto channelGroupDto)
+    public async Task<ChannelGroup> AddChannelGroup(AppRepos repos, ChannelGroupDto channelGroupDto)
     {
         var channelGroup = ChannelGroup.FromDto(channelGroupDto);
-        channelGroup.Id = await channelGroupRepo.InsertOne(channelGroup);
+        channelGroup.Id = await repos.ChannelGroups.InsertOne(channelGroup);
         return channelGroup;
     }
 
-    public async Task<ChannelGroup?> UpdateChannelGroup(PgRepo<ChannelGroup, int> channelGroupRepo, ChannelGroup channelGroup)
+    public async Task<ChannelGroup?> UpdateChannelGroup(AppRepos repos, ChannelGroup channelGroup)
     {
-        var updated = await channelGroupRepo.UpdateOne(channelGroup);
+        var updated = await repos.ChannelGroups.UpdateOne(channelGroup);
         return updated ? channelGroup : null;
     }
 
-    public async Task<bool> DeleteChannelGroup(PgRepo<ChannelGroup, int> channelGroupRepo, int id) =>
-        await channelGroupRepo.DeleteById(id);
+    public async Task<bool> DeleteChannelGroup(AppRepos repos, int id) =>
+        await repos.ChannelGroups.DeleteById(id);
 }

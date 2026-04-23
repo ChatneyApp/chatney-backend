@@ -2,7 +2,6 @@ using System.Security.Claims;
 using System.Text.RegularExpressions;
 using Amazon.S3;
 using Amazon.S3.Model;
-using ChatneyBackend.Domains.Users;
 using ChatneyBackend.Infra;
 using ChatneyBackend.Infra.Middleware;
 using HotChocolate.Authorization;
@@ -19,8 +18,7 @@ public class AttachmentMutations
 
     [Authorize]
     public async Task<AttachmentUploadResponse> Upload(
-        PgRepo<User, Guid> usersRepo,
-        PgRepo<Attachment, int> attachmentsRepo,
+        AppRepos repos,
         ClaimsPrincipal principal,
         IAmazonS3 s3Client,
         IFile file
@@ -66,7 +64,7 @@ public class AttachmentMutations
             UrlPath = s3Key
         };
 
-        attachment.Id = await attachmentsRepo.InsertOne(attachment);
+        attachment.Id = await repos.Attachments.InsertOne(attachment);
 
         var serviceUrl = s3Client.Config.ServiceURL.TrimEnd('/');
 

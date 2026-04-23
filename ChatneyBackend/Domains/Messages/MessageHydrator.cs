@@ -1,5 +1,3 @@
-using ChatneyBackend.Domains.Attachments;
-using ChatneyBackend.Domains.Users;
 using ChatneyBackend.Infra;
 
 namespace ChatneyBackend.Domains.Messages;
@@ -8,11 +6,7 @@ public static class MessageHydrator
 {
     public static async Task<MessagesResult> HydrateAsync(
         List<Message> messages,
-        PgRepo<Message, int> messageRepo,
-        PgRepo<Attachment, int> attachmentRepo,
-        PgRepo<User, Guid> usersRepo,
-        PgRepo<UrlPreview, int> urlPreviewRepo,
-        PgRepo<MessageReaction, MessageReactionKey> reactionRepo,
+        AppRepos repos,
         Guid currentUserId)
     {
         var allMessageIds = messages.Select(m => m.Id).ToArray();
@@ -22,23 +16,23 @@ public static class MessageHydrator
         var allReplyToIds = messages.Select(m => m.ReplyTo).Where(id => id != null).Select(id => id!.Value).Distinct().ToArray();
 
         var attachmentsByIdTask = allAttachmentIds.Length > 0
-            ? attachmentRepo.GetList(a => allAttachmentIds.Contains(a.Id))
-            : Task.FromResult(new List<Attachment>());
+            ? repos.Attachments.GetList(a => allAttachmentIds.Contains(a.Id))
+            : Task.FromResult(new List<Attachments.Attachment>());
 
         var urlPreviewsByIdTask = allUrlPreviewIds.Length > 0
-            ? urlPreviewRepo.GetList(u => allUrlPreviewIds.Contains(u.Id))
+            ? repos.UrlPreviews.GetList(u => allUrlPreviewIds.Contains(u.Id))
             : Task.FromResult(new List<UrlPreview>());
 
         var usersByIdTask = allUserIds.Length > 0
-            ? usersRepo.GetList(u => allUserIds.Contains(u.Id))
-            : Task.FromResult(new List<User>());
+            ? repos.Users.GetList(u => allUserIds.Contains(u.Id))
+            : Task.FromResult(new List<Users.User>());
 
         var reactionsByIdTask = allMessageIds.Length > 0
-            ? reactionRepo.GetList(r => allMessageIds.Contains(r.MessageId))
+            ? repos.Reactions.GetList(r => allMessageIds.Contains(r.MessageId))
             : Task.FromResult(new List<MessageReaction>());
 
         var replyToMessagesTask = allReplyToIds.Length > 0
-            ? messageRepo.GetList(m => allReplyToIds.Contains(m.Id))
+            ? repos.Messages.GetList(m => allReplyToIds.Contains(m.Id))
             : Task.FromResult(new List<Message>());
 
         await Task.WhenAll(attachmentsByIdTask, urlPreviewsByIdTask, usersByIdTask, reactionsByIdTask, replyToMessagesTask);

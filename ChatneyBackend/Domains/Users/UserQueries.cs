@@ -1,4 +1,4 @@
-﻿using HotChocolate.Authorization;
+using HotChocolate.Authorization;
 using ChatneyBackend.Infra;
 
 namespace ChatneyBackend.Domains.Users;
@@ -14,14 +14,14 @@ public record UserFilter
 public class UserQueries
 {
     [Authorize]
-    public async Task<User?> GetUserById(PgRepo<User, Guid> repo, Guid id) => await repo.GetById(id);
+    public async Task<User?> GetUserById(AppRepos repos, Guid id) => await repos.Users.GetById(id);
 
     [Authorize]
-    public async Task<User?> GetUserByName(PgRepo<User, Guid> repo, string name) => await repo.GetOne(u => u.Name == name);
+    public async Task<User?> GetUserByName(AppRepos repos, string name) => await repos.Users.GetOne(u => u.Name == name);
 
     [Authorize]
-    public async Task<List<User>> GetList(PgRepo<User, Guid> repo, UserFilter filter) =>
-        await repo.GetList(u =>
+    public async Task<List<User>> GetList(AppRepos repos, UserFilter filter) =>
+        await repos.Users.GetList(u =>
             (filter.Active == null || u.Active == filter.Active) &&
             (filter.Banned == null || u.Banned == filter.Banned) &&
             (filter.Email == null || u.Email == filter.Email) &&

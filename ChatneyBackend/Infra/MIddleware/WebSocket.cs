@@ -186,7 +186,7 @@ public class WebSocketConnector
         var segment = new ArraySegment<byte>(buffer);
         var deadSockets = new List<string>();
 
-        Console.WriteLine($"Broadcasting: {serializedMessage}");
+        // Console.WriteLine($"Broadcasting: {serializedMessage}");
 
         foreach (var kvp in websocketsMapping)
         {
@@ -196,7 +196,7 @@ public class WebSocketConnector
             {
                 try
                 {
-                    Console.WriteLine($"Sending to {kvp.Key}");
+                    // Console.WriteLine($"Sending to {kvp.Key}");
                     await socket.SendAsync(segment, WebSocketMessageType.Text, true, CancellationToken.None);
                 }
                 catch (Exception ex)
@@ -212,7 +212,7 @@ public class WebSocketConnector
             }
         }
 
-        Console.WriteLine("cleaning up");
+        // Console.WriteLine("cleaning up");
 
         foreach (var deadSocket in deadSockets)
         {

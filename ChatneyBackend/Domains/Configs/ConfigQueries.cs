@@ -4,10 +4,10 @@ namespace ChatneyBackend.Domains.Configs;
 
 public class ConfigQueries
 {
-    public async Task<Config?> GetConfigById(PgRepo<Config, int> repo, int id) => await repo.GetById(id);
+    public async Task<Config?> GetConfigById(AppRepos repos, int id) => await repos.Configs.GetById(id);
 
-    public async Task<Config?> GetConfigByName(PgRepo<Config, int> repo, string name) =>
-        await repo.GetOne(config => config.Name == name);
+    public async Task<Config?> GetConfigByName(AppRepos repos, string name) =>
+        await repos.Configs.GetOne(config => config.Name == name);
 
-    public async Task<List<Config>> GetList(PgRepo<Config, int> repo) => await repo.GetList();
+    public async Task<List<Config>> GetList(AppRepos repos) => await repos.Configs.GetList();
 }
