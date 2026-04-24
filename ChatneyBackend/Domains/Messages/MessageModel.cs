@@ -183,6 +183,11 @@ public class DeletedMessage
     public required int ChannelId { get; set; }
 }
 
+public class EditedMessagePayload
+{
+    public required MessageWithUser Message { get; set; }
+}
+
 public class MessageChildrenCountUpdated
 {
     public required int MessageId { get; set; }
