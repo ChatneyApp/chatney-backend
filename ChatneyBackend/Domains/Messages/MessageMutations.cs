@@ -139,11 +139,52 @@ public class MessageMutations
     }
 
     [Authorize]
-    public async Task<Message?> UpdateMessage(AppRepos repos, Message message)
+    public async Task<bool> UpdateMessage(
+        AppRepos repos,
+        ClaimsPrincipal principal,
+        WebSocketConnector webSocketConnector,
+        MessageUpdateDto message)
     {
-        return await repos.Messages.UpdateOne(message)
-            ? message
-            : null;
+        try
+        {
+            var existingMessage = await repos.Messages.GetById(message.Id);
+            if (existingMessage == null || existingMessage.UserId != principal.GetUserGuid())
+                return false;
+
+            var updated = await repos.Messages.ExecuteScalarAsync<int>(
+                """
+            UPDATE messages
+            SET content = @Content,
+                attachment_ids = COALESCE(@AttachmentIds::integer[], '{}'::integer[]),
+                updated_at = NOW()
+            WHERE id = @Id
+            RETURNING id;
+            """,
+                new { message.Id, message.Content, AttachmentIds = message.AttachmentIds ?? [] }
+            );
+
+            if (updated > 0)
+            {
+                var dbMessage = await repos.Messages.GetById(message.Id);
+                if (dbMessage != null)
+                {
+                    var result = await MessageHydrator.HydrateAsync([dbMessage], repos, principal.GetUserGuid());
+                    var messageWithUser = result.Messages.FirstOrDefault();
+                    if (messageWithUser != null)
+                    {
+                        await webSocketConnector.SendEditedMessageAsync(messageWithUser);
+                    }
+                }
+                return true;
+            }
+
+            return false;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.ToString());
+            return false;
+        }
     }
 
     [Authorize]

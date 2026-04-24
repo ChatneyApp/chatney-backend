@@ -100,6 +100,16 @@ public class MessageDto
     public int? ReplyTo { get; set; }
 }
 
+public class MessageUpdateDto
+{
+    public required int Id { get; set; }
+
+    [MaxLength(4096)]
+    public required string Content { get; set; }
+
+    public int[]? AttachmentIds { get; set; }
+}
+
 
 public class MessageUser
 {
@@ -171,6 +181,11 @@ public class DeletedMessage
 {
     public required int MessageId { get; set; }
     public required int ChannelId { get; set; }
+}
+
+public class EditedMessagePayload
+{
+    public required MessageWithUser Message { get; set; }
 }
 
 public class MessageChildrenCountUpdated
