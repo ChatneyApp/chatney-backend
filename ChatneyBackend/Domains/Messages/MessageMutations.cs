@@ -139,11 +139,21 @@ public class MessageMutations
     }
 
     [Authorize]
-    public async Task<Message?> UpdateMessage(AppRepos repos, Message message)
+    public async Task<Message?> UpdateMessage(AppRepos repos, MessageUpdateDto message)
     {
-        return await repos.Messages.UpdateOne(message)
-            ? message
-            : null;
+        var updated = await repos.Messages.ExecuteScalarAsync<int>(
+            """
+            UPDATE messages
+            SET content = @Content,
+                attachment_ids = @AttachmentIds,
+                updated_at = NOW()
+            WHERE id = @Id
+            RETURNING id;
+            """,
+            new { message.Id, message.Content, AttachmentIds = message.AttachmentIds ?? [] }
+        );
+
+        return updated > 0 ? await repos.Messages.GetById(message.Id) : null;
     }
 
     [Authorize]

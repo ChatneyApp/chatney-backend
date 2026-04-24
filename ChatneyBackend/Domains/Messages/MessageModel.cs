@@ -100,6 +100,16 @@ public class MessageDto
     public int? ReplyTo { get; set; }
 }
 
+public class MessageUpdateDto
+{
+    public required int Id { get; set; }
+
+    [MaxLength(4096)]
+    public required string Content { get; set; }
+
+    public int[]? AttachmentIds { get; set; }
+}
+
 
 public class MessageUser
 {
