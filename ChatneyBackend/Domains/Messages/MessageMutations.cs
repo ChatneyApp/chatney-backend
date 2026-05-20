@@ -1,11 +1,12 @@
 using System.Security.Claims;
-using ChatneyBackend.Domains.Channels;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Infra;
 using ChatneyInfra = ChatneyBackend.Infra;
 using ChatneyBackend.Infra.Middleware;
 using ChatneyBackend.Utils;
 using HotChocolate.Authorization;
+using Npgsql;
+using NpgsqlTypes;
 
 namespace ChatneyBackend.Domains.Messages;
 
@@ -69,46 +70,7 @@ public class MessageMutations
                 });
             }
 
-            var urls = UrlPreviewExtractor.ExtractUrls(message.Content);
-            List<UrlPreview> newUrlPreviews = new List<UrlPreview>();
-            List<UrlPreview> urlPreviews = new List<UrlPreview>();
-
-            List<int> urlPreviewIds = new List<int>();
-            var existingUrlPreviews = await repos.UrlPreviews.GetList(x => urls.Contains(x.Url));
-            foreach (var url in urls)
-            {
-                var urlPreview = existingUrlPreviews.FirstOrDefault(x => x.Url == url);
-                if (urlPreview != null)
-                {
-                    urlPreviewIds.Add(urlPreview.Id);
-                    urlPreviews.Add(urlPreview);
-                }
-                else
-                {
-                    try
-                    {
-                        urlPreview = await UrlPreviewExtractor.GetPreviewAsync(url);
-                        if (urlPreview != null)
-                        {
-                            urlPreviewIds.Add(urlPreview.Id);
-                            newUrlPreviews.Add(urlPreview);
-                            urlPreviews.Add(urlPreview);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.Error.WriteLine($"Failed to parse url {url} with the error: {ex.Message}");
-                    }
-                }
-            }
-
-            if (newUrlPreviews.Count > 0)
-            {
-                await repos.UrlPreviews.InsertBulk(newUrlPreviews);
-            }
-
-            message.UrlPreviewIds = urlPreviewIds.ToArray();
-
+            message.UrlPreviewIds = await ExtractUrlPreviewIds(repos, message.Content);
 
             try
             {
@@ -138,6 +100,50 @@ public class MessageMutations
                 .Build());
     }
 
+    private static async Task<int[]> ExtractUrlPreviewIds(AppRepos repos, string messageContent)
+    {
+        var urls = UrlPreviewExtractor.ExtractUrls(messageContent);
+        List<UrlPreview> newUrlPreviews = new List<UrlPreview>();
+
+        List<int> urlPreviewIds = new List<int>();
+        var existingUrlPreviews = await repos.UrlPreviews.GetList(x => urls.Contains(x.Url));
+        foreach (var url in urls)
+        {
+            var urlPreview = existingUrlPreviews.FirstOrDefault(x => x.Url == url);
+            if (urlPreview != null)
+            {
+                urlPreviewIds.Add(urlPreview.Id);
+            }
+            else
+            {
+                try
+                {
+                    urlPreview = await UrlPreviewExtractor.GetPreviewAsync(url);
+                    if (urlPreview != null)
+                    {
+                        newUrlPreviews.Add(urlPreview);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine($"Failed to parse url {url} with the error: {ex.Message}");
+                }
+            }
+        }
+
+        if (newUrlPreviews.Count > 0)
+        {
+            // TODO: make insert bulk return ID array
+            foreach (var url in newUrlPreviews)
+            {
+                await repos.UrlPreviews.InsertOne(url);
+                urlPreviewIds.Add(url.Id);
+            }
+        }
+
+        return urlPreviewIds.ToArray();
+    }
+
     [Authorize]
     public async Task<bool> UpdateMessage(
         AppRepos repos,
@@ -151,29 +157,48 @@ public class MessageMutations
             if (existingMessage == null || existingMessage.UserId != principal.GetUserGuid())
                 return false;
 
-            var updated = await repos.Messages.ExecuteScalarAsync<int>(
+            var urlPreviewIds = existingMessage.UrlPreviewIds ?? [];
+            if (existingMessage.Content != message.Content)
+            {
+                urlPreviewIds = await ExtractUrlPreviewIds(repos, message.Content);
+            }
+
+            var attachmentIds = message.AttachmentIds ?? Array.Empty<int>();
+
+            var updatedAt = await repos.Messages.ExecuteScalarAsync<DateTime?>(
                 """
-            UPDATE messages
-            SET content = @Content,
-                attachment_ids = COALESCE(@AttachmentIds::integer[], '{}'::integer[]),
-                updated_at = NOW()
-            WHERE id = @Id
-            RETURNING id;
-            """,
-                new { message.Id, message.Content, AttachmentIds = message.AttachmentIds ?? [] }
+                UPDATE messages
+                SET content = @Content,
+                    attachment_ids = CAST(@AttachmentIds AS integer[]),
+                    url_preview_ids = CAST(@UrlPreviewIds AS integer[]),
+                    updated_at = NOW()
+                WHERE id = @Id
+                RETURNING updated_at;
+                """,
+                new NpgsqlParameter("Id", NpgsqlDbType.Integer) { Value = message.Id },
+                new NpgsqlParameter("Content", NpgsqlDbType.Text) { Value = message.Content },
+                new NpgsqlParameter("AttachmentIds", NpgsqlDbType.Array | NpgsqlDbType.Integer)
+                {
+                    Value = attachmentIds
+                },
+                new NpgsqlParameter("UrlPreviewIds", NpgsqlDbType.Array | NpgsqlDbType.Integer)
+                {
+                    Value = urlPreviewIds
+                }
             );
 
-            if (updated > 0)
+            if (updatedAt != null)
             {
-                var dbMessage = await repos.Messages.GetById(message.Id);
-                if (dbMessage != null)
+                existingMessage.Content = message.Content;
+                existingMessage.AttachmentIds = attachmentIds;
+                existingMessage.UrlPreviewIds = urlPreviewIds;
+                existingMessage.UpdatedAt = updatedAt.Value;
+
+                var result = await MessageHydrator.HydrateAsync([existingMessage], repos, principal.GetUserGuid());
+                var messageWithUser = result.Messages.FirstOrDefault();
+                if (messageWithUser != null)
                 {
-                    var result = await MessageHydrator.HydrateAsync([dbMessage], repos, principal.GetUserGuid());
-                    var messageWithUser = result.Messages.FirstOrDefault();
-                    if (messageWithUser != null)
-                    {
-                        await webSocketConnector.SendEditedMessageAsync(messageWithUser);
-                    }
+                    await webSocketConnector.SendEditedMessageAsync(messageWithUser);
                 }
                 return true;
             }

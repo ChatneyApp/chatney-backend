@@ -109,6 +109,21 @@ public class PgRepo<T, TKey> where T : class, IPgKey<T, TKey>
         return await conn.ExecuteScalarAsync<TResult>(sql, param);
     }
 
+    public async Task<TResult?> ExecuteScalarAsync<TResult>(string sql, params NpgsqlParameter[] parameters)
+    {
+        await using var conn = await OpenAsync();
+        await using var command = new NpgsqlCommand(sql, conn);
+        command.Parameters.AddRange(parameters);
+
+        var result = await command.ExecuteScalarAsync();
+        if (result == null || result == DBNull.Value)
+        {
+            return default;
+        }
+
+        return (TResult)result;
+    }
+
     public async Task<int> ExecuteAsync(string sql, object? param = null)
     {
         await using var conn = await OpenAsync();
