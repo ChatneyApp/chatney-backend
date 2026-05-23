@@ -49,29 +49,37 @@ public class AttachmentMutations
                 ContentType = file.ContentType
             };
 
-            await s3Client.PutObjectAsync(uploadRequest);
+            try
+            {
+                await s3Client.PutObjectAsync(uploadRequest);
+
+                var attachment = new Attachment
+                {
+                    UserId = userId,
+                    Extension = ext,
+                    MimeType = file.ContentType,
+                    OriginalFileName = file.Name,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow,
+                    Type = type,
+                    UrlPath = s3Key
+                };
+
+                attachment.Id = await repos.Attachments.InsertOne(attachment);
+
+                var serviceUrl = s3Client.Config.ServiceURL.TrimEnd('/');
+
+                return new AttachmentUploadResponse
+                {
+                    AttachmentId = attachment.Id,
+                    S3Url = $"{serviceUrl}/{bucketName}/{s3Key}"
+                };
+            }
+            catch (AmazonS3Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                throw new Exception("Error uploading file to S3.");
+            }
         }
-
-        var attachment = new Attachment
-        {
-            UserId = userId,
-            Extension = ext,
-            MimeType = file.ContentType,
-            OriginalFileName = file.Name,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
-            Type = type,
-            UrlPath = s3Key
-        };
-
-        attachment.Id = await repos.Attachments.InsertOne(attachment);
-
-        var serviceUrl = s3Client.Config.ServiceURL.TrimEnd('/');
-
-        return new AttachmentUploadResponse
-        {
-            AttachmentId = attachment.Id,
-            S3Url = $"{serviceUrl}/{bucketName}/{s3Key}"
-        };
     }
 }
