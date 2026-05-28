@@ -14,6 +14,8 @@ public class AttachmentMutations
     {
         public required string S3Url { get; set; }
         public required int AttachmentId { get; set; }
+        public required string MimeType { get; set; }
+        public required long Size { get; set; }
     }
 
     [Authorize]
@@ -24,7 +26,12 @@ public class AttachmentMutations
         IFile file
     )
     {
-        if (file == null || file.Length == 0)
+        if (file == null)
+            throw new Exception("File is empty.");
+
+        var fileSize = file.Length ?? 0;
+
+        if (fileSize == 0)
             throw new Exception("File is empty.");
 
         var userId = principal.GetUserGuid();
@@ -33,10 +40,40 @@ public class AttachmentMutations
         var s3Folder = "attachments";
         var dateString = DateTime.UtcNow.ToString("yyyy-MM-dd");
         var extMatch = Regex.Match(file.Name, "\\.([^\\.]+$)");
-        var ext = extMatch.Success ? extMatch.Groups[1].Value : "";
-        string fullExt = ext == "" ? "" : "." + ext;
-        string type = "image";
+        string type = "binary";
 
+        var contentType = file.ContentType ?? "binary";
+
+        if (contentType.StartsWith("image/"))
+        {
+            if (contentType == "image/gif") {
+                type = "gif";
+            } else {
+                type = "image";
+            }
+        } else if (contentType.StartsWith("video/"))
+        {
+            type = "video";
+        } else if (contentType.StartsWith("audio/"))
+        {
+            type = "audio";
+        }
+
+        var ext = extMatch.Success ? extMatch.Groups[1].Value : "";
+
+        switch (type)
+        {
+            case "audio":
+                ext = "mp3";
+                break;
+            case "video":
+                ext = "mp4";
+                break;
+            case "gif":
+                ext = "gif";
+                break;
+        }
+        string fullExt = ext == "" ? "" : "." + ext;
         var s3Key = $"{s3Folder}/{userId}/{dateString}/{fileId}{fullExt}";
 
         using (var fileStream = file.OpenReadStream())
@@ -46,7 +83,7 @@ public class AttachmentMutations
                 BucketName = bucketName,
                 Key = s3Key,
                 InputStream = fileStream,
-                ContentType = file.ContentType
+                ContentType = contentType
             };
 
             try
@@ -57,7 +94,8 @@ public class AttachmentMutations
                 {
                     UserId = userId,
                     Extension = ext,
-                    MimeType = file.ContentType,
+                    MimeType = contentType,
+                    Size = fileSize,
                     OriginalFileName = file.Name,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow,
@@ -72,7 +110,9 @@ public class AttachmentMutations
                 return new AttachmentUploadResponse
                 {
                     AttachmentId = attachment.Id,
-                    S3Url = $"{serviceUrl}/{bucketName}/{s3Key}"
+                    S3Url = $"{serviceUrl}/{bucketName}/{s3Key}",
+                    MimeType = contentType,
+                    Size = fileSize
                 };
             }
             catch (AmazonS3Exception ex)
