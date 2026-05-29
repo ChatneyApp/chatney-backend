@@ -47,6 +47,9 @@ public class Attachment : IPgKey<Attachment, int>, IPgTimestamped
     [MaxLength(4096)]
     public required string Type { get; set; }
 
+    [Map("as_file")]
+    public bool AsFile { get; set; }
+
     [Map("created_at")]
     public DateTime CreatedAt { get; set; }
 

@@ -10,20 +10,13 @@ namespace ChatneyBackend.Domains.Attachments;
 
 public class AttachmentMutations
 {
-    public class AttachmentUploadResponse
-    {
-        public required string S3Url { get; set; }
-        public required int AttachmentId { get; set; }
-        public required string MimeType { get; set; }
-        public required long Size { get; set; }
-    }
-
     [Authorize]
-    public async Task<AttachmentUploadResponse> Upload(
+    public async Task<Attachment> Upload(
         AppRepos repos,
         ClaimsPrincipal principal,
         IAmazonS3 s3Client,
-        IFile file
+        IFile file,
+        bool asFile
     )
     {
         if (file == null)
@@ -100,20 +93,13 @@ public class AttachmentMutations
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow,
                     Type = type,
+                    AsFile = asFile,
                     UrlPath = s3Key
                 };
 
                 attachment.Id = await repos.Attachments.InsertOne(attachment);
 
-                var serviceUrl = s3Client.Config.ServiceURL.TrimEnd('/');
-
-                return new AttachmentUploadResponse
-                {
-                    AttachmentId = attachment.Id,
-                    S3Url = $"{serviceUrl}/{bucketName}/{s3Key}",
-                    MimeType = contentType,
-                    Size = fileSize
-                };
+                return attachment;
             }
             catch (AmazonS3Exception ex)
             {
