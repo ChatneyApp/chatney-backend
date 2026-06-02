@@ -39,6 +39,15 @@ public class Attachment : IPgKey<Attachment, int>, IPgTimestamped
     [Map("size")]
     public required long Size { get; set; }
 
+    [Map("width")]
+    public int? Width { get; set; }
+
+    [Map("height")]
+    public int? Height { get; set; }
+
+    [Map("duration")]
+    public int? Duration { get; set; }
+
     /// <summary>
     /// The type of the attachment, e.g., "image", "video", "audio", "binary", etc.
     /// This can be used to determine how to display the attachment in the frontend.

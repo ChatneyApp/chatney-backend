@@ -16,7 +16,10 @@ public class AttachmentMutations
         ClaimsPrincipal principal,
         IAmazonS3 s3Client,
         IFile file,
-        bool asFile
+        bool asFile,
+        int? width,
+        int? height,
+        int? duration
     )
     {
         if (file == null)
@@ -89,6 +92,9 @@ public class AttachmentMutations
                     Extension = ext,
                     MimeType = contentType,
                     Size = fileSize,
+                    Width = width,
+                    Height = height,
+                    Duration = duration,
                     OriginalFileName = file.Name,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow,
