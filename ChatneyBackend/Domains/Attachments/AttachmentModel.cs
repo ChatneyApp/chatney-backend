@@ -36,13 +36,28 @@ public class Attachment : IPgKey<Attachment, int>, IPgTimestamped
     [MaxLength(4096)]
     public required string MimeType { get; set; }
 
+    [Map("size")]
+    public required long Size { get; set; }
+
+    [Map("width")]
+    public int? Width { get; set; }
+
+    [Map("height")]
+    public int? Height { get; set; }
+
+    [Map("duration")]
+    public int? Duration { get; set; }
+
     /// <summary>
-    /// The type of the attachment, e.g., "image", "video", "file", etc.
+    /// The type of the attachment, e.g., "image", "video", "audio", "binary", etc.
     /// This can be used to determine how to display the attachment in the frontend.
     /// </summary>
     [Map("type")]
     [MaxLength(4096)]
     public required string Type { get; set; }
+
+    [Map("as_file")]
+    public bool AsFile { get; set; }
 
     [Map("created_at")]
     public DateTime CreatedAt { get; set; }
