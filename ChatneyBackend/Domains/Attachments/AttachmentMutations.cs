@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Text.RegularExpressions;
 using Amazon.S3;
 using Amazon.S3.Model;
+using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Infra;
 using ChatneyBackend.Infra.Middleware;
 using HotChocolate.Authorization;
@@ -13,6 +14,7 @@ public class AttachmentMutations
     [Authorize]
     public async Task<Attachment> Upload(
         AppRepos repos,
+        RoleManager roleManager,
         ClaimsPrincipal principal,
         IAmazonS3 s3Client,
         IFile file,
@@ -22,6 +24,10 @@ public class AttachmentMutations
         int? duration
     )
     {
+        var permissions = await roleManager.GetUserPermissions(
+            repos, principal.GetUserGuid(), RoleScope.Global());
+        if (!permissions.Can(AttachmentPermissions.Upload)) ChatneyBackend.Infra.ErrorCodes.ThrowForbidden();
+
         if (file == null)
             throw new Exception("File is empty.");
 
