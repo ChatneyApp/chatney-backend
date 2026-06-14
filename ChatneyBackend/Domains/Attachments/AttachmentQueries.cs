@@ -15,8 +15,8 @@ public class AttachmentQueries
         ClaimsPrincipal principal,
         int id)
     {
-        var permissions = await roleManager.GetUserPermissions(
-            repos, principal.GetUserGuid(), RoleScope.Global());
+        var user = await principal.GetRequiredUser(repos);
+        var permissions = await roleManager.GetUserPermissions(user, RoleScope.Global());
         permissions.Require(AttachmentPermissions.Read);
 
         return await repos.Attachments.GetById(id);

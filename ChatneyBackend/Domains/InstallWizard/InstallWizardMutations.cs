@@ -1,11 +1,16 @@
+using System.Security.Claims;
+using ChatneyBackend.Domains.Attachments;
 using ChatneyBackend.Domains.Channels;
+using ChatneyBackend.Domains.Configs;
 using ChatneyBackend.Domains.Messages;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Domains.Users;
 using ChatneyBackend.Domains.Workspaces;
 using ChatneyBackend.Infra;
+using ChatneyBackend.Infra.Middleware;
 using ChatneyBackend.Utils;
 using FluentMigrator.Runner;
+using HotChocolate.Authorization;
 
 namespace ChatneyBackend.Domains.InstallWizard;
 
@@ -16,6 +21,22 @@ public class InstallWizardMutations
         public required string status { get; set; }
         public string? message { get; set; }
     }
+
+    public static string[] BaseRolePermissions =>
+    [
+        UserPermissionNames.ReadUser,
+        UserPermissionNames.EditUser,
+        ChannelPermissions.CreateMessage,
+        ChannelPermissions.DeleteMessage,
+        ChannelPermissions.EditMessage,
+        ChannelPermissions.ReadChannel,
+        ChannelPermissions.ReadMessage,
+        ChannelPermissions.EditOwnMessage,
+        ChannelPermissions.DeleteOwnMessage,
+        WorkspacePermissions.ReadWorkspace,
+        AttachmentPermissions.Upload,
+        AttachmentPermissions.Read,
+    ];
 
     public async Task<InstallSystemResult> InstallSystem(
         AppConfig appConfig,
@@ -42,21 +63,7 @@ public class InstallWizardMutations
                 UpdatedAt = DateTime.UtcNow,
                 CreatedAt = DateTime.UtcNow,
                 Name = Roles.DomainSettings.BaseRoleName,
-                Permissions =
-                [
-                    MessagePermissions.CreateMessage,
-                    MessagePermissions.DeleteMessage,
-                    MessagePermissions.EditMessage,
-                    MessagePermissions.ReadMessage,
-                    ChatneyBackend.Domains.Users.UserPermissions.ReadUser,
-                    ChatneyBackend.Domains.Users.UserPermissions.EditUser,
-                    ChannelPermissions.CreateMessage,
-                    ChannelPermissions.DeleteMessage,
-                    ChannelPermissions.EditMessage,
-                    ChannelPermissions.ReadChannel,
-                    ChannelPermissions.ReadMessage,
-                    WorkspacePermissions.ReadWorkspace
-                ],
+                Permissions = BaseRolePermissions,
                 IsBase = true
             };
 
@@ -170,8 +177,17 @@ public class InstallWizardMutations
         };
     }
 
-    public async Task<InstallSystemResult> UnInstallSystem(IMigrationRunner migrationRunner)
+    [Authorize]
+    public async Task<InstallSystemResult> UnInstallSystem(
+        AppRepos repos,
+        RoleManager roleManager,
+        ClaimsPrincipal principal,
+        IMigrationRunner migrationRunner)
     {
+        var user = await principal.GetRequiredUser(repos);
+        var permissions = await roleManager.GetUserPermissions(user, RoleScope.Global());
+        permissions.Require(SystemConfigPermissions.UpdateValue);
+
         migrationRunner.MigrateDown(0);
 
         return new InstallSystemResult()

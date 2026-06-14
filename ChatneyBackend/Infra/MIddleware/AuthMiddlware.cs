@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using ChatneyBackend.Domains.Users;
+using ChatneyBackend.Infra;
 using ChatneyBackend.Utils;
 
 namespace ChatneyBackend.Infra.Middleware;
@@ -28,6 +29,17 @@ public static class ClaimsPincipalExtensions
     public static string GetUserEmail(this ClaimsPrincipal user)
     {
         return user.Claims.First(claim => claim.Type == ClaimTypes.Email).Value;
+    }
+
+    public static async Task<User> GetRequiredUser(this ClaimsPrincipal principal, AppRepos repos)
+    {
+        var user = await repos.Users.GetById(principal.GetUserGuid());
+        if (user is null)
+        {
+            ErrorCodes.ThrowNotFound();
+        }
+
+        return user!;
     }
 }
 

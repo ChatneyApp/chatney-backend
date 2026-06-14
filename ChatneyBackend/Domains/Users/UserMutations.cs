@@ -1,13 +1,27 @@
-using ChatneyBackend.Utils;
+using System.Security.Claims;
+using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Infra;
+using ChatneyBackend.Infra.Middleware;
+using ChatneyBackend.Utils;
+using HotChocolate.Authorization;
 using RolesDomainSettings = ChatneyBackend.Domains.Roles.DomainSettings;
 
 namespace ChatneyBackend.Domains.Users;
 
 public class UserMutations
 {
-    public async Task<User> CreateUser(AppConfig appConfig, AppRepos repos, CreateUserDto userDto)
+    [Authorize]
+    public async Task<User> CreateUser(
+        AppConfig appConfig,
+        AppRepos repos,
+        RoleManager roleManager,
+        ClaimsPrincipal principal,
+        CreateUserDto userDto)
     {
+        var currentUser = await principal.GetRequiredUser(repos);
+        var permissions = await roleManager.GetUserPermissions(currentUser, RoleScope.Global());
+        permissions.Require(UserPermissionNames.CreateUser);
+
         var user = userDto.ToModel();
         user.Password = Helpers.GetMd5Hash(user.Password + appConfig.UserPasswordSalt);
 
@@ -31,7 +45,19 @@ public class UserMutations
         return user;
     }
 
-    public Task<bool> DeleteUser(AppRepos repos, Guid id) => repos.Users.DeleteById(id);
+    [Authorize]
+    public async Task<bool> DeleteUser(
+        AppRepos repos,
+        RoleManager roleManager,
+        ClaimsPrincipal principal,
+        Guid id)
+    {
+        var currentUser = await principal.GetRequiredUser(repos);
+        var permissions = await roleManager.GetUserPermissions(currentUser, RoleScope.Global());
+        permissions.Require(UserPermissionNames.DeleteUser);
+
+        return await repos.Users.DeleteById(id);
+    }
 
     public async Task<UserLoginResponse?> Login(AppConfig appConfig, AppRepos repos, string login, string password)
     {

@@ -24,8 +24,8 @@ public class AttachmentMutations
         int? duration
     )
     {
-        var permissions = await roleManager.GetUserPermissions(
-            repos, principal.GetUserGuid(), RoleScope.Global());
+        var user = await principal.GetRequiredUser(repos);
+        var permissions = await roleManager.GetUserPermissions(user, RoleScope.Global());
         permissions.Require(AttachmentPermissions.Upload);
 
         if (file == null)

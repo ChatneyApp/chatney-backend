@@ -1,6 +1,6 @@
 namespace ChatneyBackend.Domains.Users;
 
-public class UserPermissions
+public class UserPermissionNames
 {
     public const string DeleteUser = DomainSettings.PermissionsPrefix + ".deleteUser";
     public const string EditUser   = DomainSettings.PermissionsPrefix + ".editUser";

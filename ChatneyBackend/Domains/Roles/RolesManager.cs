@@ -1,9 +1,24 @@
 using ChatneyBackend.Infra;
+using ChatneyBackend.Domains.Channels;
 using ChatneyBackend.Domains.Users;
+using ChatneyBackend.Domains.Workspaces;
 
 namespace ChatneyBackend.Domains.Roles;
 
-public sealed record RoleScope(int? WorkspaceId, int? ChannelId, int? ChannelTypeId);
+public sealed record RoleScope(int? WorkspaceId, int? ChannelId, int? ChannelTypeId)
+{
+    public static RoleScope FromChannel(Channel channel) =>
+        new(channel.WorkspaceId, channel.Id, channel.ChannelTypeId);
+
+    public static RoleScope FromChannelType(ChannelType channelType) =>
+        new(null, null, channelType.Id);
+
+    public static RoleScope FromWorkspace(Workspace workspace) =>
+        new(workspace.Id, null, null);
+
+    public static RoleScope Global() =>
+        new(null, null, null);
+}
 
 public class RoleManager
 {

@@ -15,7 +15,8 @@ public class ChannelMutations
         ClaimsPrincipal principal,
         ChannelTypeDto channelTypeDto)
     {
-        var permissions = await roleManager.GetUserPermissions(repos, principal.GetUserGuid(), RoleScope.Global());
+        var user = await principal.GetRequiredUser(repos);
+        var permissions = await roleManager.GetUserPermissions(user, RoleScope.Global());
         permissions.Require(ChannelPermissions.CreateChannel);
 
         var channelType = ChannelType.FromDto(channelTypeDto);
@@ -30,8 +31,8 @@ public class ChannelMutations
         ClaimsPrincipal principal,
         ChannelType channelType)
     {
-        var permissions = await roleManager.GetUserPermissions(
-            repos, principal.GetUserGuid(), RoleScope.FromChannelType(channelType));
+        var user = await principal.GetRequiredUser(repos);
+        var permissions = await roleManager.GetUserPermissions(user, RoleScope.FromChannelType(channelType));
         permissions.Require(ChannelPermissions.EditChannel);
 
         var updated = await repos.ChannelTypes.UpdateOne(channelType);
@@ -51,8 +52,8 @@ public class ChannelMutations
             return false;
         }
 
-        var permissions = await roleManager.GetUserPermissions(
-            repos, principal.GetUserGuid(), RoleScope.FromChannelType(channelType));
+        var user = await principal.GetRequiredUser(repos);
+        var permissions = await roleManager.GetUserPermissions(user, RoleScope.FromChannelType(channelType));
         permissions.Require(ChannelPermissions.DeleteChannelType);
 
         return await repos.ChannelTypes.DeleteById(id);
@@ -71,8 +72,8 @@ public class ChannelMutations
             ChatneyBackend.Infra.ErrorCodes.ThrowNotFound();
         }
 
-        var permissions = await roleManager.GetUserPermissions(
-            repos, principal.GetUserGuid(), RoleScope.FromWorkspace(workspace!));
+        var user = await principal.GetRequiredUser(repos);
+        var permissions = await roleManager.GetUserPermissions(user, RoleScope.FromWorkspace(workspace!));
         permissions.Require(ChannelPermissions.CreateChannel);
 
         var channel = channelDto.ToModel();
@@ -87,8 +88,8 @@ public class ChannelMutations
         ClaimsPrincipal principal,
         Channel channel)
     {
-        var permissions = await roleManager.GetUserPermissions(
-            repos, principal.GetUserGuid(), RoleScope.FromChannel(channel));
+        var user = await principal.GetRequiredUser(repos);
+        var permissions = await roleManager.GetUserPermissions(user, RoleScope.FromChannel(channel));
         permissions.Require(ChannelPermissions.EditChannel);
 
         var updated = await repos.Channels.UpdateOne(channel);
@@ -108,8 +109,8 @@ public class ChannelMutations
             return false;
         }
 
-        var permissions = await roleManager.GetUserPermissions(
-            repos, principal.GetUserGuid(), RoleScope.FromChannel(channel));
+        var user = await principal.GetRequiredUser(repos);
+        var permissions = await roleManager.GetUserPermissions(user, RoleScope.FromChannel(channel));
         permissions.Require(ChannelPermissions.DeleteChannel);
 
         return await repos.Channels.DeleteById(id);
@@ -128,8 +129,8 @@ public class ChannelMutations
             ChatneyBackend.Infra.ErrorCodes.ThrowNotFound();
         }
 
-        var permissions = await roleManager.GetUserPermissions(
-            repos, principal.GetUserGuid(), RoleScope.FromWorkspace(workspace!));
+        var user = await principal.GetRequiredUser(repos);
+        var permissions = await roleManager.GetUserPermissions(user, RoleScope.FromWorkspace(workspace!));
         permissions.Require(ChannelPermissions.AddChannelGroup);
 
         var channelGroup = ChannelGroup.FromDto(channelGroupDto);
@@ -150,8 +151,8 @@ public class ChannelMutations
             return null;
         }
 
-        var permissions = await roleManager.GetUserPermissions(
-            repos, principal.GetUserGuid(), RoleScope.FromWorkspace(workspace));
+        var user = await principal.GetRequiredUser(repos);
+        var permissions = await roleManager.GetUserPermissions(user, RoleScope.FromWorkspace(workspace));
         permissions.Require(ChannelPermissions.EditChannelGroup);
 
         var updated = await repos.ChannelGroups.UpdateOne(channelGroup);
@@ -177,8 +178,8 @@ public class ChannelMutations
             return false;
         }
 
-        var permissions = await roleManager.GetUserPermissions(
-            repos, principal.GetUserGuid(), RoleScope.FromWorkspace(workspace));
+        var user = await principal.GetRequiredUser(repos);
+        var permissions = await roleManager.GetUserPermissions(user, RoleScope.FromWorkspace(workspace));
         permissions.Require(ChannelPermissions.DeleteChannelGroup);
 
         return await repos.ChannelGroups.DeleteById(id);

@@ -1,4 +1,5 @@
 using ChatneyBackend.Domains.Channels;
+using ChatneyBackend.Domains.InstallWizard;
 using ChatneyBackend.Domains.Messages;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Domains.Users;
@@ -45,20 +46,7 @@ public class _202603180001_CreateRolesTable : Migration
             command.Parameters.AddRange(new NpgsqlParameter[]
             {
                 new NpgsqlParameter<string>("name", ChatneyBackend.Domains.Roles.DomainSettings.BaseRoleName),
-                new NpgsqlParameter<string[]>("permissions", [
-                    MessagePermissions.CreateMessage,
-                    MessagePermissions.DeleteMessage,
-                    MessagePermissions.EditMessage,
-                    MessagePermissions.ReadMessage,
-                    ChatneyBackend.Domains.Users.UserPermissions.ReadUser,
-                    ChatneyBackend.Domains.Users.UserPermissions.EditUser,
-                    ChannelPermissions.CreateMessage,
-                    ChannelPermissions.DeleteMessage,
-                    ChannelPermissions.EditMessage,
-                    ChannelPermissions.ReadChannel,
-                    ChannelPermissions.ReadMessage,
-                    WorkspacePermissions.ReadWorkspace
-                ])
+                new NpgsqlParameter<string[]>("permissions", InstallWizardMutations.BaseRolePermissions)
                 {
                     NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Array | NpgsqlTypes.NpgsqlDbType.Text
                 }

@@ -1,9 +1,10 @@
 using System.Security.Claims;
+using ChatneyBackend.Domains.Channels;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Infra;
-using ChatneyInfra = ChatneyBackend.Infra;
 using ChatneyBackend.Infra.Middleware;
 using ChatneyBackend.Utils;
+using HotChocolate;
 using HotChocolate.Authorization;
 using Npgsql;
 using NpgsqlTypes;
@@ -27,75 +28,64 @@ public class MessageMutations
         WebSocketConnector webSocketConnector
     )
     {
-        Message message = Message.FromDto(messageDto, principal.GetUserGuid());
-        var user = await repos.Users.GetById(principal.GetUserGuid());
+        var user = await principal.GetRequiredUser(repos);
+        var userId = user.Id;
+        Message message = Message.FromDto(messageDto, userId);
 
         var channel = await repos.Channels.GetById(message.ChannelId);
-
-        if (channel == null || user == null)
+        if (channel == null)
         {
             throw new InvalidOperationException("Channel or user is invalid");
         }
 
-        var permissions = await roleManager.GetUserPermissions(user, new RoleScope(
-            WorkspaceId: channel.WorkspaceId,
-            ChannelId: channel.Id,
-            ChannelTypeId: channel.ChannelTypeId
-        ));
+        var permissions = await roleManager.GetUserPermissions(user, RoleScope.FromChannel(channel));
+        permissions.Require(ChannelPermissions.CreateMessage);
 
-        if (permissions.Can(MessagePermissions.CreateMessage))
+        var parentMessage = message.ParentId != null
+            ? await repos.Messages.GetById(message.ParentId.Value)
+            : null;
+
+        if (parentMessage != null)
         {
-            var parentMessage = message.ParentId != null
-                ? await repos.Messages.GetById(message.ParentId.Value)
-                : null;
-
-            if (parentMessage != null)
+            var childrenCount = await repos.Messages.ExecuteScalarAsync<int>(
+                """
+                UPDATE messages
+                SET children_count = children_count + 1,
+                    updated_at = NOW()
+                WHERE id = @Id
+                RETURNING children_count;
+                """,
+                new { Id = parentMessage.Id }
+            );
+            await webSocketConnector.UpdateMessageChildrenCountAsync(new MessageChildrenCountUpdated
             {
-                var childrenCount = await repos.Messages.ExecuteScalarAsync<int>(
-                    """
-                    UPDATE messages
-                    SET children_count = children_count + 1,
-                        updated_at = NOW()
-                    WHERE id = @Id
-                    RETURNING children_count;
-                    """,
-                    new { Id = parentMessage.Id }
-                );
-                await webSocketConnector.UpdateMessageChildrenCountAsync(new MessageChildrenCountUpdated
-                {
-                    ChildrenCount = childrenCount,
-                    MessageId = parentMessage.Id
-                });
-            }
-
-            message.UrlPreviewIds = await ExtractUrlPreviewIds(repos, message.Content);
-
-            try
-            {
-                message.Id = await repos.Messages.InsertOne(message);
-                var result = await MessageHydrator.HydrateAsync([message], repos, principal.GetUserGuid());
-
-                var messageWithUser = result.Messages.First();
-                var replyRef = result.Refs.FirstOrDefault();
-
-                await webSocketConnector.SendNewMessageAsync(new NewMessagePayload
-                {
-                    Message = messageWithUser,
-                    ReplyTo = replyRef,
-                });
-                return messageWithUser;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-            }
+                ChildrenCount = childrenCount,
+                MessageId = parentMessage.Id
+            });
         }
 
-        throw new GraphQLException(
-            ErrorBuilder.New()
-                .SetMessage(ChatneyInfra.ErrorCodes.ForbiddenAction)
-                .SetCode(ChatneyInfra.ErrorCodes.ForbiddenAction)
-                .Build());
+        message.UrlPreviewIds = await ExtractUrlPreviewIds(repos, message.Content);
+
+        try
+        {
+            message.Id = await repos.Messages.InsertOne(message);
+            var result = await MessageHydrator.HydrateAsync([message], repos, userId);
+
+            var messageWithUser = result.Messages.First();
+            var replyRef = result.Refs.FirstOrDefault();
+
+            await webSocketConnector.SendNewMessageAsync(new NewMessagePayload
+            {
+                Message = messageWithUser,
+                ReplyTo = replyRef,
+            });
+            return messageWithUser;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.ToString());
+            throw;
+        }
     }
 
     private static async Task<int[]> ExtractUrlPreviewIds(AppRepos repos, string messageContent)
@@ -131,7 +121,6 @@ public class MessageMutations
 
         if (newUrlPreviews.Count > 0)
         {
-            // TODO: make insert bulk return ID array
             foreach (var url in newUrlPreviews)
             {
                 await repos.UrlPreviews.InsertOne(url);
@@ -145,15 +134,36 @@ public class MessageMutations
     [Authorize]
     public async Task<bool> UpdateMessage(
         AppRepos repos,
+        RoleManager roleManager,
         ClaimsPrincipal principal,
         WebSocketConnector webSocketConnector,
         MessageUpdateDto message)
     {
         try
         {
+            var user = await principal.GetRequiredUser(repos);
+            var userId = user.Id;
             var existingMessage = await repos.Messages.GetById(message.Id);
-            if (existingMessage == null || existingMessage.UserId != principal.GetUserGuid())
+            if (existingMessage == null)
+            {
+                ChatneyBackend.Infra.ErrorCodes.ThrowNotFound();
                 return false;
+            }
+
+            var channel = await repos.Channels.GetById(existingMessage.ChannelId);
+            if (channel == null)
+            {
+                ChatneyBackend.Infra.ErrorCodes.ThrowNotFound();
+                return false;
+            }
+
+            var permissions = await roleManager.GetUserPermissions(user, RoleScope.FromChannel(channel));
+            if (!permissions.Can(ChannelPermissions.EditMessage) &&
+                !(existingMessage.UserId == userId && permissions.Can(ChannelPermissions.EditOwnMessage)))
+            {
+                ChatneyBackend.Infra.ErrorCodes.ThrowForbidden();
+                return false;
+            }
 
             var urlPreviewIds = existingMessage.UrlPreviewIds ?? [];
             if (existingMessage.Content != message.Content)
@@ -192,7 +202,7 @@ public class MessageMutations
                 existingMessage.UrlPreviewIds = urlPreviewIds;
                 existingMessage.UpdatedAt = updatedAt.Value;
 
-                var result = await MessageHydrator.HydrateAsync([existingMessage], repos, principal.GetUserGuid());
+                var result = await MessageHydrator.HydrateAsync([existingMessage], repos, userId);
                 var messageWithUser = result.Messages.FirstOrDefault();
                 if (messageWithUser != null)
                 {
@@ -203,6 +213,10 @@ public class MessageMutations
 
             return false;
         }
+        catch (GraphQLException)
+        {
+            throw;
+        }
         catch (Exception e)
         {
             Console.WriteLine(e.ToString());
@@ -211,21 +225,44 @@ public class MessageMutations
     }
 
     [Authorize]
-    public async Task<bool> DeleteMessage(WebSocketConnector webSocketConnector, AppRepos repos, int id)
+    public async Task<bool> DeleteMessage(
+        WebSocketConnector webSocketConnector,
+        AppRepos repos,
+        RoleManager roleManager,
+        ClaimsPrincipal principal,
+        int id)
     {
+        var user = await principal.GetRequiredUser(repos);
+        var userId = user.Id;
         var message = await repos.Messages.GetById(id);
-        if (message == null) return false;
+        if (message == null)
+        {
+            ChatneyBackend.Infra.ErrorCodes.ThrowNotFound();
+            return false;
+        }
+
+        var channel = await repos.Channels.GetById(message.ChannelId);
+        if (channel == null)
+        {
+            ChatneyBackend.Infra.ErrorCodes.ThrowNotFound();
+            return false;
+        }
+
+        var permissions = await roleManager.GetUserPermissions(user, RoleScope.FromChannel(channel));
+        if (!permissions.Can(ChannelPermissions.DeleteMessage) &&
+            !(message.UserId == userId && permissions.Can(ChannelPermissions.DeleteOwnMessage)))
+        {
+            ChatneyBackend.Infra.ErrorCodes.ThrowForbidden();
+        }
 
         try
         {
-            // remove all children messages under this thread
             if (message.ParentId == null)
             {
                 await repos.Messages.Delete(r => r.ParentId == id);
             }
             else
             {
-                // decrease children count in parent message if applicable
                 var parentMessage = message.ParentId != null
                     ? await repos.Messages.GetById(message.ParentId.Value)
                     : null;
@@ -257,6 +294,10 @@ public class MessageMutations
             });
             return result;
         }
+        catch (GraphQLException)
+        {
+            throw;
+        }
         catch (Exception exception)
         {
             Console.WriteLine("Exception: " + exception.Message);
@@ -268,6 +309,7 @@ public class MessageMutations
     public async Task<ReactionEndpointOutput> AddReaction(
         WebSocketConnector webSocketConnector,
         AppRepos repos,
+        RoleManager roleManager,
         string code,
         int messageId,
         ClaimsPrincipal principal)
@@ -275,7 +317,6 @@ public class MessageMutations
         try
         {
             var userId = principal.GetUserGuid();
-
             var message = await repos.Messages.GetById(messageId);
 
             if (message == null)
@@ -284,6 +325,16 @@ public class MessageMutations
                 {
                     status = "error",
                     message = "wrong message id"
+                };
+            }
+
+            var channel = await repos.Channels.GetById(message.ChannelId);
+            if (channel == null)
+            {
+                return new ReactionEndpointOutput()
+                {
+                    status = "error",
+                    message = "channel not found"
                 };
             }
 
@@ -315,6 +366,10 @@ public class MessageMutations
                 status = "success"
             };
         }
+        catch (GraphQLException)
+        {
+            throw;
+        }
         catch (Exception e)
         {
             return new ReactionEndpointOutput()
@@ -329,6 +384,7 @@ public class MessageMutations
     public async Task<ReactionEndpointOutput> DeleteReaction(
         WebSocketConnector webSocketConnector,
         AppRepos repos,
+        RoleManager roleManager,
         string code,
         int messageId,
         ClaimsPrincipal principal)
@@ -336,7 +392,6 @@ public class MessageMutations
         try
         {
             var userId = principal.GetUserGuid();
-
             var message = await repos.Messages.GetById(messageId);
 
             if (message == null)
@@ -345,6 +400,16 @@ public class MessageMutations
                 {
                     status = "error",
                     message = "wrong message id"
+                };
+            }
+
+            var channel = await repos.Channels.GetById(message.ChannelId);
+            if (channel == null)
+            {
+                return new ReactionEndpointOutput()
+                {
+                    status = "error",
+                    message = "channel not found"
                 };
             }
 
@@ -385,6 +450,10 @@ public class MessageMutations
                 status = "success"
             };
         }
+        catch (GraphQLException)
+        {
+            throw;
+        }
         catch (Exception ex)
         {
             return new ReactionEndpointOutput
@@ -394,5 +463,4 @@ public class MessageMutations
             };
         }
     }
-
 }

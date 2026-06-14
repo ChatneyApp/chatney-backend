@@ -16,5 +16,16 @@ public class UserPermissions
             .ToArray();
     }
 
-    public bool Can(string permission) => Permissions.Contains(permission);
+    public bool Can(params string[] permissions) => permissions.All(p => Permissions.Contains(p));
+
+    public void Require(params string[] permissions)
+    {
+        foreach (var permission in permissions)
+        {
+            if (!Can(permission))
+            {
+                ChatneyBackend.Infra.ErrorCodes.ThrowForbidden();
+            }
+        }
+    }
 }

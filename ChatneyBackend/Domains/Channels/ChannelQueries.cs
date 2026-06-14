@@ -21,8 +21,8 @@ public class ChannelQueries
             return null;
         }
 
-        var permissions = await roleManager.GetUserPermissions(
-            repos, principal.GetUserGuid(), RoleScope.FromChannel(channel));
+        var user = await principal.GetRequiredUser(repos);
+        var permissions = await roleManager.GetUserPermissions(user, RoleScope.FromChannel(channel));
         permissions.Require(ChannelPermissions.ReadChannel);
 
         return channel;
@@ -41,8 +41,8 @@ public class ChannelQueries
             return null;
         }
 
-        var permissions = await roleManager.GetUserPermissions(
-            repos, principal.GetUserGuid(), RoleScope.FromChannel(channel));
+        var user = await principal.GetRequiredUser(repos);
+        var permissions = await roleManager.GetUserPermissions(user, RoleScope.FromChannel(channel));
         permissions.Require(ChannelPermissions.ReadChannel);
 
         return channel;
@@ -61,8 +61,8 @@ public class ChannelQueries
             ChatneyBackend.Infra.ErrorCodes.ThrowNotFound();
         }
 
-        var permissions = await roleManager.GetUserPermissions(
-            repos, principal.GetUserGuid(), RoleScope.FromWorkspace(workspace!));
+        var user = await principal.GetRequiredUser(repos);
+        var permissions = await roleManager.GetUserPermissions(user, RoleScope.FromWorkspace(workspace!));
         permissions.Require(ChannelPermissions.ReadChannel);
 
         return await repos.Channels.GetList(channel => channel.WorkspaceId == workspaceId);
@@ -74,8 +74,8 @@ public class ChannelQueries
         RoleManager roleManager,
         ClaimsPrincipal principal)
     {
-        var permissions = await roleManager.GetUserPermissions(
-            repos, principal.GetUserGuid(), RoleScope.Global());
+        var user = await principal.GetRequiredUser(repos);
+        var permissions = await roleManager.GetUserPermissions(user, RoleScope.Global());
         permissions.Require(ChannelPermissions.ReadChannel);
 
         return await repos.ChannelTypes.GetList();
@@ -94,8 +94,8 @@ public class ChannelQueries
             ChatneyBackend.Infra.ErrorCodes.ThrowNotFound();
         }
 
-        var permissions = await roleManager.GetUserPermissions(
-            repos, principal.GetUserGuid(), RoleScope.FromWorkspace(workspace!));
+        var user = await principal.GetRequiredUser(repos);
+        var permissions = await roleManager.GetUserPermissions(user, RoleScope.FromWorkspace(workspace!));
         permissions.Require(ChannelPermissions.ReadChannel);
 
         return await repos.ChannelGroups.GetList(group => group.WorkspaceId == workspaceId);
