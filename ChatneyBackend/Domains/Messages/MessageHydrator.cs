@@ -1,3 +1,4 @@
+using ChatneyBackend.Domains.Attachments;
 using ChatneyBackend.Infra;
 
 namespace ChatneyBackend.Domains.Messages;
@@ -17,7 +18,7 @@ public static class MessageHydrator
 
         var attachmentsByIdTask = allAttachmentIds.Length > 0
             ? repos.Attachments.GetList(a => allAttachmentIds.Contains(a.Id))
-            : Task.FromResult(new List<Attachments.Attachment>());
+            : Task.FromResult(new List<Attachment>());
 
         var urlPreviewsByIdTask = allUrlPreviewIds.Length > 0
             ? repos.UrlPreviews.GetList(u => allUrlPreviewIds.Contains(u.Id))

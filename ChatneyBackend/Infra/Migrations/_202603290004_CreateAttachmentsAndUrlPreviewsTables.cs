@@ -15,7 +15,12 @@ public class _202603290004_CreateAttachmentsAndUrlPreviewsTables : Migration
                 original_file_name varchar(4096) NOT NULL,
                 extension varchar(4096) NOT NULL,
                 mime_type varchar(4096) NOT NULL,
+                size bigint NOT NULL,
+                width int NULL,
+                height int NULL,
+                duration int NULL,
                 type varchar(4096) NOT NULL,
+                as_file boolean NOT NULL DEFAULT false,
                 created_at timestamptz NOT NULL DEFAULT NOW(),
                 updated_at timestamptz NOT NULL DEFAULT NOW(),
                 CONSTRAINT fk_attachments_user_id
