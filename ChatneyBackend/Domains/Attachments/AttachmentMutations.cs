@@ -26,15 +26,19 @@ public class AttachmentMutations
     {
         var permissions = await roleManager.GetUserPermissions(
             repos, principal.GetUserGuid(), RoleScope.Global());
-        if (!permissions.Can(AttachmentPermissions.Upload)) ChatneyBackend.Infra.ErrorCodes.ThrowForbidden();
+        permissions.Require(AttachmentPermissions.Upload);
 
         if (file == null)
+        {
             throw new Exception("File is empty.");
+        }
 
         var fileSize = file.Length ?? 0;
 
         if (fileSize == 0)
+        {
             throw new Exception("File is empty.");
+        }
 
         var userId = principal.GetUserGuid();
         var fileId = Guid.NewGuid().ToString();

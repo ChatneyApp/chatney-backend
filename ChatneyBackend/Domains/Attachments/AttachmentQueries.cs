@@ -17,7 +17,7 @@ public class AttachmentQueries
     {
         var permissions = await roleManager.GetUserPermissions(
             repos, principal.GetUserGuid(), RoleScope.Global());
-        if (!permissions.Can(AttachmentPermissions.Read)) ChatneyBackend.Infra.ErrorCodes.ThrowForbidden();
+        permissions.Require(AttachmentPermissions.Read);
 
         return await repos.Attachments.GetById(id);
     }

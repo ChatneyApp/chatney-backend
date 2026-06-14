@@ -1,53 +1,186 @@
+using System.Security.Claims;
+using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Infra;
+using ChatneyBackend.Infra.Middleware;
+using HotChocolate.Authorization;
 
 namespace ChatneyBackend.Domains.Channels;
 
 public class ChannelMutations
 {
-    public async Task<ChannelType> AddChannelType(AppRepos repos, ChannelTypeDto channelTypeDto)
+    [Authorize]
+    public async Task<ChannelType> AddChannelType(
+        AppRepos repos,
+        RoleManager roleManager,
+        ClaimsPrincipal principal,
+        ChannelTypeDto channelTypeDto)
     {
+        var permissions = await roleManager.GetUserPermissions(repos, principal.GetUserGuid(), RoleScope.Global());
+        permissions.Require(ChannelPermissions.CreateChannel);
+
         var channelType = ChannelType.FromDto(channelTypeDto);
         channelType.Id = await repos.ChannelTypes.InsertOne(channelType);
         return channelType;
     }
 
-    public async Task<ChannelType?> UpdateChannelType(AppRepos repos, ChannelType channelType)
+    [Authorize]
+    public async Task<ChannelType?> UpdateChannelType(
+        AppRepos repos,
+        RoleManager roleManager,
+        ClaimsPrincipal principal,
+        ChannelType channelType)
     {
+        var permissions = await roleManager.GetUserPermissions(
+            repos, principal.GetUserGuid(), RoleScope.FromChannelType(channelType));
+        permissions.Require(ChannelPermissions.EditChannel);
+
         var updated = await repos.ChannelTypes.UpdateOne(channelType);
         return updated ? channelType : null;
     }
 
-    public async Task<bool> DeleteChannelType(AppRepos repos, int id) =>
-        await repos.ChannelTypes.DeleteById(id);
-
-    public async Task<Channel> AddChannel(AppRepos repos, ChannelDto channelDto)
+    [Authorize]
+    public async Task<bool> DeleteChannelType(
+        AppRepos repos,
+        RoleManager roleManager,
+        ClaimsPrincipal principal,
+        int id)
     {
+        var channelType = await repos.ChannelTypes.GetById(id);
+        if (channelType == null)
+        {
+            return false;
+        }
+
+        var permissions = await roleManager.GetUserPermissions(
+            repos, principal.GetUserGuid(), RoleScope.FromChannelType(channelType));
+        permissions.Require(ChannelPermissions.DeleteChannelType);
+
+        return await repos.ChannelTypes.DeleteById(id);
+    }
+
+    [Authorize]
+    public async Task<Channel> AddChannel(
+        AppRepos repos,
+        RoleManager roleManager,
+        ClaimsPrincipal principal,
+        ChannelDto channelDto)
+    {
+        var workspace = await repos.Workspaces.GetById(channelDto.WorkspaceId);
+        if (workspace == null)
+        {
+            ChatneyBackend.Infra.ErrorCodes.ThrowNotFound();
+        }
+
+        var permissions = await roleManager.GetUserPermissions(
+            repos, principal.GetUserGuid(), RoleScope.FromWorkspace(workspace!));
+        permissions.Require(ChannelPermissions.CreateChannel);
+
         var channel = channelDto.ToModel();
         channel.Id = await repos.Channels.InsertOne(channel);
         return channel;
     }
 
-    public async Task<Channel?> UpdateChannel(AppRepos repos, Channel channel)
+    [Authorize]
+    public async Task<Channel?> UpdateChannel(
+        AppRepos repos,
+        RoleManager roleManager,
+        ClaimsPrincipal principal,
+        Channel channel)
     {
+        var permissions = await roleManager.GetUserPermissions(
+            repos, principal.GetUserGuid(), RoleScope.FromChannel(channel));
+        permissions.Require(ChannelPermissions.EditChannel);
+
         var updated = await repos.Channels.UpdateOne(channel);
         return updated ? channel : null;
     }
 
-    public async Task<bool> DeleteChannel(AppRepos repos, int id) => await repos.Channels.DeleteById(id);
-
-    public async Task<ChannelGroup> AddChannelGroup(AppRepos repos, ChannelGroupDto channelGroupDto)
+    [Authorize]
+    public async Task<bool> DeleteChannel(
+        AppRepos repos,
+        RoleManager roleManager,
+        ClaimsPrincipal principal,
+        int id)
     {
+        var channel = await repos.Channels.GetById(id);
+        if (channel == null)
+        {
+            return false;
+        }
+
+        var permissions = await roleManager.GetUserPermissions(
+            repos, principal.GetUserGuid(), RoleScope.FromChannel(channel));
+        permissions.Require(ChannelPermissions.DeleteChannel);
+
+        return await repos.Channels.DeleteById(id);
+    }
+
+    [Authorize]
+    public async Task<ChannelGroup> AddChannelGroup(
+        AppRepos repos,
+        RoleManager roleManager,
+        ClaimsPrincipal principal,
+        ChannelGroupDto channelGroupDto)
+    {
+        var workspace = await repos.Workspaces.GetById(channelGroupDto.WorkspaceId);
+        if (workspace == null)
+        {
+            ChatneyBackend.Infra.ErrorCodes.ThrowNotFound();
+        }
+
+        var permissions = await roleManager.GetUserPermissions(
+            repos, principal.GetUserGuid(), RoleScope.FromWorkspace(workspace!));
+        permissions.Require(ChannelPermissions.AddChannelGroup);
+
         var channelGroup = ChannelGroup.FromDto(channelGroupDto);
         channelGroup.Id = await repos.ChannelGroups.InsertOne(channelGroup);
         return channelGroup;
     }
 
-    public async Task<ChannelGroup?> UpdateChannelGroup(AppRepos repos, ChannelGroup channelGroup)
+    [Authorize]
+    public async Task<ChannelGroup?> UpdateChannelGroup(
+        AppRepos repos,
+        RoleManager roleManager,
+        ClaimsPrincipal principal,
+        ChannelGroup channelGroup)
     {
+        var workspace = await repos.Workspaces.GetById(channelGroup.WorkspaceId);
+        if (workspace == null)
+        {
+            return null;
+        }
+
+        var permissions = await roleManager.GetUserPermissions(
+            repos, principal.GetUserGuid(), RoleScope.FromWorkspace(workspace));
+        permissions.Require(ChannelPermissions.EditChannelGroup);
+
         var updated = await repos.ChannelGroups.UpdateOne(channelGroup);
         return updated ? channelGroup : null;
     }
 
-    public async Task<bool> DeleteChannelGroup(AppRepos repos, int id) =>
-        await repos.ChannelGroups.DeleteById(id);
+    [Authorize]
+    public async Task<bool> DeleteChannelGroup(
+        AppRepos repos,
+        RoleManager roleManager,
+        ClaimsPrincipal principal,
+        int id)
+    {
+        var channelGroup = await repos.ChannelGroups.GetById(id);
+        if (channelGroup == null)
+        {
+            return false;
+        }
+
+        var workspace = await repos.Workspaces.GetById(channelGroup.WorkspaceId);
+        if (workspace == null)
+        {
+            return false;
+        }
+
+        var permissions = await roleManager.GetUserPermissions(
+            repos, principal.GetUserGuid(), RoleScope.FromWorkspace(workspace));
+        permissions.Require(ChannelPermissions.DeleteChannelGroup);
+
+        return await repos.ChannelGroups.DeleteById(id);
+    }
 }
