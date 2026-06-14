@@ -37,15 +37,13 @@ public class MessageMutations
             throw new InvalidOperationException("Channel or user is invalid");
         }
 
-        var userRoles = await repos.UserRoles.GetList(r => r.UserId == user.Id);
-        var currentRole = await roleManager.GetRelevantRole(user, userRoles, new RoleScope(
+        var permissions = await roleManager.GetUserPermissions(user, new RoleScope(
             WorkspaceId: channel.WorkspaceId,
             ChannelId: channel.Id,
             ChannelTypeId: channel.ChannelTypeId
         ));
 
-        Console.WriteLine(string.Join(" ", currentRole?.Permissions ?? []));
-        if ((currentRole?.Permissions ?? []).Contains(MessagePermissions.CreateMessage))
+        if (permissions.Can(MessagePermissions.CreateMessage))
         {
             var parentMessage = message.ParentId != null
                 ? await repos.Messages.GetById(message.ParentId.Value)

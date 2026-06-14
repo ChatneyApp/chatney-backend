@@ -5,31 +5,40 @@ using System.Linq.Expressions;
 
 namespace ChatneyBackend.Domains.Users;
 
-public readonly record struct UserRoleKey(Guid UserId, string Type, int ItemId);
+public readonly record struct UserRoleKey(Guid UserId, int? ChannelId, int? ChannelTypeId, int? WorkspaceId);
 
 public class UserRole : IPgKey<UserRole, UserRoleKey>
 {
     [Primary]
-    [Identity]
     [Map("user_id")]
     public Guid UserId { get; set; }
 
-    /// <summary>
-    /// "workspace" | "channel" | "channel_type"
-    /// </summary>
     [Primary]
-    [Map("type")]
-    public required string Type { get; set; }
+    [Map("channel_id")]
+    public int? ChannelId { get; set; }
 
     [Primary]
-    [Map("item_id")]
-    public required int ItemId { get; set; }
+    [Map("channel_type_id")]
+    public int? ChannelTypeId { get; set; }
+
+    [Primary]
+    [Map("workspace_id")]
+    public int? WorkspaceId { get; set; }
 
     [Map("role_id")]
     public required int RoleId { get; set; }
 
+    [Map("allowlist")]
+    public required string[] Allowlist { get; set; }
+
+    [Map("denylist")]
+    public required string[] Denylist { get; set; }
+
     public static Expression<Func<UserRole, bool>> MatchByKey(UserRoleKey key) =>
-        role => role.UserId == key.UserId && role.Type == key.Type && role.ItemId == key.ItemId;
+        role => role.UserId == key.UserId &&
+                role.ChannelId == key.ChannelId &&
+                role.ChannelTypeId == key.ChannelTypeId &&
+                role.WorkspaceId == key.WorkspaceId;
 }
 
 // TODO: move to another model/table

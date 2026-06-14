@@ -78,7 +78,7 @@ var appRepos = new AppRepos(
 builder.Services.AddSingleton(pgDataSource);
 builder.Services.AddSingleton(_ => new AppConfig { UserPasswordSalt = userPasswordSalt, JwtSecret = jwtSecret });
 builder.Services.AddSingleton(_ => appRepos);
-builder.Services.AddSingleton(_ => new RoleManager(appRepos.Roles));
+builder.Services.AddSingleton(_ => new RoleManager(appRepos.Roles, appRepos.UserRoles));
 builder.Services
     .AddFluentMigratorCore()
     .ConfigureRunner(runner => runner

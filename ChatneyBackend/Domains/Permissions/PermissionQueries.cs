@@ -20,7 +20,7 @@ public class PermissionQueries
             new PermissionGroup("Workspace permissions", PermissionsUtils.GetAllPermissions<SystemConfigPermissions>()),
             new PermissionGroup("Channel permissions", PermissionsUtils.GetAllPermissions<RolePermissions>()),
             new PermissionGroup("Message permissions", PermissionsUtils.GetAllPermissions<MessagePermissions>()),
-            new PermissionGroup("User permissions", PermissionsUtils.GetAllPermissions<UserPermissions>()),
+            new PermissionGroup("User permissions", PermissionsUtils.GetAllPermissions<ChatneyBackend.Domains.Users.UserPermissions>()),
             new PermissionGroup("Role permissions", PermissionsUtils.GetAllPermissions<WorkspacePermissions>())
         ];
     }
