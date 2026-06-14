@@ -28,7 +28,7 @@ public class RoleManager
             var role = userRoles.Find(role => role.ChannelId == roleScope.ChannelId);
             if (role != null)
             {
-                return await FromRoleId(role.RoleId);
+                return await FromUserRole(role);
             }
         }
 
@@ -37,7 +37,7 @@ public class RoleManager
             var role = userRoles.Find(role => role.ChannelTypeId == roleScope.ChannelTypeId);
             if (role != null)
             {
-                return await FromRoleId(role.RoleId);
+                return await FromUserRole(role);
             }
         }
 
@@ -46,16 +46,22 @@ public class RoleManager
             var role = userRoles.Find(role => role.WorkspaceId == roleScope.WorkspaceId);
             if (role != null)
             {
-                return await FromRoleId(role.RoleId);
+                return await FromUserRole(role);
             }
         }
 
         return await FromRoleId(user.RoleId);
     }
 
+    private async Task<UserPermissions> FromUserRole(UserRole userRole)
+    {
+        var role = await _roles.GetById(userRole.RoleId);
+        return new UserPermissions(role?.Permissions ?? [], userRole.Allowlist, userRole.Denylist);
+    }
+
     private async Task<UserPermissions> FromRoleId(int roleId)
     {
         var role = await _roles.GetById(roleId);
-        return new UserPermissions(role?.Permissions ?? []);
+        return new UserPermissions(role?.Permissions ?? [], [], []);
     }
 }

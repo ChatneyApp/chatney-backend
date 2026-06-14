@@ -2,11 +2,18 @@ namespace ChatneyBackend.Domains.Roles;
 
 public class UserPermissions
 {
-    public string[] Permissions { get; }
+    public IReadOnlyList<string> Permissions { get; }
 
-    public UserPermissions(string[] permissions)
+    public UserPermissions(
+        IEnumerable<string> rolePermissions,
+        IEnumerable<string> allowlist,
+        IEnumerable<string> denylist)
     {
-        Permissions = permissions;
+        Permissions = rolePermissions
+            .Concat(allowlist)
+            .Except(denylist)
+            .Distinct()
+            .ToArray();
     }
 
     public bool Can(string permission) => Permissions.Contains(permission);
