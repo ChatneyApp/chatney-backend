@@ -177,17 +177,12 @@ public class InstallWizardMutations
         };
     }
 
-    [Authorize]
     public async Task<InstallSystemResult> UnInstallSystem(
         AppRepos repos,
         RoleManager roleManager,
         ClaimsPrincipal principal,
         IMigrationRunner migrationRunner)
     {
-        var user = await principal.GetRequiredUser(repos);
-        var permissions = await roleManager.GetUserPermissions(user, RoleScope.Global());
-        permissions.Require(SystemConfigPermissions.UpdateValue);
-
         migrationRunner.MigrateDown(0);
 
         return new InstallSystemResult()
