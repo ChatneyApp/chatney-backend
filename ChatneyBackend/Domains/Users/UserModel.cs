@@ -81,9 +81,6 @@ public class User : IPgKey<User, Guid>, IPgTimestamped, IType
     [GraphQLIgnore]
     public required int RoleId { get; set; }
 
-    [Map("workspace_ids")]
-    public required int[] WorkspaceIds { get; set; }
-
     [Map("password")]
     [GraphQLIgnore]
     public required string Password { get; set; }
@@ -125,7 +122,6 @@ public class UserRegisterDto : IDto<User>
             Muted = false,
             Banned = false,
             Verified = false,
-            WorkspaceIds = [],
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
             RoleId = 0,
@@ -152,8 +148,6 @@ public class CreateUserDto : IDto<User>
 
     public required int RoleId { get; set; }
 
-    public required int[] WorkspaceIds { get; set; }
-
     public required string Password { get; set; }
 
     public User ToModel()
@@ -164,7 +158,6 @@ public class CreateUserDto : IDto<User>
             Name = Name,
             Email = Email,
             Password = Password,
-            WorkspaceIds = WorkspaceIds,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
             RoleId = RoleId,

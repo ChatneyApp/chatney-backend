@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using ChatneyBackend.Domains.Roles;
+using ChatneyBackend.Domains.Workspaces;
 using ChatneyBackend.Infra;
 using ChatneyBackend.Infra.Middleware;
 using HotChocolate.Authorization;
@@ -63,23 +64,13 @@ public class ChannelQueries
 
         var user = await principal.GetRequiredUser(repos);
         var permissions = await roleManager.GetUserPermissions(user, RoleScope.FromWorkspace(workspace!));
-        permissions.Require(ChannelPermissions.ReadChannel);
+        permissions.Require(WorkspacePermissions.ReadWorkspace);
 
         return await repos.Channels.GetList(channel => channel.WorkspaceId == workspaceId);
     }
 
     [Authorize]
-    public async Task<List<ChannelType>> GetChannelTypeList(
-        AppRepos repos,
-        RoleManager roleManager,
-        ClaimsPrincipal principal)
-    {
-        var user = await principal.GetRequiredUser(repos);
-        var permissions = await roleManager.GetUserPermissions(user, RoleScope.Global());
-        permissions.Require(ChannelPermissions.ReadChannel);
-
-        return await repos.ChannelTypes.GetList();
-    }
+    public async Task<List<ChannelType>> GetChannelTypeList(AppRepos repos) => await repos.ChannelTypes.GetList();
 
     [Authorize]
     public async Task<List<ChannelGroup>> GetWorkspaceChannelGroupList(

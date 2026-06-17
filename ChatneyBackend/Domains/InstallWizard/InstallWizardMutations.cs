@@ -122,7 +122,6 @@ public class InstallWizardMutations
             };
             await repos.Channels.InsertBulk(channels);
 
-            var workspaceIds = workspaces.Select(w => w.Id).ToArray();
             List<Users.User> users = new()
             {
                 new()
@@ -131,7 +130,6 @@ public class InstallWizardMutations
                     Name = "test user 1",
                     Email = "test1@test.com",
                     RoleId = baseRole.Id,
-                    WorkspaceIds = workspaceIds,
                     Password = Helpers.GetMd5Hash("123" + appConfig.UserPasswordSalt),
                 },
                 new()
@@ -140,7 +138,6 @@ public class InstallWizardMutations
                     Name = "test user 2",
                     Email = "test2@test.com",
                     RoleId = baseRole.Id,
-                    WorkspaceIds = workspaceIds,
                     Password = Helpers.GetMd5Hash("123" + appConfig.UserPasswordSalt),
                 },
             };
