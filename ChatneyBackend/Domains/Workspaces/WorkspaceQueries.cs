@@ -57,85 +57,21 @@ public class WorkspaceQueries
         ClaimsPrincipal principal)
     {
         var user = await principal.GetRequiredUser(repos);
-        var permissions = await roleManager.GetUserPermissions(user, RoleScope.Global());
-        if (permissions.Can(WorkspacePermissions.ReadWorkspace))
-        {
-            return await repos.Workspaces.GetList();
-        }
 
-        var userRoles = await repos.UserRoles.GetList(r => r.UserId == user.Id);
-        var roles = await repos.Roles.GetList(r => userRoles.Any(ur => ur.RoleId == r.Id) || r.Id == user.RoleId);
-        
-        var haveAccessToAnyWorkspace = roles.Any(r => 
-            r.Id == user.RoleId && r.Permissions.Contains(ChannelPermissions.ReadMessage));
+        var perms = await roleManager.GetUserPermissions(user, RoleScope.Global());
+
+        var haveAccessToAnyWorkspace = perms.Can(ChannelPermissions.ReadMessage);
         if (haveAccessToAnyWorkspace)
         {
             return await repos.Workspaces.GetList();
         }
 
-        var channels = await repos.Channels.GetList();
-
-        var channelsByChannelTypesForUser = channels.FindAll(c => {
-            var userRole = userRoles.Find(r => r.ChannelTypeId == c.ChannelTypeId);
-            if (userRole == null)
-            {
-                return false;
-            }
-
-            var role = roles.Find(r => r.Id == userRole.RoleId);
-            if (role == null)
-            {
-                return false;
-            }
-
-            return role.Permissions.Contains(ChannelPermissions.ReadMessage);
-        });
-
-        var channelsByworkspacesForUser = channels
-            .FindAll(c => {
-                var userRole = userRoles.Find(r => r.WorkspaceId == c.WorkspaceId);
-                if (userRole == null)
-                {
-                    return false;
-                }
-
-                var role = roles.Find(r => r.Id == userRole.RoleId);
-                if (role == null)
-                {
-                    return false;
-                }
-
-                return role.Permissions.Contains(ChannelPermissions.ReadMessage);
-            });
-            
-        var channelsForUser = channels.FindAll(c => {
-            var userRole = userRoles.Find(r => r.ChannelId == c.Id);
-            if (userRole == null)
-            {
-                return false;
-            }
-
-            var role = roles.Find(r => r.Id == userRole.RoleId);
-            if (role == null)
-            {
-                return false;
-            }
-
-            return role.Permissions.Contains(ChannelPermissions.ReadMessage);
-        });
-   
-
-        // Combine all relevant channels for the user and take distinct workspace ids
-        var allUserChannels = channelsByChannelTypesForUser
-            .Concat(channelsByworkspacesForUser)
-            .Concat(channelsForUser);
-
+        var allUserChannels = await roleManager.GetPermittedChannels(repos, user.Id);
         var distinctWorkspaceIds = allUserChannels
             .Select(c => c.WorkspaceId)
             .Distinct()
             .ToList();
-      
-      
+
         var workspaces = await repos.Workspaces.GetList(w => distinctWorkspaceIds.Contains(w.Id));
         return workspaces;
     }

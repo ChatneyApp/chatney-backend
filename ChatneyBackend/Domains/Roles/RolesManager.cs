@@ -68,6 +68,74 @@ public class RoleManager
         return await FromRoleId(user.RoleId);
     }
 
+    public async Task<List<Channel>> GetPermittedChannels(AppRepos repos, Guid userId)
+    {
+        var userRoles = await repos.UserRoles.GetList(r => r.UserId == userId);
+        var roleIds = userRoles.Select(ur => ur.RoleId).ToList();
+        var roles = await repos.Roles.GetList(r => roleIds.Any(rId => r.Id == rId));
+        var channels = await repos.Channels.GetList();
+
+        var channelsByChannelTypesForUser = channels
+            .FindAll(c =>
+            {
+                var userRole = userRoles.Find(r => r.ChannelTypeId == c.ChannelTypeId);
+                if (userRole == null)
+                {
+                    return false;
+                }
+
+                var role = roles.Find(r => r.Id == userRole.RoleId);
+                if (role == null)
+                {
+                    return false;
+                }
+
+                return role.Permissions.Contains(ChannelPermissions.ReadMessage);
+            });
+
+        var channelsByworkspacesForUser = channels
+            .FindAll(c =>
+            {
+                var userRole = userRoles.Find(r => r.WorkspaceId == c.WorkspaceId);
+                if (userRole == null)
+                {
+                    return false;
+                }
+
+                var role = roles.Find(r => r.Id == userRole.RoleId);
+                if (role == null)
+                {
+                    return false;
+                }
+
+                return role.Permissions.Contains(ChannelPermissions.ReadMessage);
+            });
+
+        var channelsForUser = channels.FindAll(c =>
+        {
+            var userRole = userRoles.Find(r => r.ChannelId == c.Id);
+            if (userRole == null)
+            {
+                return false;
+            }
+
+            var role = roles.Find(r => r.Id == userRole.RoleId);
+            if (role == null)
+            {
+                return false;
+            }
+
+            return role.Permissions.Contains(ChannelPermissions.ReadMessage);
+        });
+
+
+        // Combine all relevant channels for the user and take distinct workspace ids
+        return channelsByChannelTypesForUser
+            .Concat(channelsByworkspacesForUser)
+            .Concat(channelsForUser)
+            .ToList();
+    }
+
     private async Task<UserPermissions> FromUserRole(UserRole userRole)
     {
         var role = await _roles.GetById(userRole.RoleId);

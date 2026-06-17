@@ -63,10 +63,26 @@ public class ChannelQueries
         }
 
         var user = await principal.GetRequiredUser(repos);
-        var permissions = await roleManager.GetUserPermissions(user, RoleScope.FromWorkspace(workspace!));
-        permissions.Require(WorkspacePermissions.ReadWorkspace);
 
-        return await repos.Channels.GetList(channel => channel.WorkspaceId == workspaceId);
+        var perms = await roleManager.GetUserPermissions(user, RoleScope.Global());
+
+        var haveAccessToAnyChannel = perms.Can(ChannelPermissions.ReadMessage);
+        if (haveAccessToAnyChannel)
+        {
+            return await repos.Channels.GetList(c => c.WorkspaceId == workspaceId);
+        }
+
+        var allUserChannels = await roleManager.GetPermittedChannels(repos, user.Id);
+        var distinctChannelIds = allUserChannels
+            .Select(c => c.Id)
+            .Distinct()
+            .ToList();
+
+        var channels = await repos.Channels.GetList(
+            c => distinctChannelIds.Contains(c.Id) &&
+                 c.WorkspaceId == workspaceId
+        );
+        return channels;
     }
 
     [Authorize]
