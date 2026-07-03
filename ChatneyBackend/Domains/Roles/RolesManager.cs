@@ -22,10 +22,10 @@ public sealed record RoleScope(int? WorkspaceId, int? ChannelId, int? ChannelTyp
 
 public class RoleManager
 {
-    private readonly PgRepo<Role, int> _roles;
-    private readonly PgRepo<UserRole, UserRoleKey> _userRoles;
+    private readonly IPgRepo<Role, int> _roles;
+    private readonly IPgRepo<UserRole, UserRoleKey> _userRoles;
 
-    public RoleManager(PgRepo<Role, int> roles, PgRepo<UserRole, UserRoleKey> userRoles)
+    public RoleManager(IPgRepo<Role, int> roles, IPgRepo<UserRole, UserRoleKey> userRoles)
     {
         _roles = roles;
         _userRoles = userRoles;

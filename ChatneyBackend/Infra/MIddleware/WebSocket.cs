@@ -139,36 +139,36 @@ public class WebSocketConnector
     }
 
     #region Message Reactions
-    public async Task AddReactionAsync(WebsocketReactionPayload reaction)
+    public virtual Task AddReactionAsync(WebsocketReactionPayload reaction)
     {
-        await SendToAllAsync(WebSocketPayloadType.NewReaction, reaction);
+        return SendToAllAsync(WebSocketPayloadType.NewReaction, reaction);
     }
-    public async Task DeleteReactionAsync(WebsocketReactionPayload reaction)
+    public virtual Task DeleteReactionAsync(WebsocketReactionPayload reaction)
     {
-        await SendToAllAsync(WebSocketPayloadType.DeletedReaction, reaction);
+        return SendToAllAsync(WebSocketPayloadType.DeletedReaction, reaction);
     }
     #endregion
 
     #region Messages
-    public async Task SendMessageAsync(MessageWithUser message)
+    public virtual Task SendMessageAsync(MessageWithUser message)
     {
-        await SendToAllAsync(WebSocketPayloadType.NewMessage, message);
+        return SendToAllAsync(WebSocketPayloadType.NewMessage, message);
     }
-    public async Task SendNewMessageAsync(NewMessagePayload payload)
+    public virtual Task SendNewMessageAsync(NewMessagePayload payload)
     {
-        await SendToAllAsync(WebSocketPayloadType.NewMessage, payload);
+        return SendToAllAsync(WebSocketPayloadType.NewMessage, payload);
     }
-    public async Task DeleteMessageAsync(DeletedMessage message)
+    public virtual Task DeleteMessageAsync(DeletedMessage message)
     {
-        await SendToAllAsync(WebSocketPayloadType.DeletedMessage, message);
+        return SendToAllAsync(WebSocketPayloadType.DeletedMessage, message);
     }
-    public async Task UpdateMessageChildrenCountAsync(MessageChildrenCountUpdated message)
+    public virtual Task UpdateMessageChildrenCountAsync(MessageChildrenCountUpdated message)
     {
-        await SendToAllAsync(WebSocketPayloadType.MessageChildrenCountUpdated, message);
+        return SendToAllAsync(WebSocketPayloadType.MessageChildrenCountUpdated, message);
     }
-    public async Task SendEditedMessageAsync(MessageWithUser message)
+    public virtual Task SendEditedMessageAsync(MessageWithUser message)
     {
-        await SendToAllAsync(WebSocketPayloadType.EditedMessage, new EditedMessagePayload { Message = message });
+        return SendToAllAsync(WebSocketPayloadType.EditedMessage, new EditedMessagePayload { Message = message });
     }
     #endregion
 

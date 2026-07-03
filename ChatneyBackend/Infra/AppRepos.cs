@@ -10,31 +10,31 @@ using ChatneyBackend.Domains.Workspaces;
 namespace ChatneyBackend.Infra;
 
 public class AppRepos(
-    PgRepo<User, Guid> users,
-    PgRepo<UserRole, UserRoleKey> userRoles,
-    PgRepo<Role, int> roles,
-    PgRepo<Message, int> messages,
-    PgRepo<DraftMessage, int> draftMessages,
-    PgRepo<MessageReaction, MessageReactionKey> reactions,
-    PgRepo<Attachment, int> attachments,
-    PgRepo<UrlPreview, int> urlPreviews,
-    PgRepo<Channel, int> channels,
-    PgRepo<ChannelType, int> channelTypes,
-    PgRepo<ChannelGroup, int> channelGroups,
-    PgRepo<Config, int> configs,
-    PgRepo<Workspace, int> workspaces)
+    IPgRepo<User, Guid> users,
+    IPgRepo<UserRole, UserRoleKey> userRoles,
+    IPgRepo<Role, int> roles,
+    IPgRepo<Message, int> messages,
+    IPgRepo<DraftMessage, int> draftMessages,
+    IPgRepo<MessageReaction, MessageReactionKey> reactions,
+    IPgRepo<Attachment, int> attachments,
+    IPgRepo<UrlPreview, int> urlPreviews,
+    IPgRepo<Channel, int> channels,
+    IPgRepo<ChannelType, int> channelTypes,
+    IPgRepo<ChannelGroup, int> channelGroups,
+    IPgRepo<Config, int> configs,
+    IPgRepo<Workspace, int> workspaces)
 {
-    public PgRepo<User, Guid> Users { get; } = users;
-    public PgRepo<UserRole, UserRoleKey> UserRoles { get; } = userRoles;
-    public PgRepo<Role, int> Roles { get; } = roles;
-    public PgRepo<Message, int> Messages { get; } = messages;
-    public PgRepo<DraftMessage, int> DraftMessages { get; } = draftMessages;
-    public PgRepo<MessageReaction, MessageReactionKey> Reactions { get; } = reactions;
-    public PgRepo<Attachment, int> Attachments { get; } = attachments;
-    public PgRepo<UrlPreview, int> UrlPreviews { get; } = urlPreviews;
-    public PgRepo<Channel, int> Channels { get; } = channels;
-    public PgRepo<ChannelType, int> ChannelTypes { get; } = channelTypes;
-    public PgRepo<ChannelGroup, int> ChannelGroups { get; } = channelGroups;
-    public PgRepo<Config, int> Configs { get; } = configs;
-    public PgRepo<Workspace, int> Workspaces { get; } = workspaces;
+    public IPgRepo<User, Guid> Users { get; } = users;
+    public IPgRepo<UserRole, UserRoleKey> UserRoles { get; } = userRoles;
+    public IPgRepo<Role, int> Roles { get; } = roles;
+    public IPgRepo<Message, int> Messages { get; } = messages;
+    public IPgRepo<DraftMessage, int> DraftMessages { get; } = draftMessages;
+    public IPgRepo<MessageReaction, MessageReactionKey> Reactions { get; } = reactions;
+    public IPgRepo<Attachment, int> Attachments { get; } = attachments;
+    public IPgRepo<UrlPreview, int> UrlPreviews { get; } = urlPreviews;
+    public IPgRepo<Channel, int> Channels { get; } = channels;
+    public IPgRepo<ChannelType, int> ChannelTypes { get; } = channelTypes;
+    public IPgRepo<ChannelGroup, int> ChannelGroups { get; } = channelGroups;
+    public IPgRepo<Config, int> Configs { get; } = configs;
+    public IPgRepo<Workspace, int> Workspaces { get; } = workspaces;
 }

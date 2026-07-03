@@ -6,8 +6,6 @@ using ChatneyBackend.Infra.Middleware;
 using ChatneyBackend.Utils;
 using HotChocolate;
 using HotChocolate.Authorization;
-using Npgsql;
-using NpgsqlTypes;
 
 namespace ChatneyBackend.Domains.Messages;
 
@@ -47,15 +45,9 @@ public class MessageMutations
 
         if (parentMessage != null)
         {
-            var childrenCount = await repos.Messages.ExecuteScalarAsync<int>(
-                """
-                UPDATE messages
-                SET children_count = children_count + 1,
-                    updated_at = NOW()
-                WHERE id = @Id
-                RETURNING children_count;
-                """,
-                new { Id = parentMessage.Id }
+            var childrenCount = await MessageMutationQueries.IncrementChildrenCountAsync(
+                repos.Messages,
+                parentMessage.Id
             );
             await webSocketConnector.UpdateMessageChildrenCountAsync(new MessageChildrenCountUpdated
             {
@@ -173,26 +165,12 @@ public class MessageMutations
 
             var attachmentIds = message.AttachmentIds ?? Array.Empty<int>();
 
-            var updatedAt = await repos.Messages.ExecuteScalarAsync<DateTime?>(
-                """
-                UPDATE messages
-                SET content = @Content,
-                    attachment_ids = CAST(@AttachmentIds AS integer[]),
-                    url_preview_ids = CAST(@UrlPreviewIds AS integer[]),
-                    updated_at = NOW()
-                WHERE id = @Id
-                RETURNING updated_at;
-                """,
-                new NpgsqlParameter("Id", NpgsqlDbType.Integer) { Value = message.Id },
-                new NpgsqlParameter("Content", NpgsqlDbType.Text) { Value = message.Content },
-                new NpgsqlParameter("AttachmentIds", NpgsqlDbType.Array | NpgsqlDbType.Integer)
-                {
-                    Value = attachmentIds
-                },
-                new NpgsqlParameter("UrlPreviewIds", NpgsqlDbType.Array | NpgsqlDbType.Integer)
-                {
-                    Value = urlPreviewIds
-                }
+            var updatedAt = await MessageMutationQueries.UpdateMessageAsync(
+                repos.Messages,
+                message.Id,
+                message.Content,
+                attachmentIds,
+                urlPreviewIds
             );
 
             if (updatedAt != null)
@@ -268,15 +246,9 @@ public class MessageMutations
                     : null;
                 if (parentMessage != null)
                 {
-                    var childrenCount = await repos.Messages.ExecuteScalarAsync<int>(
-                        """
-                        UPDATE messages
-                        SET children_count = GREATEST(children_count - 1, 0),
-                            updated_at = NOW()
-                        WHERE id = @Id
-                        RETURNING children_count;
-                        """,
-                        new { Id = parentMessage.Id }
+                    var childrenCount = await MessageMutationQueries.DecrementChildrenCountAsync(
+                        repos.Messages,
+                        parentMessage.Id
                     );
                     await webSocketConnector.UpdateMessageChildrenCountAsync(new MessageChildrenCountUpdated
                     {
@@ -338,19 +310,11 @@ public class MessageMutations
                 };
             }
 
-            await repos.Reactions.ExecuteAsync(
-                """
-                INSERT INTO message_reactions (message_id, user_id, code)
-                VALUES (@MessageId, @UserId, @Code)
-                ON CONFLICT (message_id, user_id, code)
-                DO NOTHING;
-                """,
-                new
-                {
-                    MessageId = messageId,
-                    UserId = userId,
-                    Code = code
-                }
+            await MessageMutationQueries.InsertReactionAsync(
+                repos.Reactions,
+                messageId,
+                userId,
+                code
             );
 
             await webSocketConnector.AddReactionAsync(new WebsocketReactionPayload()
@@ -413,19 +377,11 @@ public class MessageMutations
                 };
             }
 
-            var deletedAggregate = await repos.Reactions.ExecuteAsync(
-                """
-                DELETE FROM message_reactions
-                WHERE message_id = @MessageId
-                  AND user_id = @UserId
-                  AND code = @Code;
-                """,
-                new
-                {
-                    MessageId = messageId,
-                    UserId = userId,
-                    Code = code
-                }
+            var deletedAggregate = await MessageMutationQueries.DeleteReactionAsync(
+                repos.Reactions,
+                messageId,
+                userId,
+                code
             );
 
             if (deletedAggregate == 0)

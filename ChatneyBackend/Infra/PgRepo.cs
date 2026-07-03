@@ -16,7 +16,7 @@ public interface IPgKey<T, in TKey> where T : class
     static abstract Expression<Func<T, bool>> MatchByKey(TKey key);
 }
 
-public class PgRepo<T, TKey> where T : class, IPgKey<T, TKey>
+public class PgRepo<T, TKey> : IPgRepo<T, TKey> where T : class, IPgKey<T, TKey>
 {
     private readonly NpgsqlDataSource _dataSource;
 
