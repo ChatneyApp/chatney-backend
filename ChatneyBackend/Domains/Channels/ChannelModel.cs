@@ -55,3 +55,25 @@ public class ChannelDto : IDto<Channel>
 
     public Channel ToModel() => Channel.FromDto(this);
 }
+
+public class WebsocketChannelPayload
+{
+    public int Id { get; set; }
+    public required string Name { get; set; }
+    public int ChannelTypeId { get; set; }
+    public int WorkspaceId { get; set; }
+
+    public static WebsocketChannelPayload FromChannel(Channel channel) => new()
+    {
+        Id = channel.Id,
+        Name = channel.Name,
+        ChannelTypeId = channel.ChannelTypeId,
+        WorkspaceId = channel.WorkspaceId,
+    };
+}
+
+public class WebsocketChannelDeletedPayload
+{
+    public int Id { get; set; }
+    public int WorkspaceId { get; set; }
+}

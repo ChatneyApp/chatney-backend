@@ -13,7 +13,8 @@ public class WorkspaceMutations
         AppRepos repos,
         RoleManager roleManager,
         ClaimsPrincipal principal,
-        WorkspaceDto workspaceDto)
+        WorkspaceDto workspaceDto,
+        WebSocketConnector webSocketConnector)
     {
         var user = await principal.GetRequiredUser(repos);
         var permissions = await roleManager.GetUserPermissions(user, RoleScope.Global());
@@ -21,6 +22,7 @@ public class WorkspaceMutations
 
         var workspace = Workspace.FromDto(workspaceDto);
         workspace.Id = await repos.Workspaces.InsertOne(workspace);
+        await webSocketConnector.SendNewWorkspaceAsync(WebsocketWorkspacePayload.FromWorkspace(workspace));
         return workspace;
     }
 
@@ -29,13 +31,18 @@ public class WorkspaceMutations
         AppRepos repos,
         RoleManager roleManager,
         ClaimsPrincipal principal,
-        Workspace workspace)
+        Workspace workspace,
+        WebSocketConnector webSocketConnector)
     {
         var user = await principal.GetRequiredUser(repos);
         var permissions = await roleManager.GetUserPermissions(user, RoleScope.FromWorkspace(workspace));
         permissions.Require(WorkspacePermissions.UpdateWorkspace);
 
         var updated = await repos.Workspaces.UpdateOne(workspace);
+        if (updated)
+        {
+            await webSocketConnector.SendUpdatedWorkspaceAsync(WebsocketWorkspacePayload.FromWorkspace(workspace));
+        }
         return updated ? workspace : null;
     }
 
@@ -44,7 +51,8 @@ public class WorkspaceMutations
         AppRepos repos,
         RoleManager roleManager,
         ClaimsPrincipal principal,
-        int id)
+        int id,
+        WebSocketConnector webSocketConnector)
     {
         var workspace = await repos.Workspaces.GetById(id);
         if (workspace == null)
@@ -56,6 +64,11 @@ public class WorkspaceMutations
         var permissions = await roleManager.GetUserPermissions(user, RoleScope.FromWorkspace(workspace));
         permissions.Require(WorkspacePermissions.DeleteWorkspace);
 
-        return await repos.Workspaces.DeleteById(id);
+        var deleted = await repos.Workspaces.DeleteById(id);
+        if (deleted)
+        {
+            await webSocketConnector.SendDeletedWorkspaceAsync(new WebsocketWorkspaceDeletedPayload { Id = id });
+        }
+        return deleted;
     }
 }

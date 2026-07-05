@@ -1,6 +1,8 @@
+using ChatneyBackend.Domains.Channels;
 using ChatneyBackend.Domains.Messages;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Domains.Users;
+using ChatneyBackend.Domains.Workspaces;
 using ChatneyBackend.Infra.Middleware;
 
 namespace ChatneyBackend.Tests.Support;
@@ -19,6 +21,15 @@ public class RecordingWebSocketConnector : WebSocketConnector
     public List<WebsocketUserRolePayload> NewUserRoles { get; } = [];
     public List<WebsocketUserRolePayload> UpdatedUserRoles { get; } = [];
     public List<WebsocketUserRoleDeletedPayload> DeletedUserRoles { get; } = [];
+    public List<WebsocketChannelPayload> NewChannels { get; } = [];
+    public List<WebsocketChannelPayload> UpdatedChannels { get; } = [];
+    public List<WebsocketChannelDeletedPayload> DeletedChannels { get; } = [];
+    public List<WebsocketChannelTypePayload> NewChannelTypes { get; } = [];
+    public List<WebsocketChannelTypePayload> UpdatedChannelTypes { get; } = [];
+    public List<WebsocketChannelTypeDeletedPayload> DeletedChannelTypes { get; } = [];
+    public List<WebsocketWorkspacePayload> NewWorkspaces { get; } = [];
+    public List<WebsocketWorkspacePayload> UpdatedWorkspaces { get; } = [];
+    public List<WebsocketWorkspaceDeletedPayload> DeletedWorkspaces { get; } = [];
 
     public override Task SendNewMessageAsync(NewMessagePayload payload)
     {
@@ -89,6 +100,60 @@ public class RecordingWebSocketConnector : WebSocketConnector
     public override Task SendDeletedUserRoleAsync(WebsocketUserRoleDeletedPayload payload)
     {
         DeletedUserRoles.Add(payload);
+        return Task.CompletedTask;
+    }
+
+    public override Task SendNewChannelAsync(WebsocketChannelPayload channel)
+    {
+        NewChannels.Add(channel);
+        return Task.CompletedTask;
+    }
+
+    public override Task SendUpdatedChannelAsync(WebsocketChannelPayload channel)
+    {
+        UpdatedChannels.Add(channel);
+        return Task.CompletedTask;
+    }
+
+    public override Task SendDeletedChannelAsync(WebsocketChannelDeletedPayload channel)
+    {
+        DeletedChannels.Add(channel);
+        return Task.CompletedTask;
+    }
+
+    public override Task SendNewChannelTypeAsync(WebsocketChannelTypePayload channelType)
+    {
+        NewChannelTypes.Add(channelType);
+        return Task.CompletedTask;
+    }
+
+    public override Task SendUpdatedChannelTypeAsync(WebsocketChannelTypePayload channelType)
+    {
+        UpdatedChannelTypes.Add(channelType);
+        return Task.CompletedTask;
+    }
+
+    public override Task SendDeletedChannelTypeAsync(WebsocketChannelTypeDeletedPayload channelType)
+    {
+        DeletedChannelTypes.Add(channelType);
+        return Task.CompletedTask;
+    }
+
+    public override Task SendNewWorkspaceAsync(WebsocketWorkspacePayload workspace)
+    {
+        NewWorkspaces.Add(workspace);
+        return Task.CompletedTask;
+    }
+
+    public override Task SendUpdatedWorkspaceAsync(WebsocketWorkspacePayload workspace)
+    {
+        UpdatedWorkspaces.Add(workspace);
+        return Task.CompletedTask;
+    }
+
+    public override Task SendDeletedWorkspaceAsync(WebsocketWorkspaceDeletedPayload workspace)
+    {
+        DeletedWorkspaces.Add(workspace);
         return Task.CompletedTask;
     }
 }

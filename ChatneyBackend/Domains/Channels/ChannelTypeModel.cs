@@ -54,3 +54,24 @@ public class ChannelTypeDto
 
     public int BaseRoleId { get; set; }
 }
+
+public class WebsocketChannelTypePayload
+{
+    public int Id { get; set; }
+    public required string Name { get; set; }
+    public required string Key { get; set; }
+    public int BaseRoleId { get; set; }
+
+    public static WebsocketChannelTypePayload FromChannelType(ChannelType channelType) => new()
+    {
+        Id = channelType.Id,
+        Name = channelType.Name,
+        Key = channelType.Key,
+        BaseRoleId = channelType.BaseRoleId,
+    };
+}
+
+public class WebsocketChannelTypeDeletedPayload
+{
+    public int Id { get; set; }
+}

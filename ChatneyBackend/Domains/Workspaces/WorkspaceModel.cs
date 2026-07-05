@@ -40,3 +40,20 @@ public class WorkspaceDto
     [MaxLength(255)]
     public required string Name { get; set; }
 }
+
+public class WebsocketWorkspacePayload
+{
+    public int Id { get; set; }
+    public required string Name { get; set; }
+
+    public static WebsocketWorkspacePayload FromWorkspace(Workspace workspace) => new()
+    {
+        Id = workspace.Id,
+        Name = workspace.Name,
+    };
+}
+
+public class WebsocketWorkspaceDeletedPayload
+{
+    public int Id { get; set; }
+}

@@ -13,7 +13,8 @@ public class ChannelMutations
         AppRepos repos,
         RoleManager roleManager,
         ClaimsPrincipal principal,
-        ChannelTypeDto channelTypeDto)
+        ChannelTypeDto channelTypeDto,
+        WebSocketConnector webSocketConnector)
     {
         var user = await principal.GetRequiredUser(repos);
         var permissions = await roleManager.GetUserPermissions(user, RoleScope.Global());
@@ -21,6 +22,7 @@ public class ChannelMutations
 
         var channelType = ChannelType.FromDto(channelTypeDto);
         channelType.Id = await repos.ChannelTypes.InsertOne(channelType);
+        await webSocketConnector.SendNewChannelTypeAsync(WebsocketChannelTypePayload.FromChannelType(channelType));
         return channelType;
     }
 
@@ -29,13 +31,18 @@ public class ChannelMutations
         AppRepos repos,
         RoleManager roleManager,
         ClaimsPrincipal principal,
-        ChannelType channelType)
+        ChannelType channelType,
+        WebSocketConnector webSocketConnector)
     {
         var user = await principal.GetRequiredUser(repos);
         var permissions = await roleManager.GetUserPermissions(user, RoleScope.FromChannelType(channelType));
         permissions.Require(ChannelPermissions.EditChannel);
 
         var updated = await repos.ChannelTypes.UpdateOne(channelType);
+        if (updated)
+        {
+            await webSocketConnector.SendUpdatedChannelTypeAsync(WebsocketChannelTypePayload.FromChannelType(channelType));
+        }
         return updated ? channelType : null;
     }
 
@@ -44,7 +51,8 @@ public class ChannelMutations
         AppRepos repos,
         RoleManager roleManager,
         ClaimsPrincipal principal,
-        int id)
+        int id,
+        WebSocketConnector webSocketConnector)
     {
         var channelType = await repos.ChannelTypes.GetById(id);
         if (channelType == null)
@@ -56,7 +64,12 @@ public class ChannelMutations
         var permissions = await roleManager.GetUserPermissions(user, RoleScope.FromChannelType(channelType));
         permissions.Require(ChannelPermissions.DeleteChannelType);
 
-        return await repos.ChannelTypes.DeleteById(id);
+        var deleted = await repos.ChannelTypes.DeleteById(id);
+        if (deleted)
+        {
+            await webSocketConnector.SendDeletedChannelTypeAsync(new WebsocketChannelTypeDeletedPayload { Id = id });
+        }
+        return deleted;
     }
 
     [Authorize]
@@ -64,7 +77,8 @@ public class ChannelMutations
         AppRepos repos,
         RoleManager roleManager,
         ClaimsPrincipal principal,
-        ChannelDto channelDto)
+        ChannelDto channelDto,
+        WebSocketConnector webSocketConnector)
     {
         var workspace = await repos.Workspaces.GetById(channelDto.WorkspaceId);
         if (workspace == null)
@@ -78,6 +92,7 @@ public class ChannelMutations
 
         var channel = channelDto.ToModel();
         channel.Id = await repos.Channels.InsertOne(channel);
+        await webSocketConnector.SendNewChannelAsync(WebsocketChannelPayload.FromChannel(channel));
         return channel;
     }
 
@@ -86,13 +101,18 @@ public class ChannelMutations
         AppRepos repos,
         RoleManager roleManager,
         ClaimsPrincipal principal,
-        Channel channel)
+        Channel channel,
+        WebSocketConnector webSocketConnector)
     {
         var user = await principal.GetRequiredUser(repos);
         var permissions = await roleManager.GetUserPermissions(user, RoleScope.FromChannel(channel));
         permissions.Require(ChannelPermissions.EditChannel);
 
         var updated = await repos.Channels.UpdateOne(channel);
+        if (updated)
+        {
+            await webSocketConnector.SendUpdatedChannelAsync(WebsocketChannelPayload.FromChannel(channel));
+        }
         return updated ? channel : null;
     }
 
@@ -101,7 +121,8 @@ public class ChannelMutations
         AppRepos repos,
         RoleManager roleManager,
         ClaimsPrincipal principal,
-        int id)
+        int id,
+        WebSocketConnector webSocketConnector)
     {
         var channel = await repos.Channels.GetById(id);
         if (channel == null)
@@ -113,7 +134,16 @@ public class ChannelMutations
         var permissions = await roleManager.GetUserPermissions(user, RoleScope.FromChannel(channel));
         permissions.Require(ChannelPermissions.DeleteChannel);
 
-        return await repos.Channels.DeleteById(id);
+        var deleted = await repos.Channels.DeleteById(id);
+        if (deleted)
+        {
+            await webSocketConnector.SendDeletedChannelAsync(new WebsocketChannelDeletedPayload
+            {
+                Id = id,
+                WorkspaceId = channel.WorkspaceId,
+            });
+        }
+        return deleted;
     }
 
     [Authorize]
