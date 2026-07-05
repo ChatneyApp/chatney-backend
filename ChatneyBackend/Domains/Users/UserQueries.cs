@@ -65,8 +65,7 @@ public class UserQueries
         ClaimsPrincipal principal,
         string nickname)
     {
-        var nicknameLower = nickname.Trim().ToLowerInvariant();
-        var user = await repos.Users.GetOne(u => u.Nickname.ToLower() == nicknameLower);
+        var user = await UserLookup.FindByNickname(repos, nickname);
         if (user == null)
         {
             return null;
@@ -96,11 +95,19 @@ public class UserQueries
         var permissions = await roleManager.GetUserPermissions(user, RoleScope.Global());
         permissions.Require(UserPermissionNames.ReadUser);
 
-        var nicknameLower = filter.Nickname?.Trim().ToLowerInvariant();
-        return await repos.Users.GetList(u =>
+        var users = await repos.Users.GetList(u =>
             (filter.Active == null || u.Active == filter.Active) &&
             (filter.Banned == null || u.Banned == filter.Banned) &&
-            (filter.Email == null || u.Email == filter.Email) &&
-            (nicknameLower == null || u.Nickname.ToLower() == nicknameLower));
+            (filter.Email == null || u.Email == filter.Email));
+
+        if (!string.IsNullOrWhiteSpace(filter.Nickname))
+        {
+            var nickname = filter.Nickname.Trim();
+            users = users
+                .Where(u => string.Equals(u.Nickname, nickname, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+
+        return users;
     }
 }

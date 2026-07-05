@@ -173,10 +173,7 @@ public class UserMutations
     public async Task<UserLoginResponse?> Login(AppConfig appConfig, AppRepos repos, string login, string password)
     {
         var passwordHash = Helpers.GetMd5Hash(password + appConfig.UserPasswordSalt);
-        var loginLower = login.Trim().ToLowerInvariant();
-        var user = await repos.Users.GetOne(u =>
-            (u.Email.ToLower() == loginLower || u.Nickname.ToLower() == loginLower) &&
-            u.Password == passwordHash);
+        var user = await UserLookup.FindByLogin(repos, login, passwordHash);
 
         if (user == null)
         {

@@ -24,12 +24,7 @@ public static class NicknameValidator
 
     public static async Task EnsureUnique(AppRepos repos, string nickname, Guid? excludeUserId = null)
     {
-        var lowerNickname = nickname.ToLowerInvariant();
-        var existing = await repos.Users.GetOne(u =>
-            u.Nickname.ToLower() == lowerNickname &&
-            (excludeUserId == null || u.Id != excludeUserId));
-
-        if (existing != null)
+        if (await UserLookup.IsNicknameTaken(repos, nickname, excludeUserId))
         {
             ChatneyBackend.Infra.ErrorCodes.ThrowNicknameTaken();
         }
