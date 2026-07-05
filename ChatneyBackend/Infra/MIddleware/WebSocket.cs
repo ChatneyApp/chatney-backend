@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using ChatneyBackend.Domains.Messages;
+using ChatneyBackend.Domains.Roles;
 
 namespace ChatneyBackend.Infra.Middleware;
 
@@ -22,6 +23,9 @@ public readonly struct WebSocketPayloadType
     public static readonly WebSocketPayloadType DeletedMessage = new("deletedMessage");
     public static readonly WebSocketPayloadType MessageChildrenCountUpdated = new("messageChildrenCountUpdated");
     public static readonly WebSocketPayloadType EditedMessage = new("editedMessage");
+    public static readonly WebSocketPayloadType NewRole = new("newRole");
+    public static readonly WebSocketPayloadType UpdatedRole = new("updatedRole");
+    public static readonly WebSocketPayloadType DeletedRole = new("deletedRole");
 
     public override string ToString() => Value;
 
@@ -169,6 +173,23 @@ public class WebSocketConnector
     public virtual Task SendEditedMessageAsync(MessageWithUser message)
     {
         return SendToAllAsync(WebSocketPayloadType.EditedMessage, new EditedMessagePayload { Message = message });
+    }
+    #endregion
+
+    #region Roles
+    public virtual Task SendNewRoleAsync(WebsocketRolePayload role)
+    {
+        return SendToAllAsync(WebSocketPayloadType.NewRole, role);
+    }
+
+    public virtual Task SendUpdatedRoleAsync(WebsocketRolePayload role)
+    {
+        return SendToAllAsync(WebSocketPayloadType.UpdatedRole, role);
+    }
+
+    public virtual Task SendDeletedRoleAsync(WebsocketRoleDeletedPayload role)
+    {
+        return SendToAllAsync(WebSocketPayloadType.DeletedRole, role);
     }
     #endregion
 

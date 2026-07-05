@@ -12,14 +12,16 @@ public class RoleMutations
         AppRepos repos,
         RoleManager roleManager,
         ClaimsPrincipal principal,
-        RoleDto roleDto)
+        RoleDto roleDto,
+        WebSocketConnector webSocketConnector)
     {
         var user = await principal.GetRequiredUser(repos);
         var permissions = await roleManager.GetUserPermissions(user, RoleScope.Global());
         permissions.Require(RolePermissions.CreateRole);
 
         var role = Role.FromDto(roleDto);
-        await repos.Roles.InsertOne(role);
+        role.Id = await repos.Roles.InsertOne(role);
+        await webSocketConnector.SendNewRoleAsync(WebsocketRolePayload.FromRole(role));
         return role;
     }
 
@@ -28,13 +30,15 @@ public class RoleMutations
         AppRepos repos,
         RoleManager roleManager,
         ClaimsPrincipal principal,
-        Role role)
+        Role role,
+        WebSocketConnector webSocketConnector)
     {
         var user = await principal.GetRequiredUser(repos);
         var permissions = await roleManager.GetUserPermissions(user, RoleScope.Global());
         permissions.Require(RolePermissions.EditRole);
 
         await repos.Roles.UpdateOne(role);
+        await webSocketConnector.SendUpdatedRoleAsync(WebsocketRolePayload.FromRole(role));
         return role;
     }
 
@@ -43,12 +47,19 @@ public class RoleMutations
         AppRepos repos,
         RoleManager roleManager,
         ClaimsPrincipal principal,
-        int id)
+        int id,
+        WebSocketConnector webSocketConnector)
     {
         var user = await principal.GetRequiredUser(repos);
         var permissions = await roleManager.GetUserPermissions(user, RoleScope.Global());
         permissions.Require(RolePermissions.DeleteRole);
 
-        return await repos.Roles.DeleteById(id);
+        var deleted = await repos.Roles.DeleteById(id);
+        if (deleted)
+        {
+            await webSocketConnector.SendDeletedRoleAsync(new WebsocketRoleDeletedPayload { Id = id });
+        }
+
+        return deleted;
     }
 }

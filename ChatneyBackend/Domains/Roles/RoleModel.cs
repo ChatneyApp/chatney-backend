@@ -52,3 +52,24 @@ public class RoleDto
 
     public List<string> Permissions { get; set; }
 }
+
+public class WebsocketRolePayload
+{
+    public int Id { get; set; }
+    public required string Name { get; set; }
+    public string[] Permissions { get; set; } = [];
+    public bool IsBase { get; set; }
+
+    public static WebsocketRolePayload FromRole(Role role) => new()
+    {
+        Id = role.Id,
+        Name = role.Name,
+        Permissions = role.Permissions,
+        IsBase = role.IsBase,
+    };
+}
+
+public class WebsocketRoleDeletedPayload
+{
+    public int Id { get; set; }
+}

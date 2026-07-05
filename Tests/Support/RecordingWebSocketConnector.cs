@@ -1,4 +1,5 @@
 using ChatneyBackend.Domains.Messages;
+using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Infra.Middleware;
 
 namespace ChatneyBackend.Tests.Support;
@@ -11,6 +12,9 @@ public class RecordingWebSocketConnector : WebSocketConnector
     public List<MessageChildrenCountUpdated> ChildrenCountUpdates { get; } = [];
     public List<WebsocketReactionPayload> AddedReactions { get; } = [];
     public List<WebsocketReactionPayload> DeletedReactions { get; } = [];
+    public List<WebsocketRolePayload> NewRoles { get; } = [];
+    public List<WebsocketRolePayload> UpdatedRoles { get; } = [];
+    public List<WebsocketRoleDeletedPayload> DeletedRoles { get; } = [];
 
     public override Task SendNewMessageAsync(NewMessagePayload payload)
     {
@@ -45,6 +49,24 @@ public class RecordingWebSocketConnector : WebSocketConnector
     public override Task DeleteReactionAsync(WebsocketReactionPayload reaction)
     {
         DeletedReactions.Add(reaction);
+        return Task.CompletedTask;
+    }
+
+    public override Task SendNewRoleAsync(WebsocketRolePayload role)
+    {
+        NewRoles.Add(role);
+        return Task.CompletedTask;
+    }
+
+    public override Task SendUpdatedRoleAsync(WebsocketRolePayload role)
+    {
+        UpdatedRoles.Add(role);
+        return Task.CompletedTask;
+    }
+
+    public override Task SendDeletedRoleAsync(WebsocketRoleDeletedPayload role)
+    {
+        DeletedRoles.Add(role);
         return Task.CompletedTask;
     }
 }
