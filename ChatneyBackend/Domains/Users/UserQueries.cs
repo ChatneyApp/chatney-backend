@@ -14,8 +14,30 @@ public record UserFilter
     public string? Name { get; set; }
 }
 
+public record UserProfile
+{
+    public required User User { get; init; }
+
+    public string? GlobalRoleName { get; init; }
+}
+
 public class UserQueries
 {
+    [Authorize]
+    public async Task<UserProfile> GetMyProfile(
+        AppRepos repos,
+        ClaimsPrincipal principal)
+    {
+        var user = await principal.GetRequiredUser(repos);
+        var role = await repos.Roles.GetById(user.RoleId);
+
+        return new UserProfile
+        {
+            User = user,
+            GlobalRoleName = role?.Name,
+        };
+    }
+
     [Authorize]
     public async Task<User?> GetUserById(
         AppRepos repos,

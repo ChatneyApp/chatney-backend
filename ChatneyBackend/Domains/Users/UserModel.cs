@@ -78,7 +78,6 @@ public class User : IPgKey<User, Guid>, IPgTimestamped, IType
     public string? AvatarUrl { get; set; }
 
     [Map("role_id")]
-    [GraphQLIgnore]
     public required int RoleId { get; set; }
 
     [Map("password")]
@@ -167,6 +166,40 @@ public class CreateUserDto : IDto<User>
             Muted = Muted,
         };
     }
+}
+
+public class UpdateUserDto
+{
+    public Guid Id { get; set; }
+
+    public required string Name { get; set; }
+
+    public bool Active { get; set; }
+
+    public bool Verified { get; set; }
+
+    public bool Banned { get; set; }
+
+    public bool Muted { get; set; }
+
+    public required string Email { get; set; }
+
+    public required int RoleId { get; set; }
+
+    public string? Password { get; set; }
+}
+
+public class UpdateMyProfileDto
+{
+    public string? Name { get; set; }
+
+    public string? Email { get; set; }
+
+    public string? AvatarUrl { get; set; }
+
+    public string? CurrentPassword { get; set; }
+
+    public string? NewPassword { get; set; }
 }
 
 public class UserLoginResponse

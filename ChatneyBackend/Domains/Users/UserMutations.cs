@@ -67,6 +67,88 @@ public class UserMutations
         return await repos.Users.DeleteById(id);
     }
 
+    [Authorize]
+    public async Task<User> UpdateUser(
+        AppConfig appConfig,
+        AppRepos repos,
+        RoleManager roleManager,
+        ClaimsPrincipal principal,
+        UpdateUserDto userDto)
+    {
+        var currentUser = await principal.GetRequiredUser(repos);
+        var permissions = await roleManager.GetUserPermissions(currentUser, RoleScope.Global());
+        permissions.Require(UserPermissionNames.EditUser);
+
+        var user = await repos.Users.GetById(userDto.Id);
+        if (user == null)
+        {
+            ChatneyBackend.Infra.ErrorCodes.ThrowNotFound();
+        }
+
+        user.Name = userDto.Name.Trim();
+        user.Email = userDto.Email.Trim();
+        user.Active = userDto.Active;
+        user.Verified = userDto.Verified;
+        user.Banned = userDto.Banned;
+        user.Muted = userDto.Muted;
+        user.RoleId = userDto.RoleId;
+
+        if (!string.IsNullOrWhiteSpace(userDto.Password))
+        {
+            user.Password = Helpers.GetMd5Hash(userDto.Password + appConfig.UserPasswordSalt);
+        }
+
+        await repos.Users.UpdateOne(user);
+        return user;
+    }
+
+    [Authorize]
+    public async Task<User> UpdateMyProfile(
+        AppConfig appConfig,
+        AppRepos repos,
+        ClaimsPrincipal principal,
+        UpdateMyProfileDto profileDto)
+    {
+        var user = await principal.GetRequiredUser(repos);
+
+        if (!string.IsNullOrWhiteSpace(profileDto.Name))
+        {
+            user.Name = profileDto.Name.Trim();
+        }
+
+        if (!string.IsNullOrWhiteSpace(profileDto.Email))
+        {
+            user.Email = profileDto.Email.Trim();
+        }
+
+        if (profileDto.AvatarUrl != null)
+        {
+            user.AvatarUrl = string.IsNullOrWhiteSpace(profileDto.AvatarUrl)
+                ? null
+                : profileDto.AvatarUrl.Trim();
+        }
+
+        if (!string.IsNullOrWhiteSpace(profileDto.NewPassword))
+        {
+            if (string.IsNullOrWhiteSpace(profileDto.CurrentPassword))
+            {
+                ChatneyBackend.Infra.ErrorCodes.ThrowForbidden();
+            }
+
+            var currentPasswordHash = Helpers.GetMd5Hash(
+                profileDto.CurrentPassword + appConfig.UserPasswordSalt);
+            if (user.Password != currentPasswordHash)
+            {
+                ChatneyBackend.Infra.ErrorCodes.ThrowForbidden();
+            }
+
+            user.Password = Helpers.GetMd5Hash(profileDto.NewPassword + appConfig.UserPasswordSalt);
+        }
+
+        await repos.Users.UpdateOne(user);
+        return user;
+    }
+
     public async Task<UserLoginResponse?> Login(AppConfig appConfig, AppRepos repos, string login, string password)
     {
         var passwordHash = Helpers.GetMd5Hash(password + appConfig.UserPasswordSalt);
