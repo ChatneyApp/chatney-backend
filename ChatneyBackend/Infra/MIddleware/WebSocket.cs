@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using ChatneyBackend.Domains.Messages;
 using ChatneyBackend.Domains.Roles;
+using ChatneyBackend.Domains.Users;
 
 namespace ChatneyBackend.Infra.Middleware;
 
@@ -26,6 +27,9 @@ public readonly struct WebSocketPayloadType
     public static readonly WebSocketPayloadType NewRole = new("newRole");
     public static readonly WebSocketPayloadType UpdatedRole = new("updatedRole");
     public static readonly WebSocketPayloadType DeletedRole = new("deletedRole");
+    public static readonly WebSocketPayloadType NewUserRole = new("newUserRole");
+    public static readonly WebSocketPayloadType UpdatedUserRole = new("updatedUserRole");
+    public static readonly WebSocketPayloadType DeletedUserRole = new("deletedUserRole");
 
     public override string ToString() => Value;
 
@@ -193,7 +197,54 @@ public class WebSocketConnector
     }
     #endregion
 
-    private async Task SendToAllAsync(WebSocketPayloadType type, Object payload)
+    #region User Roles
+    public virtual Task SendNewUserRoleAsync(UserRole userRole)
+    {
+        return SendToUserAsync(
+            userRole.UserId,
+            WebSocketPayloadType.NewUserRole,
+            WebsocketUserRolePayload.FromUserRole(userRole));
+    }
+
+    public virtual Task SendUpdatedUserRoleAsync(UserRole userRole)
+    {
+        return SendToUserAsync(
+            userRole.UserId,
+            WebSocketPayloadType.UpdatedUserRole,
+            WebsocketUserRolePayload.FromUserRole(userRole));
+    }
+
+    public virtual Task SendDeletedUserRoleAsync(WebsocketUserRoleDeletedPayload payload)
+    {
+        return SendToUserAsync(payload.UserId, WebSocketPayloadType.DeletedUserRole, payload);
+    }
+    #endregion
+
+    private static bool IsSocketForUser(string socketKey, Guid userId)
+    {
+        var userIdString = userId.ToString();
+        return socketKey == userIdString ||
+               socketKey.StartsWith(userIdString + "--", StringComparison.Ordinal);
+    }
+
+    private Task SendToAllAsync(WebSocketPayloadType type, object payload)
+    {
+        return SendToSocketsAsync(websocketsMapping, type, payload);
+    }
+
+    private Task SendToUserAsync(Guid userId, WebSocketPayloadType type, object payload)
+    {
+        var userSockets = websocketsMapping
+            .Where(kvp => IsSocketForUser(kvp.Key, userId))
+            .ToList();
+
+        return SendToSocketsAsync(userSockets, type, payload);
+    }
+
+    private async Task SendToSocketsAsync(
+        IEnumerable<KeyValuePair<string, WebSocket>> sockets,
+        WebSocketPayloadType type,
+        object payload)
     {
         var options = new JsonSerializerOptions
         {
@@ -212,9 +263,7 @@ public class WebSocketConnector
         var segment = new ArraySegment<byte>(buffer);
         var deadSockets = new List<string>();
 
-        // Console.WriteLine($"Broadcasting: {serializedMessage}");
-
-        foreach (var kvp in websocketsMapping)
+        foreach (var kvp in sockets)
         {
             var socket = kvp.Value;
 
@@ -222,7 +271,6 @@ public class WebSocketConnector
             {
                 try
                 {
-                    // Console.WriteLine($"Sending to {kvp.Key}");
                     await socket.SendAsync(segment, WebSocketMessageType.Text, true, CancellationToken.None);
                 }
                 catch (Exception ex)
@@ -237,8 +285,6 @@ public class WebSocketConnector
                 deadSockets.Add(kvp.Key);
             }
         }
-
-        // Console.WriteLine("cleaning up");
 
         foreach (var deadSocket in deadSockets)
         {

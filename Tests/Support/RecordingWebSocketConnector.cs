@@ -1,5 +1,6 @@
 using ChatneyBackend.Domains.Messages;
 using ChatneyBackend.Domains.Roles;
+using ChatneyBackend.Domains.Users;
 using ChatneyBackend.Infra.Middleware;
 
 namespace ChatneyBackend.Tests.Support;
@@ -15,6 +16,9 @@ public class RecordingWebSocketConnector : WebSocketConnector
     public List<WebsocketRolePayload> NewRoles { get; } = [];
     public List<WebsocketRolePayload> UpdatedRoles { get; } = [];
     public List<WebsocketRoleDeletedPayload> DeletedRoles { get; } = [];
+    public List<WebsocketUserRolePayload> NewUserRoles { get; } = [];
+    public List<WebsocketUserRolePayload> UpdatedUserRoles { get; } = [];
+    public List<WebsocketUserRoleDeletedPayload> DeletedUserRoles { get; } = [];
 
     public override Task SendNewMessageAsync(NewMessagePayload payload)
     {
@@ -67,6 +71,24 @@ public class RecordingWebSocketConnector : WebSocketConnector
     public override Task SendDeletedRoleAsync(WebsocketRoleDeletedPayload role)
     {
         DeletedRoles.Add(role);
+        return Task.CompletedTask;
+    }
+
+    public override Task SendNewUserRoleAsync(UserRole userRole)
+    {
+        NewUserRoles.Add(WebsocketUserRolePayload.FromUserRole(userRole));
+        return Task.CompletedTask;
+    }
+
+    public override Task SendUpdatedUserRoleAsync(UserRole userRole)
+    {
+        UpdatedUserRoles.Add(WebsocketUserRolePayload.FromUserRole(userRole));
+        return Task.CompletedTask;
+    }
+
+    public override Task SendDeletedUserRoleAsync(WebsocketUserRoleDeletedPayload payload)
+    {
+        DeletedUserRoles.Add(payload);
         return Task.CompletedTask;
     }
 }

@@ -175,3 +175,41 @@ public class UserLoginResponse
 
     public required string Token { get; set; }
 }
+
+public class WebsocketUserRolePayload
+{
+    public Guid UserId { get; set; }
+    public int? ChannelId { get; set; }
+    public int? ChannelTypeId { get; set; }
+    public int? WorkspaceId { get; set; }
+    public int RoleId { get; set; }
+    public string[] Allowlist { get; set; } = [];
+    public string[] Denylist { get; set; } = [];
+
+    public static WebsocketUserRolePayload FromUserRole(UserRole userRole) => new()
+    {
+        UserId = userRole.UserId,
+        ChannelId = userRole.ChannelId,
+        ChannelTypeId = userRole.ChannelTypeId,
+        WorkspaceId = userRole.WorkspaceId,
+        RoleId = userRole.RoleId,
+        Allowlist = userRole.Allowlist,
+        Denylist = userRole.Denylist,
+    };
+}
+
+public class WebsocketUserRoleDeletedPayload
+{
+    public Guid UserId { get; set; }
+    public int? ChannelId { get; set; }
+    public int? ChannelTypeId { get; set; }
+    public int? WorkspaceId { get; set; }
+
+    public static WebsocketUserRoleDeletedPayload FromKey(UserRoleKey key) => new()
+    {
+        UserId = key.UserId,
+        ChannelId = key.ChannelId,
+        ChannelTypeId = key.ChannelTypeId,
+        WorkspaceId = key.WorkspaceId,
+    };
+}

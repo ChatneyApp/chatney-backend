@@ -2,6 +2,7 @@ using System.Collections;
 using System.Linq.Expressions;
 using System.Reflection;
 using ChatneyBackend.Domains.Messages;
+using ChatneyBackend.Domains.Users;
 using ChatneyBackend.Infra;
 using Npgsql;
 
@@ -207,6 +208,16 @@ public class InMemoryPgRepo<T, TKey> : IPgRepo<T, TKey> where T : class, IPgKey<
             return (TKey)(object)new MessageReactionKey(reaction.MessageId, reaction.UserId, reaction.Code);
         }
 
+        if (typeof(T) == typeof(UserRole))
+        {
+            var userRole = (UserRole)(object)record;
+            return (TKey)(object)new UserRoleKey(
+                userRole.UserId,
+                userRole.ChannelId,
+                userRole.ChannelTypeId,
+                userRole.WorkspaceId);
+        }
+
         var idProperty = typeof(T).GetProperty("Id", BindingFlags.Public | BindingFlags.Instance)
             ?? throw new InvalidOperationException($"{typeof(T).Name} does not have an Id property.");
 
@@ -215,7 +226,7 @@ public class InMemoryPgRepo<T, TKey> : IPgRepo<T, TKey> where T : class, IPgKey<
 
     private static void SetKey(T record, TKey key)
     {
-        if (typeof(T) == typeof(MessageReaction))
+        if (typeof(T) == typeof(MessageReaction) || typeof(T) == typeof(UserRole))
         {
             return;
         }
