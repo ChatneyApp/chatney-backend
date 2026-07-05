@@ -5,11 +5,6 @@ using System.Linq.Expressions;
 
 namespace ChatneyBackend.Domains.Roles;
 
-public class RoleSettings
-{
-    public bool Protected { get; set; }
-}
-
 public class Role : IPgKey<Role, int>, IPgTimestamped
 {
     [Primary]
@@ -22,7 +17,6 @@ public class Role : IPgKey<Role, int>, IPgTimestamped
     public required string Name { get; set; }
 
     [Map("is_protected")]
-    [GraphQLIgnore]
     public bool IsProtected { get; set; }
 
     [Map("permissions")]
@@ -34,12 +28,6 @@ public class Role : IPgKey<Role, int>, IPgTimestamped
     [Map("updated_at")]
     public DateTime UpdatedAt { get; set; }
 
-    public RoleSettings Settings
-    {
-        get => new() { Protected = IsProtected };
-        set => IsProtected = value?.Protected ?? false;
-    }
-
     public static Role FromDto(RoleDto role)
     {
         return new Role()
@@ -48,7 +36,7 @@ public class Role : IPgKey<Role, int>, IPgTimestamped
             Permissions = role.Permissions.ToArray(),
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
-            IsProtected = role.Settings?.Protected ?? false,
+            IsProtected = role.IsProtected,
         };
     }
 
@@ -60,7 +48,7 @@ public class RoleDto
     [MaxLength(255)]
     public string Name { get; set; }
 
-    public RoleSettings? Settings { get; set; }
+    public bool IsProtected { get; set; }
 
     public List<string> Permissions { get; set; }
 }
