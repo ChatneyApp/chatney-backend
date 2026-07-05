@@ -69,7 +69,7 @@ public sealed class MessageMutationsTestContext
                 ChannelPermissions.ReadMessage,
                 ChannelPermissions.ReadChannel,
             ],
-            IsBase = true,
+            IsProtected = true,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
         };

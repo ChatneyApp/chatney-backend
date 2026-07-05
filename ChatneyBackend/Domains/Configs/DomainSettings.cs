@@ -4,4 +4,5 @@ public class DomainSettings
 {
     public const string ConfigTableName = "configs";
     public const string PermissionsPrefix = "config";
+    public const string NewUserDefaultRole = "settings.NewUserDefaultRole";
 }

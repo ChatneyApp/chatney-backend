@@ -46,7 +46,7 @@ public sealed class UserRoleMutationsTestContext
             Id = 1,
             Name = "admin",
             Permissions = adminPermissions ?? [UserPermissionNames.EditUser],
-            IsBase = false,
+            IsProtected = false,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
         };
@@ -56,7 +56,7 @@ public sealed class UserRoleMutationsTestContext
             Id = 2,
             Name = "moderator",
             Permissions = [ChannelPermissions.EditMessage],
-            IsBase = false,
+            IsProtected = false,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
         };

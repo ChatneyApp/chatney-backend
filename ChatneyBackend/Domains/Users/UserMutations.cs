@@ -1,10 +1,10 @@
 using System.Security.Claims;
+using ChatneyBackend.Domains.Configs;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Infra;
 using ChatneyBackend.Infra.Middleware;
 using ChatneyBackend.Utils;
 using HotChocolate.Authorization;
-using RolesDomainSettings = ChatneyBackend.Domains.Roles.DomainSettings;
 
 namespace ChatneyBackend.Domains.Users;
 
@@ -34,10 +34,18 @@ public class UserMutations
         var user = userDto.ToModel();
         user.Password = Helpers.GetMd5Hash(user.Password + appConfig.UserPasswordSalt);
 
-        var userRole = await repos.Roles.GetOne(r => r.Name == RolesDomainSettings.BaseRoleName);
+        var defaultRoleId = await SystemConfigReader.GetIntByName(
+            repos.Configs,
+            Configs.DomainSettings.NewUserDefaultRole);
+        if (defaultRoleId == null)
+        {
+            throw new Exception("New user default role is not configured");
+        }
+
+        var userRole = await repos.Roles.GetById(defaultRoleId.Value);
         if (userRole == null)
         {
-            throw new Exception("User role not found");
+            throw new Exception("New user default role not found");
         }
         user.RoleId = userRole.Id;
 

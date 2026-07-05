@@ -22,22 +22,6 @@ public class InstallWizardMutations
         public string? message { get; set; }
     }
 
-    public static string[] BaseRolePermissions =>
-    [
-        UserPermissionNames.ReadUser,
-        UserPermissionNames.EditUser,
-        ChannelPermissions.CreateMessage,
-        ChannelPermissions.DeleteMessage,
-        ChannelPermissions.EditMessage,
-        ChannelPermissions.ReadChannel,
-        ChannelPermissions.ReadMessage,
-        ChannelPermissions.EditOwnMessage,
-        ChannelPermissions.DeleteOwnMessage,
-        WorkspacePermissions.ReadWorkspace,
-        AttachmentPermissions.Upload,
-        AttachmentPermissions.Read,
-    ];
-
     public async Task<InstallSystemResult> InstallSystem(
         AppConfig appConfig,
         AppRepos repos,
@@ -48,9 +32,9 @@ public class InstallWizardMutations
         {
             migrationRunner.MigrateUp();
 
-            Role? baseRole = await repos.Roles.GetOne(r => r.Name == Roles.DomainSettings.BaseRoleName);
+            Role? adminRole = await repos.Roles.GetOne(r => r.Name == Roles.DomainSettings.AdminRoleName);
 
-            if (baseRole != null)
+            if (adminRole != null)
             {
                 return new InstallSystemResult()
                 {
@@ -58,16 +42,12 @@ public class InstallWizardMutations
                 };
             }
 
-            baseRole = new()
-            {
-                UpdatedAt = DateTime.UtcNow,
-                CreatedAt = DateTime.UtcNow,
-                Name = Roles.DomainSettings.BaseRoleName,
-                Permissions = BaseRolePermissions,
-                IsBase = true
-            };
+            var now = DateTime.UtcNow;
+            var seedRoles = DefaultRoles.CreateSeedRoles(now);
+            await repos.Roles.InsertBulk([..seedRoles]);
 
-            await repos.Roles.InsertOne(baseRole);
+            var userRole = seedRoles.Single(r => r.Name == Roles.DomainSettings.UserRoleName);
+            adminRole = seedRoles.Single(r => r.Name == Roles.DomainSettings.AdminRoleName);
 
             List<Workspace> workspaces = new List<Workspace>
             {
@@ -82,13 +62,13 @@ public class InstallWizardMutations
                 {
                     Name = "public",
                     Key = "public",
-                    BaseRoleId = baseRole.Id
+                    BaseRoleId = userRole.Id
                 },
                 new()
                 {
                     Name = "private",
                     Key = "private",
-                    BaseRoleId = baseRole.Id
+                    BaseRoleId = userRole.Id
                 },
             };
             await repos.ChannelTypes.InsertBulk(channelTypes);
@@ -129,7 +109,7 @@ public class InstallWizardMutations
                     Id = Guid.NewGuid(),
                     Name = "test user 1",
                     Email = "test1@test.com",
-                    RoleId = baseRole.Id,
+                    RoleId = adminRole.Id,
                     Password = Helpers.GetMd5Hash("123" + appConfig.UserPasswordSalt),
                 },
                 new()
@@ -137,7 +117,7 @@ public class InstallWizardMutations
                     Id = Guid.NewGuid(),
                     Name = "test user 2",
                     Email = "test2@test.com",
-                    RoleId = baseRole.Id,
+                    RoleId = userRole.Id,
                     Password = Helpers.GetMd5Hash("123" + appConfig.UserPasswordSalt),
                 },
             };
@@ -145,6 +125,12 @@ public class InstallWizardMutations
 
             List<Configs.Config> configs = new()
             {
+                new()
+                {
+                    Name = Configs.DomainSettings.NewUserDefaultRole,
+                    Value = userRole.Id.ToString(),
+                    Type = "int",
+                },
                 new()
                 {
                     Name = "messages.sendCooldown",

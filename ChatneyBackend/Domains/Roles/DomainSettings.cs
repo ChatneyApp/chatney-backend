@@ -4,5 +4,8 @@ public class DomainSettings
 {
     public const string RoleCollectionName = "roles";
     public const string PermissionsPrefix = "role";
-    public const string BaseRoleName = "BaseUser";
+
+    public const string AdminRoleName = "admin";
+    public const string ModeratorRoleName = "moderator";
+    public const string UserRoleName = "user";
 }

@@ -1,9 +1,3 @@
-using ChatneyBackend.Domains.Channels;
-using ChatneyBackend.Domains.InstallWizard;
-using ChatneyBackend.Domains.Messages;
-using ChatneyBackend.Domains.Roles;
-using ChatneyBackend.Domains.Users;
-using ChatneyBackend.Domains.Workspaces;
 using FluentMigrator;
 using Npgsql;
 
@@ -24,7 +18,7 @@ public class _202603180001_CreateRolesTable : Migration
                 CREATE TABLE roles (
                     id int GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
                     name varchar(255) NOT NULL,
-                    is_base bool NOT NULL DEFAULT false,
+                    is_protected bool NOT NULL DEFAULT false,
                     permissions text[] NOT NULL DEFAULT '{}',
                     created_at timestamptz NOT NULL DEFAULT NOW(),
                     updated_at timestamptz NOT NULL DEFAULT NOW()
@@ -43,15 +37,6 @@ public class _202603180001_CreateRolesTable : Migration
                 FOR EACH ROW
                 EXECUTE FUNCTION set_updated_at();
             """;
-            command.Parameters.AddRange(new NpgsqlParameter[]
-            {
-                new NpgsqlParameter<string>("name", ChatneyBackend.Domains.Roles.DomainSettings.BaseRoleName),
-                new NpgsqlParameter<string[]>("permissions", InstallWizardMutations.BaseRolePermissions)
-                {
-                    NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Array | NpgsqlTypes.NpgsqlDbType.Text
-                }
-            });
-
             command.ExecuteNonQuery();
         });
     }

@@ -5,6 +5,11 @@ using System.Linq.Expressions;
 
 namespace ChatneyBackend.Domains.Roles;
 
+public class RoleSettings
+{
+    public bool Protected { get; set; }
+}
+
 public class Role : IPgKey<Role, int>, IPgTimestamped
 {
     [Primary]
@@ -16,8 +21,9 @@ public class Role : IPgKey<Role, int>, IPgTimestamped
     [MaxLength(255)]
     public required string Name { get; set; }
 
-    [Map("is_base")]
-    public bool IsBase { get; set; }
+    [Map("is_protected")]
+    [GraphQLIgnore]
+    public bool IsProtected { get; set; }
 
     [Map("permissions")]
     public string[] Permissions { get; set; } = [];
@@ -28,6 +34,12 @@ public class Role : IPgKey<Role, int>, IPgTimestamped
     [Map("updated_at")]
     public DateTime UpdatedAt { get; set; }
 
+    public RoleSettings Settings
+    {
+        get => new() { Protected = IsProtected };
+        set => IsProtected = value?.Protected ?? false;
+    }
+
     public static Role FromDto(RoleDto role)
     {
         return new Role()
@@ -36,7 +48,7 @@ public class Role : IPgKey<Role, int>, IPgTimestamped
             Permissions = role.Permissions.ToArray(),
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
-            IsBase = role.IsBase,
+            IsProtected = role.Settings?.Protected ?? false,
         };
     }
 
@@ -48,7 +60,7 @@ public class RoleDto
     [MaxLength(255)]
     public string Name { get; set; }
 
-    public bool IsBase { get; set; }
+    public RoleSettings? Settings { get; set; }
 
     public List<string> Permissions { get; set; }
 }
@@ -58,14 +70,14 @@ public class WebsocketRolePayload
     public int Id { get; set; }
     public required string Name { get; set; }
     public string[] Permissions { get; set; } = [];
-    public bool IsBase { get; set; }
+    public bool IsProtected { get; set; }
 
     public static WebsocketRolePayload FromRole(Role role) => new()
     {
         Id = role.Id,
         Name = role.Name,
         Permissions = role.Permissions,
-        IsBase = role.IsBase,
+        IsProtected = role.IsProtected,
     };
 }
 
