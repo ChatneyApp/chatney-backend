@@ -21,6 +21,23 @@ public class UserPermissionsTests
     }
 
     [Fact]
+    public void Can_ReturnsTrueForAnyPermissionWhenAllMightyPresent()
+    {
+        var permissions = new UserPermissions([RolePermissions.AllMighty], [], []);
+
+        Assert.True(permissions.Can("message.readMessage"));
+        Assert.True(permissions.Can("message.createMessage", "channel.deleteChannel"));
+    }
+
+    [Fact]
+    public void Require_DoesNotThrowWhenAllMightyPresent()
+    {
+        var permissions = new UserPermissions([RolePermissions.AllMighty], [], []);
+
+        permissions.Require("message.readMessage", "channel.deleteChannel");
+    }
+
+    [Fact]
     public void Can_ReturnsTrueWhenPermissionPresent()
     {
         var permissions = new UserPermissions(["message.readMessage"], [], []);
