@@ -46,11 +46,11 @@ public class Role : IPgKey<Role, int>, IPgTimestamped
 public class RoleDto
 {
     [MaxLength(255)]
-    public string Name { get; set; }
+    public required string Name { get; set; }
 
     public bool IsProtected { get; set; }
 
-    public List<string> Permissions { get; set; }
+    public List<string> Permissions { get; set; } = [];
 }
 
 public class WebsocketRolePayload
