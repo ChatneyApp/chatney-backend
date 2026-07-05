@@ -43,7 +43,8 @@ public sealed class MessageMutationsTestContext
         User = new User
         {
             Id = Guid.NewGuid(),
-            Name = "Test User",
+            Nickname = "test_user",
+            FullName = "Test User",
             Email = "test@example.com",
             Password = "password",
             RoleId = 1,

@@ -115,9 +115,13 @@ public class MessageUser
 {
     public required Guid Id { get; set; }
 
-    public required string Name { get; set; }
+    public required string Nickname { get; set; }
+
+    public string? FullName { get; set; }
 
     public required string? AvatarUrl { get; set; }
+
+    public string DisplayName => FullName ?? Nickname;
 }
 
 public class ReplyToMessage
@@ -164,7 +168,8 @@ public class MessageWithUser : Message
             User = new MessageUser()
             {
                 Id = user.Id,
-                Name = user.Name,
+                Nickname = user.Nickname,
+                FullName = user.FullName,
                 AvatarUrl = user.AvatarUrl,
             }
         };

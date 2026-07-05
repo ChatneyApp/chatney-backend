@@ -107,7 +107,8 @@ public class InstallWizardMutations
                 new()
                 {
                     Id = Guid.NewGuid(),
-                    Name = "test user 1",
+                    Nickname = "test_user_1",
+                    FullName = "Test User 1",
                     Email = "test1@test.com",
                     RoleId = adminRole.Id,
                     Password = Helpers.GetMd5Hash("123" + appConfig.UserPasswordSalt),
@@ -115,7 +116,8 @@ public class InstallWizardMutations
                 new()
                 {
                     Id = Guid.NewGuid(),
-                    Name = "test user 2",
+                    Nickname = "test_user_2",
+                    FullName = "Test User 2",
                     Email = "test2@test.com",
                     RoleId = userRole.Id,
                     Password = Helpers.GetMd5Hash("123" + appConfig.UserPasswordSalt),

@@ -56,8 +56,11 @@ public class User : IPgKey<User, Guid>, IPgTimestamped, IType
     [Map("id")]
     public Guid Id { get; set; }
 
-    [Map("name")]
-    public required string Name { get; set; }
+    [Map("nickname")]
+    public required string Nickname { get; set; }
+
+    [Map("full_name")]
+    public string? FullName { get; set; }
 
     [Map("active")]
     public bool Active { get; set; }
@@ -103,7 +106,9 @@ public class User : IPgKey<User, Guid>, IPgTimestamped, IType
 /// </summary>
 public class UserRegisterDto : IDto<User>
 {
-    public required string Name { get; set; }
+    public required string Nickname { get; set; }
+
+    public string? FullName { get; set; }
 
     public required string Email { get; set; }
 
@@ -114,7 +119,8 @@ public class UserRegisterDto : IDto<User>
         return new User
         {
             Id = Guid.NewGuid(),
-            Name = Name,
+            Nickname = Nickname,
+            FullName = string.IsNullOrWhiteSpace(FullName) ? null : FullName.Trim(),
             Email = Email,
             Password = Password,
             Active = false,
@@ -133,7 +139,9 @@ public class UserRegisterDto : IDto<User>
 /// </summary>
 public class CreateUserDto : IDto<User>
 {
-    public required string Name { get; set; }
+    public required string Nickname { get; set; }
+
+    public string? FullName { get; set; }
 
     public bool Active { get; set; }
 
@@ -154,7 +162,8 @@ public class CreateUserDto : IDto<User>
         return new User
         {
             Id = Guid.NewGuid(),
-            Name = Name,
+            Nickname = Nickname,
+            FullName = string.IsNullOrWhiteSpace(FullName) ? null : FullName.Trim(),
             Email = Email,
             Password = Password,
             CreatedAt = DateTime.UtcNow,
@@ -172,7 +181,9 @@ public class UpdateUserDto
 {
     public Guid Id { get; set; }
 
-    public required string Name { get; set; }
+    public required string Nickname { get; set; }
+
+    public string? FullName { get; set; }
 
     public bool Active { get; set; }
 
@@ -191,7 +202,9 @@ public class UpdateUserDto
 
 public class UpdateMyProfileDto
 {
-    public string? Name { get; set; }
+    public string? Nickname { get; set; }
+
+    public string? FullName { get; set; }
 
     public string? Email { get; set; }
 

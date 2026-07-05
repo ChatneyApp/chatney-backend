@@ -6,6 +6,8 @@ public class ErrorCodes
 {
     public const string ForbiddenAction = "FORBIDDEN_ACTION";
     public const string NotFound = "NOT_FOUND";
+    public const string InvalidNickname = "INVALID_NICKNAME";
+    public const string NicknameTaken = "NICKNAME_TAKEN";
 
     public static void ThrowForbidden()
     {
@@ -22,6 +24,24 @@ public class ErrorCodes
             ErrorBuilder.New()
                 .SetMessage(NotFound)
                 .SetCode(NotFound)
+                .Build());
+    }
+
+    public static void ThrowInvalidNickname()
+    {
+        throw new GraphQLException(
+            ErrorBuilder.New()
+                .SetMessage(InvalidNickname)
+                .SetCode(InvalidNickname)
+                .Build());
+    }
+
+    public static void ThrowNicknameTaken()
+    {
+        throw new GraphQLException(
+            ErrorBuilder.New()
+                .SetMessage(NicknameTaken)
+                .SetCode(NicknameTaken)
                 .Build());
     }
 }

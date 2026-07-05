@@ -10,7 +10,8 @@ public class _202603250001_CreateUsersTable : Migration
         var sql = """
             CREATE TABLE users (
                 id uuid PRIMARY KEY DEFAULT uuidv7(),
-                name varchar(255) NOT NULL,
+                nickname varchar(20) NOT NULL,
+                full_name varchar(255) NULL,
                 active boolean NOT NULL DEFAULT false,
                 verified boolean NOT NULL DEFAULT false,
                 banned boolean NOT NULL DEFAULT false,
@@ -29,7 +30,7 @@ public class _202603250001_CreateUsersTable : Migration
                 FOREIGN KEY (role_id) REFERENCES roles(id);
 
             CREATE UNIQUE INDEX IF NOT EXISTS ix_users_email ON users (email);
-            CREATE UNIQUE INDEX IF NOT EXISTS ix_users_name ON users (name);
+            CREATE UNIQUE INDEX IF NOT EXISTS ix_users_nickname ON users (LOWER(nickname));
         
             CREATE TRIGGER trg_users_set_updated_at
             BEFORE UPDATE ON users
@@ -68,7 +69,7 @@ public class _202603250001_CreateUsersTable : Migration
         var sql = """
             DROP TRIGGER IF EXISTS trg_users_set_updated_at ON users;
             DROP INDEX IF EXISTS ix_users_email;
-            DROP INDEX IF EXISTS ix_users_name;
+            DROP INDEX IF EXISTS ix_users_nickname;
             ALTER TABLE IF EXISTS users DROP CONSTRAINT IF EXISTS fk_users_global_role_id;
             DROP TABLE IF EXISTS user_channel_settings;
             DROP TABLE IF EXISTS user_roles;

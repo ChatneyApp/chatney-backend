@@ -70,7 +70,8 @@ public sealed class UserRoleMutationsTestContext
         Admin = new User
         {
             Id = Guid.NewGuid(),
-            Name = "Admin",
+            Nickname = "admin_user",
+            FullName = "Admin",
             Email = "admin@example.com",
             Password = "password",
             RoleId = AdminRole.Id,
@@ -85,7 +86,8 @@ public sealed class UserRoleMutationsTestContext
         TargetUser = new User
         {
             Id = Guid.NewGuid(),
-            Name = "Target User",
+            Nickname = "target_user",
+            FullName = "Target User",
             Email = "target@example.com",
             Password = "password",
             RoleId = AdminRole.Id,

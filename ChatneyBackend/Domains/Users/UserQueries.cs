@@ -11,7 +11,7 @@ public record UserFilter
     public bool? Active { get; set; }
     public bool? Banned { get; set; }
     public string? Email { get; set; }
-    public string? Name { get; set; }
+    public string? Nickname { get; set; }
 }
 
 public record UserProfile
@@ -59,13 +59,14 @@ public class UserQueries
     }
 
     [Authorize]
-    public async Task<User?> GetUserByName(
+    public async Task<User?> GetUserByNickname(
         AppRepos repos,
         RoleManager roleManager,
         ClaimsPrincipal principal,
-        string name)
+        string nickname)
     {
-        var user = await repos.Users.GetOne(u => u.Name == name);
+        var nicknameLower = nickname.Trim().ToLowerInvariant();
+        var user = await repos.Users.GetOne(u => u.Nickname.ToLower() == nicknameLower);
         if (user == null)
         {
             return null;
@@ -95,10 +96,11 @@ public class UserQueries
         var permissions = await roleManager.GetUserPermissions(user, RoleScope.Global());
         permissions.Require(UserPermissionNames.ReadUser);
 
+        var nicknameLower = filter.Nickname?.Trim().ToLowerInvariant();
         return await repos.Users.GetList(u =>
             (filter.Active == null || u.Active == filter.Active) &&
             (filter.Banned == null || u.Banned == filter.Banned) &&
             (filter.Email == null || u.Email == filter.Email) &&
-            (filter.Name == null || u.Name == filter.Name));
+            (nicknameLower == null || u.Nickname.ToLower() == nicknameLower));
     }
 }

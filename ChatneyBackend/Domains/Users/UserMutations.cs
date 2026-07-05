@@ -22,7 +22,11 @@ public class UserMutations
         var permissions = await roleManager.GetUserPermissions(currentUser, RoleScope.Global());
         permissions.Require(UserPermissionNames.CreateUser);
 
+        var nickname = NicknameValidator.NormalizeAndValidate(userDto.Nickname);
+        await NicknameValidator.EnsureUnique(repos, nickname);
+
         var user = userDto.ToModel();
+        user.Nickname = nickname;
         user.Password = Helpers.GetMd5Hash(user.Password + appConfig.UserPasswordSalt);
 
         user.Id = await repos.Users.InsertOne(user);
@@ -31,7 +35,11 @@ public class UserMutations
 
     public async Task<User> Register(AppConfig appConfig, AppRepos repos, UserRegisterDto userDto)
     {
+        var nickname = NicknameValidator.NormalizeAndValidate(userDto.Nickname);
+        await NicknameValidator.EnsureUnique(repos, nickname);
+
         var user = userDto.ToModel();
+        user.Nickname = nickname;
         user.Password = Helpers.GetMd5Hash(user.Password + appConfig.UserPasswordSalt);
 
         var defaultRoleId = await SystemConfigReader.GetIntByName(
@@ -85,7 +93,11 @@ public class UserMutations
             ChatneyBackend.Infra.ErrorCodes.ThrowNotFound();
         }
 
-        user.Name = userDto.Name.Trim();
+        var nickname = NicknameValidator.NormalizeAndValidate(userDto.Nickname);
+        await NicknameValidator.EnsureUnique(repos, nickname, user.Id);
+
+        user.Nickname = nickname;
+        user.FullName = string.IsNullOrWhiteSpace(userDto.FullName) ? null : userDto.FullName.Trim();
         user.Email = userDto.Email.Trim();
         user.Active = userDto.Active;
         user.Verified = userDto.Verified;
@@ -111,9 +123,18 @@ public class UserMutations
     {
         var user = await principal.GetRequiredUser(repos);
 
-        if (!string.IsNullOrWhiteSpace(profileDto.Name))
+        if (!string.IsNullOrWhiteSpace(profileDto.Nickname))
         {
-            user.Name = profileDto.Name.Trim();
+            var nickname = NicknameValidator.NormalizeAndValidate(profileDto.Nickname);
+            await NicknameValidator.EnsureUnique(repos, nickname, user.Id);
+            user.Nickname = nickname;
+        }
+
+        if (profileDto.FullName != null)
+        {
+            user.FullName = string.IsNullOrWhiteSpace(profileDto.FullName)
+                ? null
+                : profileDto.FullName.Trim();
         }
 
         if (!string.IsNullOrWhiteSpace(profileDto.Email))
@@ -152,7 +173,9 @@ public class UserMutations
     public async Task<UserLoginResponse?> Login(AppConfig appConfig, AppRepos repos, string login, string password)
     {
         var passwordHash = Helpers.GetMd5Hash(password + appConfig.UserPasswordSalt);
-        var user = await repos.Users.GetOne(u => (u.Email == login || u.Name == login) && u.Password == passwordHash);
+        var loginLower = login.Trim().ToLowerInvariant();
+        var user = await repos.Users.GetOne(u =>
+            (u.Email == login || u.Nickname.ToLower() == loginLower) && u.Password == passwordHash);
 
         if (user == null)
         {
