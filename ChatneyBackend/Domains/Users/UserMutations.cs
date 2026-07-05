@@ -175,7 +175,8 @@ public class UserMutations
         var passwordHash = Helpers.GetMd5Hash(password + appConfig.UserPasswordSalt);
         var loginLower = login.Trim().ToLowerInvariant();
         var user = await repos.Users.GetOne(u =>
-            (u.Email == login || u.Nickname.ToLower() == loginLower) && u.Password == passwordHash);
+            (u.Email.ToLower() == loginLower || u.Nickname.ToLower() == loginLower) &&
+            u.Password == passwordHash);
 
         if (user == null)
         {
