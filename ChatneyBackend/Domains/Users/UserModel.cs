@@ -49,7 +49,7 @@ public class ChannelSettings
     public bool Muted { get; set; }
 }
 
-public class User : IPgKey<User, Guid>, IPgTimestamped, IType
+public class User : IPgKey<User, Guid>, IPgTimestamped
 {
     [Primary]
     [Identity]
@@ -94,9 +94,6 @@ public class User : IPgKey<User, Guid>, IPgTimestamped, IType
     [Map("updated_at")]
     [GraphQLIgnore]
     public DateTime UpdatedAt { get; set; }
-
-    [GraphQLIgnore]
-    public TypeKind Kind { get; }
 
     public static Expression<Func<User, bool>> MatchByKey(Guid key) => user => user.Id == key;
 }

@@ -95,10 +95,25 @@ public class UserQueries
         var permissions = await roleManager.GetUserPermissions(user, RoleScope.Global());
         permissions.Require(UserPermissionNames.ReadUser);
 
-        var users = await repos.Users.GetList(u =>
-            (filter.Active == null || u.Active == filter.Active) &&
-            (filter.Banned == null || u.Banned == filter.Banned) &&
-            (filter.Email == null || u.Email == filter.Email));
+        var users = await repos.Users.GetList();
+
+        if (filter.Active != null)
+        {
+            users = users.Where(u => u.Active == filter.Active).ToList();
+        }
+
+        if (filter.Banned != null)
+        {
+            users = users.Where(u => u.Banned == filter.Banned).ToList();
+        }
+
+        if (!string.IsNullOrWhiteSpace(filter.Email))
+        {
+            var email = filter.Email.Trim();
+            users = users
+                .Where(u => string.Equals(u.Email, email, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
 
         if (!string.IsNullOrWhiteSpace(filter.Nickname))
         {
