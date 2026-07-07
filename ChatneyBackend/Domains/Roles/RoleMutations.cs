@@ -12,7 +12,7 @@ public class RoleMutations
         AppRepos repos,
         RoleManager roleManager,
         ClaimsPrincipal principal,
-        RoleDto roleDto,
+        RoleCreateDto roleDto,
         WebSocketConnector webSocketConnector)
     {
         var user = await principal.GetRequiredUser(repos);
@@ -30,12 +30,20 @@ public class RoleMutations
         AppRepos repos,
         RoleManager roleManager,
         ClaimsPrincipal principal,
-        Role role,
+        RoleUpdateDto roleDto,
         WebSocketConnector webSocketConnector)
     {
         var user = await principal.GetRequiredUser(repos);
         var permissions = await roleManager.GetUserPermissions(user, RoleScope.Global());
         permissions.Require(RolePermissions.EditRole);
+
+        var role = await repos.Roles.GetById(roleDto.Id);
+        if (role == null)
+        {
+            ChatneyBackend.Infra.ErrorCodes.ThrowNotFound();
+        }
+
+        role.PatchFromDto(roleDto);
 
         await repos.Roles.UpdateOne(role);
         await webSocketConnector.SendUpdatedRoleAsync(WebsocketRolePayload.FromRole(role));

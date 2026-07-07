@@ -28,7 +28,7 @@ public class Role : IPgKey<Role, int>, IPgTimestamped
     [Map("updated_at")]
     public DateTime UpdatedAt { get; set; }
 
-    public static Role FromDto(RoleDto role)
+    public static Role FromDto(RoleCreateDto role)
     {
         return new Role()
         {
@@ -40,11 +40,31 @@ public class Role : IPgKey<Role, int>, IPgTimestamped
         };
     }
 
+    public void PatchFromDto(RoleUpdateDto role)
+    {
+        Name = role.Name;
+        Permissions = role.Permissions.ToArray();
+        UpdatedAt = DateTime.UtcNow;
+        IsProtected = role.IsProtected;
+    }
+
     public static Expression<Func<Role, bool>> MatchByKey(int key) => role => role.Id == key;
 }
 
-public class RoleDto
+public class RoleCreateDto
 {
+    [MaxLength(255)]
+    public required string Name { get; set; }
+
+    public bool IsProtected { get; set; }
+
+    public List<string> Permissions { get; set; } = [];
+}
+
+public class RoleUpdateDto
+{
+    public int Id { get; set; }
+
     [MaxLength(255)]
     public required string Name { get; set; }
 

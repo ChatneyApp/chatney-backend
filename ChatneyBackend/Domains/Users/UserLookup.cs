@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using ChatneyBackend.Infra;
 
 namespace ChatneyBackend.Domains.Users;
@@ -18,12 +19,12 @@ public static class UserLookup
         string nickname,
         Guid? excludeUserId = null)
     {
-        var nicknameTrimmed = nickname.Trim();
-        var candidates = await repos.Users.GetList(u =>
-            excludeUserId == null || u.Id != excludeUserId);
+        Expression<Func<User, bool>> candidateSearch = excludeUserId == null
+            ? u => string.Equals(u.Nickname, nickname, StringComparison.OrdinalIgnoreCase)
+            : u => u.Id != excludeUserId &&
+                   string.Equals(u.Nickname, nickname, StringComparison.OrdinalIgnoreCase);
 
-        return candidates.FirstOrDefault(u =>
-            string.Equals(u.Nickname, nicknameTrimmed, StringComparison.OrdinalIgnoreCase));
+        return await repos.Users.GetOne(candidateSearch);
     }
 
     public static async Task<bool> IsNicknameTaken(

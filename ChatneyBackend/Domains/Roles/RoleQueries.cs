@@ -16,45 +16,15 @@ public class RoleQueries
     }
 
     [Authorize]
-    public async Task<Role?> GetRoleById(
-        AppRepos repos,
-        RoleManager roleManager,
-        ClaimsPrincipal principal,
-        int id)
-    {
-        var user = await principal.GetRequiredUser(repos);
-        var permissions = await roleManager.GetUserPermissions(user, RoleScope.Global());
-        permissions.Require(RolePermissions.ReadRole);
-
-        return await repos.Roles.GetById(id);
-    }
+    public async Task<Role?> GetRoleById(AppRepos repos, int id) =>
+        await repos.Roles.GetById(id);
 
     [Authorize]
-    public async Task<Role?> GetRoleByName(
-        AppRepos repos,
-        RoleManager roleManager,
-        ClaimsPrincipal principal,
-        string name)
-    {
-        var user = await principal.GetRequiredUser(repos);
-        var permissions = await roleManager.GetUserPermissions(user, RoleScope.Global());
-        permissions.Require(RolePermissions.ReadRole);
-
-        return await repos.Roles.GetOne(r => r.Name == name);
-    }
+    public async Task<Role?> GetRoleByName(AppRepos repos, string name) =>
+        await repos.Roles.GetOne(r => r.Name == name);
 
     [Authorize]
-    public async Task<List<Role>> GetList(
-        AppRepos repos,
-        RoleManager roleManager,
-        ClaimsPrincipal principal)
-    {
-        var user = await principal.GetRequiredUser(repos);
-        var permissions = await roleManager.GetUserPermissions(user, RoleScope.Global());
-        permissions.Require(RolePermissions.ReadRole);
-
-        return await repos.Roles.GetList();
-    }
+    public async Task<List<Role>> GetList(AppRepos repos) => await repos.Roles.GetList();
 
     [Authorize]
     public async Task<ScopedPermissions> GetMyRoles(

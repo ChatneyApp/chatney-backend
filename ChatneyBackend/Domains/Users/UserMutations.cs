@@ -94,7 +94,10 @@ public class UserMutations
         }
 
         var nickname = NicknameValidator.NormalizeAndValidate(userDto.Nickname);
-        await NicknameValidator.EnsureUnique(repos, nickname, user.Id);
+        if (nickname != user.Nickname)
+        {
+            await NicknameValidator.EnsureUnique(repos, nickname, user.Id);
+        }
 
         user.Nickname = nickname;
         user.FullName = string.IsNullOrWhiteSpace(userDto.FullName) ? null : userDto.FullName.Trim();
