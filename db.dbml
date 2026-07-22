@@ -1,0 +1,232 @@
+Enum "user_role_type" {
+  "workspace"
+  "channel"
+  "channel_type"
+}
+
+Table "roles" {
+  "id" int4 [pk, not null, increment]
+  "name" varchar(255) [not null]
+  "is_protected" bool [not null, default: false]
+  "permissions" "text[]" [not null, default: 'ARRAY[text[]']
+  "created_at" timestamptz [not null, default: `now()`]
+  "updated_at" timestamptz [not null, default: `now()`]
+}
+
+Table "users" {
+  "id" uuid [pk, not null, default: `uuidv7()`]
+  "nickname" varchar(20) [not null]
+  "full_name" varchar(255)
+  "active" bool [not null, default: false]
+  "verified" bool [not null, default: false]
+  "banned" bool [not null, default: false]
+  "muted" bool [not null, default: false]
+  "email" varchar(255) [unique, not null]
+  "avatar_url" text
+  "role_id" int4 [not null]
+  "password" text [not null]
+  "created_at" timestamptz [not null, default: `now()`]
+  "updated_at" timestamptz [not null, default: `now()`]
+}
+
+Table "user_roles" {
+  "user_id" uuid [not null]
+  "role_id" int4 [not null]
+  "channel_id" int4
+  "channel_type_id" int4
+  "workspace_id" int4
+  "allowlist" "text[]" [not null, default: 'ARRAY[text[]']
+  "denylist" "text[]" [not null, default: 'ARRAY[text[]']
+}
+
+Table "user_channel_settings" {
+  "user_id" uuid [not null]
+  "channel_id" int4 [not null]
+  "last_seen_message" timestamptz [not null]
+  "muted" bool [not null, default: false]
+
+  Indexes {
+    (user_id, channel_id) [pk, type: btree, name: "user_channel_settings_pkey"]
+  }
+}
+
+Table "workspaces" {
+  "id" int4 [pk, not null, increment]
+  "name" varchar(255) [not null]
+  "created_at" timestamptz [not null, default: `now()`]
+  "updated_at" timestamptz [not null, default: `now()`]
+}
+
+Table "channel_types" {
+  "id" int4 [pk, not null, increment]
+  "name" varchar(255) [not null]
+  "key" varchar(255) [not null]
+  "base_role_id" int4 [not null]
+  "created_at" timestamptz [not null, default: `now()`]
+  "updated_at" timestamptz [not null, default: `now()`]
+}
+
+Table "channels" {
+  "id" int4 [pk, not null, increment]
+  "name" varchar(255) [not null]
+  "channel_type_id" int4 [not null]
+  "workspace_id" int4 [not null]
+  "created_at" timestamptz [not null, default: `now()`]
+  "updated_at" timestamptz [not null, default: `now()`]
+}
+
+Table "channel_groups" {
+  "id" int4 [pk, not null, increment]
+  "name" varchar(255) [not null]
+  "workspace_id" int4 [not null]
+  "channel_ids" "int4[]" [not null, default: 'ARRAY[integer[]']
+  "order" int4 [not null, default: 0]
+  "created_at" timestamptz [not null, default: `now()`]
+  "updated_at" timestamptz [not null, default: `now()`]
+}
+
+Table "configs" {
+  "id" int4 [pk, not null, increment]
+  "name" varchar(255) [not null]
+  "value" varchar(2048) [not null]
+  "type" varchar(255)
+  "created_at" timestamptz [not null, default: `now()`]
+  "updated_at" timestamptz [not null, default: `now()`]
+
+  Indexes {
+    name [type: btree, name: "ix_configs_name"]
+  }
+}
+
+Table "messages" {
+  "id" int4 [pk, not null, increment]
+  "channel_id" int4 [not null]
+  "user_id" uuid [not null]
+  "content" varchar(4096) [not null]
+  "attachment_ids" "int4[]" [not null, default: 'ARRAY[integer[]']
+  "url_preview_ids" "int4[]" [not null, default: 'ARRAY[integer[]']
+  "status" varchar(50) [not null]
+  "parent_id" int4
+  "children_count" int4 [not null, default: 0]
+  "created_at" timestamptz [not null, default: `now()`]
+  "updated_at" timestamptz [not null, default: `now()`]
+  "reply_to" int4
+
+  Indexes {
+    channel_id [type: btree, name: "ix_messages_channel_id"]
+    parent_id [type: btree, name: "ix_messages_parent_id"]
+    reply_to [type: btree, name: "ix_messages_reply_to"]
+    user_id [type: btree, name: "ix_messages_user_id"]
+  }
+}
+
+Table "message_reactions" {
+  "message_id" int4 [not null]
+  "user_id" uuid [not null]
+  "code" varchar(255) [not null]
+  "created_at" timestamptz [not null, default: `now()`]
+  "updated_at" timestamptz [not null, default: `now()`]
+
+  Indexes {
+    (message_id, user_id, code) [pk, type: btree, name: "pk_message_reactions"]
+    message_id [type: btree, name: "ix_message_reactions_message_id"]
+    user_id [type: btree, name: "ix_message_reactions_user_id"]
+  }
+}
+
+Table "attachments" {
+  "id" int4 [pk, not null, increment]
+  "user_id" uuid [not null]
+  "url_path" varchar(4096) [not null]
+  "original_file_name" varchar(4096) [not null]
+  "extension" varchar(4096) [not null]
+  "mime_type" varchar(4096) [not null]
+  "size" int8 [not null]
+  "width" int4
+  "height" int4
+  "duration" int4
+  "type" varchar(4096) [not null]
+  "as_file" bool [not null, default: false]
+  "created_at" timestamptz [not null, default: `now()`]
+  "updated_at" timestamptz [not null, default: `now()`]
+
+  Indexes {
+    user_id [type: btree, name: "ix_attachments_user_id"]
+  }
+}
+
+Table "url_previews" {
+  "id" int4 [pk, not null, increment]
+  "url" varchar(4096) [not null]
+  "title" varchar(4096)
+  "description" text
+  "thumbnail_url" varchar(4096)
+  "video_thumbnail_url" varchar(4096)
+  "site_name" varchar(4096)
+  "fav_icon_url" varchar(4096)
+  "type" varchar(255)
+  "author" varchar(4096)
+  "thumbnail_width" int4
+  "thumbnail_height" int4
+  "created_at" timestamptz [not null, default: `now()`]
+  "updated_at" timestamptz [not null, default: `now()`]
+
+  Indexes {
+    url [type: btree, name: "ix_url_previews_url"]
+  }
+}
+
+Table "draft_messages" {
+  "id" int4 [pk, not null, increment]
+  "channel_id" int4 [not null]
+  "user_id" uuid [not null]
+  "content" varchar(4096) [not null]
+  "attachment_ids" "int4[]" [not null, default: 'ARRAY[integer[]']
+  "parent_id" int4
+  "created_at" timestamptz [not null, default: `now()`]
+  "updated_at" timestamptz [not null, default: `now()`]
+
+  Indexes {
+    (user_id, channel_id, parent_id) [type: btree, unique, name: "ux_draft_messages_user_channel_parent"]
+  }
+}
+
+Ref "fk_attachments_user_id":"users"."id" < "attachments"."user_id" [delete: cascade]
+
+Ref "fk_draft_messages_channel_id":"channels"."id" < "draft_messages"."channel_id" [delete: cascade]
+
+Ref "fk_draft_messages_parent_id":"draft_messages"."id" < "draft_messages"."parent_id" [delete: cascade]
+
+Ref "fk_draft_messages_user_id":"users"."id" < "draft_messages"."user_id" [delete: cascade]
+
+Ref "fk_message_reactions_message_id":"messages"."id" < "message_reactions"."message_id" [delete: cascade]
+
+Ref "fk_message_reactions_user_id":"users"."id" < "message_reactions"."user_id" [delete: cascade]
+
+Ref "fk_messages_channel_id":"channels"."id" < "messages"."channel_id" [delete: cascade]
+
+Ref "fk_messages_parent_id":"messages"."id" < "messages"."parent_id" [delete: cascade]
+
+Ref "fk_messages_reply_to":"messages"."id" < "messages"."reply_to" [delete: set null]
+
+Ref "fk_messages_user_id":"users"."id" < "messages"."user_id" [delete: cascade]
+
+Ref "fk_user_channel_settings_user_id":"users"."id" < "user_channel_settings"."user_id" [delete: cascade]
+
+Ref "fk_user_roles_channel_id":"channels"."id" < "user_roles"."channel_id" [delete: cascade]
+
+Ref "fk_user_roles_channel_type_id":"channel_types"."id" < "user_roles"."channel_type_id" [delete: cascade]
+
+Ref "fk_user_roles_role_id":"roles"."id" < "user_roles"."role_id" [delete: cascade]
+
+Ref "fk_user_roles_user_id":"users"."id" < "user_roles"."user_id" [delete: cascade]
+
+Ref "fk_user_roles_workspace_id":"workspaces"."id" < "user_roles"."workspace_id" [delete: cascade]
+
+Ref "fk_users_global_role_id":"roles"."id" < "users"."role_id"
+
+Table "dbo"."migrations" {
+  "version" int8 [unique, not null]
+  "applied_on" timestamp
+  "description" varchar(1024)
+}
