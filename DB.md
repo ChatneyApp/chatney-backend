@@ -17,10 +17,10 @@ Run from the repo root:
 ```bash
 make db:dbml
 # or directly:
-npx -y -p @dbml/cli db2dbml postgres 'postgresql://root:pass@localhost:5432/chatney' -o db.dbml
+npx -y -p @dbml/cli db2dbml postgres 'postgresql://root:pass@localhost:5432/chatney?schemas=public' -o db.dbml
 ```
 
-`db2dbml` (from the official [@dbml/cli](https://www.npmjs.com/package/@dbml/cli) package) introspects the running Postgres instance — tables, columns, types, defaults, PKs, FKs, indexes — and writes them as DBML.
+`db2dbml` (from the official [@dbml/cli](https://www.npmjs.com/package/@dbml/cli) package) introspects the running Postgres instance — tables, columns, types, defaults, PKs, FKs, indexes — and writes them as DBML. The `?schemas=public` filter limits the output to the `public` schema, excluding bookkeeping tables like `dbo.migrations`.
 
 Re-run this command after adding or changing migrations to keep `db.dbml` in sync.
 

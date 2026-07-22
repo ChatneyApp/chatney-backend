@@ -949,28 +949,5 @@
 <text text-anchor="middle" x="1630.15" y="-1301.16" font-family="Helvetica,sans-Serif" font-size="32.00" fill="#29235c">*</text>
 <text text-anchor="middle" x="2073.27" y="-1629.96" font-family="Helvetica,sans-Serif" font-size="32.00" fill="#29235c">1</text>
 </g>
-<!-- dbo.migrations -->
-<g id="dbo.migrations" class="node">
-<title>dbo.migrations</title>
-<ellipse fill="none" stroke="black" stroke-width="0" cx="386.08" cy="-4104.96" rx="293.4" ry="172.57"/>
-<polygon fill="#1d71b8" stroke="transparent" points="181.08,-4164.96 181.08,-4224.96 592.08,-4224.96 592.08,-4164.96 181.08,-4164.96"/>
-<polygon fill="none" stroke="#29235c" points="181.08,-4164.96 181.08,-4224.96 592.08,-4224.96 592.08,-4164.96 181.08,-4164.96"/>
-<text text-anchor="start" x="219.42" y="-4186.16" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="32.00" fill="#ffffff"> &#160;&#160;&#160;&#160;&#160;&#160;dbo.migrations &#160;&#160;&#160;&#160;&#160;&#160;</text>
-<polygon fill="#e7e2dd" stroke="transparent" points="181.08,-4104.96 181.08,-4164.96 592.08,-4164.96 592.08,-4104.96 181.08,-4104.96"/>
-<polygon fill="none" stroke="#29235c" points="181.08,-4104.96 181.08,-4164.96 592.08,-4164.96 592.08,-4104.96 181.08,-4104.96"/>
-<text text-anchor="start" x="192.08" y="-4125.16" font-family="Helvetica,sans-Serif" font-size="32.00" fill="#29235c">version &#160;&#160;&#160;</text>
-<text text-anchor="start" x="490.42" y="-4126.16" font-family="Helvetica,sans-Serif" font-style="italic" font-size="32.00" fill="#29235c">int8</text>
-<text text-anchor="start" x="541.99" y="-4126.16" font-family="Helvetica,sans-Serif" font-size="32.00" fill="#29235c"> </text>
-<text text-anchor="start" x="550.88" y="-4126.16" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="32.00" fill="#29235c">(!)</text>
-<polygon fill="#e7e2dd" stroke="transparent" points="181.08,-4044.96 181.08,-4104.96 592.08,-4104.96 592.08,-4044.96 181.08,-4044.96"/>
-<polygon fill="none" stroke="#29235c" points="181.08,-4044.96 181.08,-4104.96 592.08,-4104.96 592.08,-4044.96 181.08,-4044.96"/>
-<text text-anchor="start" x="192.08" y="-4065.16" font-family="Helvetica,sans-Serif" font-size="32.00" fill="#29235c">applied_on &#160;&#160;&#160;</text>
-<text text-anchor="start" x="433.52" y="-4066.16" font-family="Helvetica,sans-Serif" font-style="italic" font-size="32.00" fill="#29235c">timestamp</text>
-<polygon fill="#e7e2dd" stroke="transparent" points="181.08,-3984.96 181.08,-4044.96 592.08,-4044.96 592.08,-3984.96 181.08,-3984.96"/>
-<polygon fill="none" stroke="#29235c" points="181.08,-3984.96 181.08,-4044.96 592.08,-4044.96 592.08,-3984.96 181.08,-3984.96"/>
-<text text-anchor="start" x="191.95" y="-4005.16" font-family="Helvetica,sans-Serif" font-size="32.00" fill="#29235c">description &#160;&#160;&#160;</text>
-<text text-anchor="start" x="382.01" y="-4006.16" font-family="Helvetica,sans-Serif" font-style="italic" font-size="32.00" fill="#29235c">varchar(1024)</text>
-<polygon fill="none" stroke="#29235c" stroke-width="2" points="179.58,-3983.96 179.58,-4225.96 592.58,-4225.96 592.58,-3983.96 179.58,-3983.96"/>
-</g>
 </g>
 </svg>

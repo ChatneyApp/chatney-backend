@@ -5,7 +5,7 @@ compose:
 restore:
 	dotnet restore
 db\:dbml:
-	npx -y -p @dbml/cli db2dbml postgres "postgresql://root:pass@localhost:5432/chatney" -o db.dbml
+	npx -y -p @dbml/cli db2dbml postgres "postgresql://root:pass@localhost:5432/chatney?schemas=public" -o db.dbml
 db\:svg:
 	npx -y -p @softwaretechnik/dbml-renderer dbml-renderer -i db.dbml -o db.svg
 db\:watch:
