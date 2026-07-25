@@ -1,14 +1,39 @@
-Enum "user_role_type" {
-  "workspace"
-  "channel"
-  "channel_type"
+Enum "permission" {
+  "role.deleteRole"
+  "role.editRole"
+  "role.createRole"
+  "channel.deleteMessage"
+  "channel.editMessage"
+  "channel.createMessage"
+  "channel.readMessage"
+  "channel.deleteChannel"
+  "channel.editChannel"
+  "channel.createChannel"
+  "channel.readChannel"
+  "channel.deleteChannelType"
+  "channel.editChannelGroup"
+  "channel.addChannelGroup"
+  "channel.deleteChannelGroup"
+  "channel.deleteOwnMessage"
+  "channel.editOwnMessage"
+  "workspace.createWorkspace"
+  "workspace.deleteWorkspace"
+  "workspace.updateWorkspace"
+  "workspace.readWorkspace"
+  "user.deleteUser"
+  "user.editUser"
+  "user.createUser"
+  "user.readUser"
+  "config.readValue"
+  "config.updateValue"
+  "attachment.upload"
+  "attachment.read"
+  "attachment.delete"
 }
 
 Table "roles" {
   "id" int4 [pk, not null, increment]
   "name" varchar(255) [not null]
-  "is_protected" bool [not null, default: false]
-  "permissions" "text[]" [not null, default: 'ARRAY[text[]']
   "created_at" timestamptz [not null, default: `now()`]
   "updated_at" timestamptz [not null, default: `now()`]
 }
@@ -32,11 +57,35 @@ Table "users" {
 Table "user_roles" {
   "user_id" uuid [not null]
   "role_id" int4 [not null]
-  "channel_id" int4
-  "channel_type_id" int4
-  "workspace_id" int4
-  "allowlist" "text[]" [not null, default: 'ARRAY[text[]']
-  "denylist" "text[]" [not null, default: 'ARRAY[text[]']
+
+  Indexes {
+    (user_id, role_id) [pk, type: btree, name: "user_roles_pkey"]
+  }
+}
+
+Table "secure_objects" {
+  "id" int4 [pk, not null, increment]
+  "description" jsonb
+}
+
+Table "user_acls" {
+  "user_id" uuid [not null]
+  "sec_obj_id" int4 [not null]
+  "permissions" "permission[]" [not null, default: `'{}'`]
+
+  Indexes {
+    (user_id, sec_obj_id) [pk, type: btree, name: "user_acls_pkey"]
+  }
+}
+
+Table "role_acls" {
+  "role_id" int4 [not null]
+  "sec_obj_id" int4 [not null]
+  "permissions" "permission[]" [not null, default: `'{}'`]
+
+  Indexes {
+    (role_id, sec_obj_id) [pk, type: btree, name: "role_acls_pkey"]
+  }
 }
 
 Table "user_channel_settings" {
@@ -71,6 +120,7 @@ Table "channels" {
   "name" varchar(255) [not null]
   "channel_type_id" int4 [not null]
   "workspace_id" int4 [not null]
+  "sec_obj_id" int4 [not null]
   "created_at" timestamptz [not null, default: `now()`]
   "updated_at" timestamptz [not null, default: `now()`]
 }
@@ -213,14 +263,24 @@ Ref "fk_messages_user_id":"users"."id" < "messages"."user_id" [delete: cascade]
 
 Ref "fk_user_channel_settings_user_id":"users"."id" < "user_channel_settings"."user_id" [delete: cascade]
 
-Ref "fk_user_roles_channel_id":"channels"."id" < "user_roles"."channel_id" [delete: cascade]
-
-Ref "fk_user_roles_channel_type_id":"channel_types"."id" < "user_roles"."channel_type_id" [delete: cascade]
-
 Ref "fk_user_roles_role_id":"roles"."id" < "user_roles"."role_id" [delete: cascade]
 
 Ref "fk_user_roles_user_id":"users"."id" < "user_roles"."user_id" [delete: cascade]
 
-Ref "fk_user_roles_workspace_id":"workspaces"."id" < "user_roles"."workspace_id" [delete: cascade]
+Ref "fk_user_acls_user_id":"users"."id" < "user_acls"."user_id" [delete: cascade]
+
+Ref "fk_user_acls_sec_obj_id":"secure_objects"."id" < "user_acls"."sec_obj_id" [delete: cascade]
+
+Ref "fk_role_acls_role_id":"roles"."id" < "role_acls"."role_id" [delete: cascade]
+
+Ref "fk_role_acls_sec_obj_id":"secure_objects"."id" < "role_acls"."sec_obj_id" [delete: cascade]
+
+Ref "fk_channels_sec_obj_id":"secure_objects"."id" < "channels"."sec_obj_id" [delete: cascade]
+
+Ref "fk_channels_channel_type_id":"channel_types"."id" < "channels"."channel_type_id" [delete: cascade]
+
+Ref "fk_channels_workspace_id":"workspaces"."id" < "channels"."workspace_id" [delete: cascade]
+
+Ref "fk_channel_groups_workspace_id":"workspaces"."id" < "channel_groups"."workspace_id" [delete: cascade]
 
 Ref "fk_users_global_role_id":"roles"."id" < "users"."role_id"
