@@ -49,12 +49,18 @@ public class InstallWizardMutations
             var userRole = seedRoles.Single(r => r.Name == Roles.DomainSettings.UserRoleName);
             adminRole = seedRoles.Single(r => r.Name == Roles.DomainSettings.AdminRoleName);
 
+            var mainWorkspaceSecObjId = await SecureObjectHelper.Create(repos);
+            var secondaryWorkspaceSecObjId = await SecureObjectHelper.Create(repos);
+
             List<Workspace> workspaces = new List<Workspace>
             {
-                new() { Name = "Main" },
-                new() { Name = "Secondary" },
+                new() { Name = "Main", SecObjId = mainWorkspaceSecObjId },
+                new() { Name = "Secondary", SecObjId = secondaryWorkspaceSecObjId },
             };
             await repos.Workspaces.InsertBulk(workspaces);
+
+            var publicChannelTypeSecObjId = await SecureObjectHelper.Create(repos);
+            var privateChannelTypeSecObjId = await SecureObjectHelper.Create(repos);
 
             List<Channels.ChannelType> channelTypes = new List<Channels.ChannelType>
             {
@@ -62,16 +68,21 @@ public class InstallWizardMutations
                 {
                     Name = "public",
                     Key = "public",
-                    BaseRoleId = userRole.Id
+                    SecObjId = publicChannelTypeSecObjId,
                 },
                 new()
                 {
                     Name = "private",
                     Key = "private",
-                    BaseRoleId = userRole.Id
+                    SecObjId = privateChannelTypeSecObjId,
                 },
             };
             await repos.ChannelTypes.InsertBulk(channelTypes);
+
+            var publicChannel1SecObjId = await SecureObjectHelper.Create(repos);
+            var publicChannel2SecObjId = await SecureObjectHelper.Create(repos);
+            var privateChannel1SecObjId = await SecureObjectHelper.Create(repos);
+            var privateChannel2SecObjId = await SecureObjectHelper.Create(repos);
 
             List<Channels.Channel> channels = new List<Channels.Channel>()
             {
@@ -80,24 +91,28 @@ public class InstallWizardMutations
                     Name = "public 1",
                     ChannelTypeId = channelTypes[0].Id,
                     WorkspaceId = workspaces[0].Id,
+                    SecObjId = publicChannel1SecObjId,
                 },
                 new()
                 {
                     Name = "public 2",
                     ChannelTypeId = channelTypes[0].Id,
                     WorkspaceId = workspaces[0].Id,
+                    SecObjId = publicChannel2SecObjId,
                 },
                 new()
                 {
                     Name = "private 1",
                     ChannelTypeId = channelTypes[1].Id,
                     WorkspaceId = workspaces[0].Id,
+                    SecObjId = privateChannel1SecObjId,
                 },
                 new()
                 {
                     Name = "private 2",
                     ChannelTypeId = channelTypes[1].Id,
                     WorkspaceId = workspaces[0].Id,
+                    SecObjId = privateChannel2SecObjId,
                 },
             };
             await repos.Channels.InsertBulk(channels);
@@ -162,17 +177,31 @@ public class InstallWizardMutations
         };
     }
 
-    public async Task<InstallSystemResult> UnInstallSystem(
+    public Task<InstallSystemResult> UnInstallSystem(
         AppRepos repos,
         RoleManager roleManager,
         ClaimsPrincipal principal,
         IMigrationRunner migrationRunner)
     {
-        migrationRunner.MigrateDown(0);
+        try
+        {
+            while (migrationRunner.HasMigrationsToApplyRollback())
+            {
+                migrationRunner.Rollback(1);
+            }
+        }
+        catch (Exception e)
+        {
+            return Task.FromResult(new InstallSystemResult()
+            {
+                status = "failed",
+                message = e.ToString()
+            });
+        }
 
-        return new InstallSystemResult()
+        return Task.FromResult(new InstallSystemResult()
         {
             status = "success"
-        };
+        });
     }
 }

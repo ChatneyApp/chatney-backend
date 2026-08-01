@@ -21,6 +21,7 @@ public class ChannelMutations
         permissions.Require(ChannelPermissions.CreateChannel);
 
         var channelType = ChannelType.FromDto(channelTypeDto);
+        channelType.SecObjId = await SecureObjectHelper.Create(repos);
         channelType.Id = await repos.ChannelTypes.InsertOne(channelType);
         await webSocketConnector.SendNewChannelTypeAsync(WebsocketChannelTypePayload.FromChannelType(channelType));
         return channelType;
@@ -91,6 +92,7 @@ public class ChannelMutations
         permissions.Require(ChannelPermissions.CreateChannel);
 
         var channel = channelDto.ToModel();
+        channel.SecObjId = await SecureObjectHelper.Create(repos);
         channel.Id = await repos.Channels.InsertOne(channel);
         await webSocketConnector.SendNewChannelAsync(WebsocketChannelPayload.FromChannel(channel));
         return channel;

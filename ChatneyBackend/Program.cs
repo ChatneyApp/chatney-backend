@@ -16,6 +16,7 @@ using UsersDomainSettings = ChatneyBackend.Domains.Users.DomainSettings;
 using MessagesDomainSettings = ChatneyBackend.Domains.Messages.DomainSettings;
 using AttachmentsDomainSettings = ChatneyBackend.Domains.Attachments.DomainSettings;
 using DraftMessagesDomainSettings = ChatneyBackend.Domains.DraftMessages.DomainSettings;
+using RolesDomainSettings = ChatneyBackend.Domains.Roles.DomainSettings;
 using WorkspacesDomainSettings = ChatneyBackend.Domains.Workspaces.DomainSettings;
 using Microsoft.AspNetCore.WebSockets;
 using Amazon.Runtime;
@@ -71,7 +72,8 @@ var appRepos = new AppRepos(
     channelTypes: new PgRepo<ChannelType, int>(pgDataSource, ChannelDomainSettings.ChannelTypeTableName),
     channelGroups: new PgRepo<ChannelGroup, int>(pgDataSource, ChannelDomainSettings.ChannelGroupTableName),
     configs: new PgRepo<Config, int>(pgDataSource, ConfigsDomainSettings.ConfigTableName),
-    workspaces: new PgRepo<Workspace, int>(pgDataSource, WorkspacesDomainSettings.WorkspaceTableName)
+    workspaces: new PgRepo<Workspace, int>(pgDataSource, WorkspacesDomainSettings.WorkspaceTableName),
+    secureObjects: new PgRepo<SecureObject, int>(pgDataSource, RolesDomainSettings.SecureObjectTableName)
 );
 
 // Database

@@ -11,6 +11,23 @@ public interface IPgTimestamped
     public DateTime UpdatedAt { get; set; }
 }
 
+public static class PgTimestamps
+{
+    public static void TouchForInsert(IPgTimestamped entity)
+    {
+        var now = DateTime.UtcNow;
+        if (entity.CreatedAt == default)
+        {
+            entity.CreatedAt = now;
+        }
+
+        entity.UpdatedAt = now;
+    }
+
+    public static void TouchForUpdate(IPgTimestamped entity) =>
+        entity.UpdatedAt = DateTime.UtcNow;
+}
+
 public interface IPgKey<T, in TKey> where T : class
 {
     static abstract Expression<Func<T, bool>> MatchByKey(TKey key);
@@ -59,6 +76,11 @@ public class PgRepo<T, TKey> : IPgRepo<T, TKey> where T : class, IPgKey<T, TKey>
 
     public async Task<TKey> InsertOne(T record)
     {
+        if (record is IPgTimestamped timestamped)
+        {
+            PgTimestamps.TouchForInsert(timestamped);
+        }
+
         await using var conn = await OpenAsync();
         return await conn.InsertAsync<T, TKey>(record);
     }
@@ -66,6 +88,15 @@ public class PgRepo<T, TKey> : IPgRepo<T, TKey> where T : class, IPgKey<T, TKey>
     public async Task InsertBulk(List<T> items)
     {
         if (items.Count == 0) return;
+
+        foreach (var item in items)
+        {
+            if (item is IPgTimestamped timestamped)
+            {
+                PgTimestamps.TouchForInsert(timestamped);
+            }
+        }
+
         await using var conn = await OpenAsync();
         await conn.InsertAllAsync(items);
     }
@@ -134,7 +165,7 @@ public class PgRepo<T, TKey> : IPgRepo<T, TKey> where T : class, IPgKey<T, TKey>
     {
         if (record is IPgTimestamped timestamped)
         {
-            timestamped.UpdatedAt = DateTime.UtcNow;
+            PgTimestamps.TouchForUpdate(timestamped);
         }
     }
 }

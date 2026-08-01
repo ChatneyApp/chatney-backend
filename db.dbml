@@ -92,7 +92,6 @@ Table "user_channel_settings" {
   "user_id" uuid [not null]
   "channel_id" int4 [not null]
   "last_seen_message" timestamptz [not null]
-  "muted" bool [not null, default: false]
 
   Indexes {
     (user_id, channel_id) [pk, type: btree, name: "user_channel_settings_pkey"]
@@ -102,6 +101,7 @@ Table "user_channel_settings" {
 Table "workspaces" {
   "id" int4 [pk, not null, increment]
   "name" varchar(255) [not null]
+  "sec_obj_id" int4 [not null]
   "created_at" timestamptz [not null, default: `now()`]
   "updated_at" timestamptz [not null, default: `now()`]
 }
@@ -110,7 +110,7 @@ Table "channel_types" {
   "id" int4 [pk, not null, increment]
   "name" varchar(255) [not null]
   "key" varchar(255) [not null]
-  "base_role_id" int4 [not null]
+  "sec_obj_id" int4 [not null]
   "created_at" timestamptz [not null, default: `now()`]
   "updated_at" timestamptz [not null, default: `now()`]
 }
@@ -240,6 +240,10 @@ Table "draft_messages" {
     (user_id, channel_id, parent_id) [type: btree, unique, name: "ux_draft_messages_user_channel_parent"]
   }
 }
+
+Ref "fk_channel_types_sec_obj_id":"secure_objects"."id" < "channel_types"."sec_obj_id" [delete: cascade]
+
+Ref "fk_workspaces_sec_obj_id":"secure_objects"."id" < "workspaces"."sec_obj_id" [delete: cascade]
 
 Ref "fk_attachments_user_id":"users"."id" < "attachments"."user_id" [delete: cascade]
 

@@ -28,6 +28,7 @@ public sealed class MessageMutationsTestContext
     public InMemoryPgRepo<ChannelGroup, int> ChannelGroupsRepo { get; } = new();
     public InMemoryPgRepo<Config, int> ConfigsRepo { get; } = new();
     public InMemoryPgRepo<Workspace, int> WorkspacesRepo { get; } = new();
+    public InMemoryPgRepo<SecureObject, int> SecureObjectsRepo { get; } = new();
 
     public User User { get; }
     public Channel Channel { get; }
@@ -81,6 +82,7 @@ public sealed class MessageMutationsTestContext
             Name = "general",
             WorkspaceId = 1,
             ChannelTypeId = 1,
+            SecObjId = 1,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
         };
@@ -109,7 +111,8 @@ public sealed class MessageMutationsTestContext
             ChannelTypesRepo,
             ChannelGroupsRepo,
             ConfigsRepo,
-            WorkspacesRepo);
+            WorkspacesRepo,
+            SecureObjectsRepo);
 
         RoleManager = new RoleManager(RolesRepo, UserRolesRepo);
     }

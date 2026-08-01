@@ -27,6 +27,7 @@ public sealed class UserRoleMutationsTestContext
     public InMemoryPgRepo<ChannelGroup, int> ChannelGroupsRepo { get; } = new();
     public InMemoryPgRepo<Config, int> ConfigsRepo { get; } = new();
     public InMemoryPgRepo<Workspace, int> WorkspacesRepo { get; } = new();
+    public InMemoryPgRepo<SecureObject, int> SecureObjectsRepo { get; } = new();
 
     public User Admin { get; }
     public User TargetUser { get; }
@@ -65,6 +66,7 @@ public sealed class UserRoleMutationsTestContext
         {
             Id = 1,
             Name = "Main",
+            SecObjId = 1,
         };
 
         Admin = new User
@@ -123,7 +125,8 @@ public sealed class UserRoleMutationsTestContext
             ChannelTypesRepo,
             ChannelGroupsRepo,
             ConfigsRepo,
-            WorkspacesRepo);
+            WorkspacesRepo,
+            SecureObjectsRepo);
 
         RoleManager = new RoleManager(RolesRepo, UserRolesRepo);
     }

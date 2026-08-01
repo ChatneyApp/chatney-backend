@@ -23,6 +23,9 @@ public class Channel : IPgKey<Channel, int>, IPgTimestamped
     [Map("workspace_id")]
     public int WorkspaceId { get; set; }
 
+    [Map("sec_obj_id")]
+    public int SecObjId { get; set; }
+
     [Map("created_at")]
     public DateTime CreatedAt { get; set; }
 

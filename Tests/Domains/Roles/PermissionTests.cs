@@ -121,7 +121,7 @@ public class RoleScopeTests
             Id = 3,
             Name = "public",
             Key = "public",
-            BaseRoleId = 1,
+            SecObjId = 1,
         };
 
         var scope = RoleScope.FromChannelType(channelType);

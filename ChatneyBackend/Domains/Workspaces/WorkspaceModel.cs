@@ -16,6 +16,9 @@ public class Workspace : IPgKey<Workspace, int>, IPgTimestamped
     [MaxLength(255)]
     public required string Name { get; set; }
 
+    [Map("sec_obj_id")]
+    public int SecObjId { get; set; }
+
     [Map("created_at")]
     public DateTime CreatedAt { get; set; }
 

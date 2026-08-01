@@ -20,8 +20,8 @@ public class ChannelType : IPgKey<ChannelType, int>, IPgTimestamped
     [MaxLength(255)]
     public required string Key { get; set; }
 
-    [Map("base_role_id")]
-    public int BaseRoleId { get; set; }
+    [Map("sec_obj_id")]
+    public int SecObjId { get; set; }
 
     [Map("created_at")]
     public DateTime CreatedAt { get; set; }
@@ -35,7 +35,6 @@ public class ChannelType : IPgKey<ChannelType, int>, IPgTimestamped
         {
             Name = channelType.Name,
             Key = channelType.Key,
-            BaseRoleId = channelType.BaseRoleId,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
         };
@@ -51,8 +50,6 @@ public class ChannelTypeDto
 
     [MaxLength(255)]
     public required string Key { get; set; }
-
-    public int BaseRoleId { get; set; }
 }
 
 public class WebsocketChannelTypePayload
@@ -60,14 +57,12 @@ public class WebsocketChannelTypePayload
     public int Id { get; set; }
     public required string Name { get; set; }
     public required string Key { get; set; }
-    public int BaseRoleId { get; set; }
 
     public static WebsocketChannelTypePayload FromChannelType(ChannelType channelType) => new()
     {
         Id = channelType.Id,
         Name = channelType.Name,
         Key = channelType.Key,
-        BaseRoleId = channelType.BaseRoleId,
     };
 }
 

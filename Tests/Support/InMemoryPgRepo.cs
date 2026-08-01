@@ -57,6 +57,11 @@ public class InMemoryPgRepo<T, TKey> : IPgRepo<T, TKey> where T : class, IPgKey<
     {
         lock (_lock)
         {
+            if (record is IPgTimestamped timestamped)
+            {
+                PgTimestamps.TouchForInsert(timestamped);
+            }
+
             AssignKeyIfNeeded(record);
             _items.Add(record);
             return Task.FromResult(ReadKey(record));
@@ -69,6 +74,11 @@ public class InMemoryPgRepo<T, TKey> : IPgRepo<T, TKey> where T : class, IPgKey<
         {
             foreach (var item in items)
             {
+                if (item is IPgTimestamped timestamped)
+                {
+                    PgTimestamps.TouchForInsert(timestamped);
+                }
+
                 AssignKeyIfNeeded(item);
                 _items.Add(item);
             }
@@ -119,6 +129,11 @@ public class InMemoryPgRepo<T, TKey> : IPgRepo<T, TKey> where T : class, IPgKey<
             TouchUpdatedAt(record);
             if (index < 0)
             {
+                if (record is IPgTimestamped timestamped)
+                {
+                    PgTimestamps.TouchForInsert(timestamped);
+                }
+
                 AssignKeyIfNeeded(record);
                 _items.Add(record);
             }
@@ -241,7 +256,7 @@ public class InMemoryPgRepo<T, TKey> : IPgRepo<T, TKey> where T : class, IPgKey<
     {
         if (record is IPgTimestamped timestamped)
         {
-            timestamped.UpdatedAt = DateTime.UtcNow;
+            PgTimestamps.TouchForUpdate(timestamped);
         }
     }
 
@@ -330,14 +345,14 @@ public class InMemoryPgRepo<T, TKey> : IPgRepo<T, TKey> where T : class, IPgKey<
                     return 0;
                 }
 
-                _items.Add((T)(object)new MessageReaction
+                var reaction = new MessageReaction
                 {
                     MessageId = messageId,
                     UserId = userId,
                     Code = code,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow,
-                });
+                };
+                PgTimestamps.TouchForInsert(reaction);
+                _items.Add((T)(object)reaction);
                 return 1;
             }
 

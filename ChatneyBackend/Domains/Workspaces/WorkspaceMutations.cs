@@ -21,6 +21,7 @@ public class WorkspaceMutations
         permissions.Require(WorkspacePermissions.CreateWorkspace);
 
         var workspace = Workspace.FromDto(workspaceDto);
+        workspace.SecObjId = await SecureObjectHelper.Create(repos);
         workspace.Id = await repos.Workspaces.InsertOne(workspace);
         await webSocketConnector.SendNewWorkspaceAsync(WebsocketWorkspacePayload.FromWorkspace(workspace));
         return workspace;
