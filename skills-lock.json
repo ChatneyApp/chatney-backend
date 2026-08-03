@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "chatney-rbac-acl": {
+      "source": "ChatneyApp/chatney-skills",
+      "sourceType": "github",
+      "skillPath": "chatney-rbac-acl/SKILL.md",
+      "computedHash": "1414a5182a75323dd0d353a11af52545cbc41038ba09977f24fc364767e659a7"
+    },
     "dotnet-best-practices": {
       "source": "github/awesome-copilot",
       "sourceType": "github",
