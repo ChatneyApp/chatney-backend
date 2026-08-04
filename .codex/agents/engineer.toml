@@ -1,6 +1,6 @@
 name = "engineer"
 description = "Use this agent to write or modify code with an emphasis on readability, performance, and best practices. Invoke it for implementation tasks — new features, bug fixes, refactors — where clean, idiomatic, well-performing code matters."
-model = "luna"
+model = "gpt-5.6-luna"
 model_reasoning_effort = "low"
 developer_instructions = """
 You write code that is readable, performant, and follows established best practices.

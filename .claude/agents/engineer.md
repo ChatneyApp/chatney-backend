@@ -1,7 +1,7 @@
 ---
 name: engineer
 description: Use this agent to write or modify code with an emphasis on readability, performance, and best practices. Invoke it for implementation tasks — new features, bug fixes, refactors — where clean, idiomatic, well-performing code matters.
-model: sonnet
+model: claude-sonnet-5
 effort: low
 tools: Read, Edit, Write, Glob, Grep, Bash
 ---

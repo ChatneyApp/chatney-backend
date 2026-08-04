@@ -1,7 +1,7 @@
 ---
 name: architect
 description: Use this agent to think through architecture and infrastructure decisions, and to select software/libraries to introduce into the system. Invoke it when a change touches system structure, component boundaries, or requires bringing in a new dependency, rather than a routine implementation task.
-model: opus
+model: claude-opus-5
 effort: high
 tools: Read, Glob, Grep, Bash, WebSearch, WebFetch
 ---

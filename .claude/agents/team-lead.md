@@ -1,7 +1,7 @@
 ---
 name: team-lead
 description: Use this agent to coordinate work across multiple subagents, resolve conflicts between their outputs or approaches, and make architectural or design-level calls. Invoke it when subagents disagree, when a decision has long-term consequences, or when a fast patch would trade off against maintainability.
-model: opus
+model: claude-opus-5
 effort: medium
 tools: Read, Glob, Grep, Bash, Agent
 ---

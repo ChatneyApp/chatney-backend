@@ -1,6 +1,6 @@
 name = "team-lead"
 description = "Use this agent to coordinate work across multiple subagents, resolve conflicts between their outputs or approaches, and make architectural or design-level calls. Invoke it when subagents disagree, when a decision has long-term consequences, or when a fast patch would trade off against maintainability."
-model = "terra"
+model = "gpt-5.6-terra"
 model_reasoning_effort = "medium"
 sandbox_mode = "read-only"
 developer_instructions = """

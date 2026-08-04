@@ -1,7 +1,7 @@
 ---
 name: code-reviewer
 description: Use this agent to thoroughly review code changes before they are handed off or merged. Invoke it on diffs, PRs, or completed implementation work to catch naming issues, weak or risky changes, and anything that would seed tech debt — before it reaches production.
-model: opus
+model: claude-opus-5
 effort: high
 tools: Read, Glob, Grep, Bash
 ---
