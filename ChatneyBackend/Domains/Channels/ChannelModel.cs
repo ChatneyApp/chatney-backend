@@ -45,6 +45,8 @@ public class Channel : IPgKey<Channel, int>, IPgTimestamped
     }
 
     public static Expression<Func<Channel, bool>> MatchByKey(int key) => channel => channel.Id == key;
+
+    public static int GetKey(Channel record) => record.Id;
 }
 
 public class ChannelDto : IDto<Channel>

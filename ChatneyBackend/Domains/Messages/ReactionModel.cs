@@ -30,6 +30,9 @@ public class MessageReaction : IPgKey<MessageReaction, MessageReactionKey>, IPgT
         reaction => reaction.MessageId == key.MessageId &&
                     reaction.UserId == key.UserId &&
                     reaction.Code == key.Code;
+
+    public static MessageReactionKey GetKey(MessageReaction record) =>
+        new(record.MessageId, record.UserId, record.Code);
 }
 
 public class WebsocketReactionPayload

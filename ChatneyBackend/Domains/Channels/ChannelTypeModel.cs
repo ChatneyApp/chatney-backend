@@ -41,6 +41,8 @@ public class ChannelType : IPgKey<ChannelType, int>, IPgTimestamped
     }
 
     public static Expression<Func<ChannelType, bool>> MatchByKey(int key) => channelType => channelType.Id == key;
+
+    public static int GetKey(ChannelType record) => record.Id;
 }
 
 public class ChannelTypeDto

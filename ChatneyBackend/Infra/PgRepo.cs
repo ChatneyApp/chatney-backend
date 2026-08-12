@@ -1,7 +1,9 @@
 using System.Collections.Concurrent;
 using System.Linq.Expressions;
+using System.Reflection;
 using Npgsql;
 using RepoDb;
+using RepoDb.Attributes;
 
 namespace ChatneyBackend.Infra;
 
@@ -28,9 +30,11 @@ public static class PgTimestamps
         entity.UpdatedAt = DateTime.UtcNow;
 }
 
-public interface IPgKey<T, in TKey> where T : class
+public interface IPgKey<T, TKey> where T : class
 {
     static abstract Expression<Func<T, bool>> MatchByKey(TKey key);
+
+    static abstract TKey GetKey(T record);
 }
 
 public class PgRepo<T, TKey> : IPgRepo<T, TKey> where T : class, IPgKey<T, TKey>
@@ -38,6 +42,26 @@ public class PgRepo<T, TKey> : IPgRepo<T, TKey> where T : class, IPgKey<T, TKey>
     private readonly NpgsqlDataSource _dataSource;
 
     private static readonly ConcurrentDictionary<Type, Lazy<bool>> _mappedTypes = new();
+
+    /// <summary>
+    /// The [Map] column names of every [Primary] property on T, computed once per closed generic
+    /// type. Null for single-key entities (the common case, where RepoDb's default identity-column
+    /// targeting is correct); non-null for composite-key entities (e.g. RoleAcl, UserAcl), where
+    /// MergeAsync must be told explicitly which columns form the ON CONFLICT target - otherwise it
+    /// only targets the first [Primary] property and Postgres rejects the upsert with 42P10.
+    /// </summary>
+    private static readonly Lazy<Field[]?> _compositeKeyQualifiers = new(BuildCompositeKeyQualifiers);
+
+    private static Field[]? BuildCompositeKeyQualifiers()
+    {
+        var primaryColumns = typeof(T)
+            .GetProperties()
+            .Where(property => property.GetCustomAttribute<PrimaryAttribute>() != null)
+            .Select(property => property.GetCustomAttribute<MapAttribute>()?.Name ?? property.Name)
+            .ToArray();
+
+        return primaryColumns.Length > 1 ? Field.From(primaryColumns).ToArray() : null;
+    }
 
     public PgRepo(NpgsqlDataSource dataSource, string tableName)
     {
@@ -82,6 +106,15 @@ public class PgRepo<T, TKey> : IPgRepo<T, TKey> where T : class, IPgKey<T, TKey>
         }
 
         await using var conn = await OpenAsync();
+
+        if (_compositeKeyQualifiers.Value != null)
+        {
+            // Composite-key entities have no single identity column to return, so
+            // InsertAsync<T, TKey> would try (and fail) to cast the generated identity into TKey.
+            await conn.InsertAsync<T>(record);
+            return T.GetKey(record);
+        }
+
         return await conn.InsertAsync<T, TKey>(record);
     }
 
@@ -131,7 +164,16 @@ public class PgRepo<T, TKey> : IPgRepo<T, TKey> where T : class, IPgKey<T, TKey>
     {
         TouchUpdatedAt(record);
         await using var conn = await OpenAsync();
-        await conn.MergeAsync(record);
+        var qualifiers = _compositeKeyQualifiers.Value;
+
+        if (qualifiers != null)
+        {
+            await conn.MergeAsync(record, qualifiers: qualifiers);
+        }
+        else
+        {
+            await conn.MergeAsync(record);
+        }
     }
 
     public async Task<TResult?> ExecuteScalarAsync<TResult>(string sql, object? param = null)

@@ -1,44 +1,26 @@
-﻿using ChatneyBackend.Infra;
+using ChatneyBackend.Infra;
 using RepoDb.Attributes;
 using ChatneyBackend.Utils;
 using System.Linq.Expressions;
 
 namespace ChatneyBackend.Domains.Users;
 
-public readonly record struct UserRoleKey(Guid UserId, int? ChannelId, int? ChannelTypeId, int? WorkspaceId);
+public readonly record struct UserRoleKey(Guid UserId, int RoleId);
 
 public class UserRole : IPgKey<UserRole, UserRoleKey>
 {
     [Primary]
     [Map("user_id")]
-    public Guid UserId { get; set; }
+    public required Guid UserId { get; set; }
 
     [Primary]
-    [Map("channel_id")]
-    public int? ChannelId { get; set; }
-
-    [Primary]
-    [Map("channel_type_id")]
-    public int? ChannelTypeId { get; set; }
-
-    [Primary]
-    [Map("workspace_id")]
-    public int? WorkspaceId { get; set; }
-
     [Map("role_id")]
     public required int RoleId { get; set; }
 
-    [Map("allowlist")]
-    public required string[] Allowlist { get; set; }
-
-    [Map("denylist")]
-    public required string[] Denylist { get; set; }
-
     public static Expression<Func<UserRole, bool>> MatchByKey(UserRoleKey key) =>
-        role => role.UserId == key.UserId &&
-                role.ChannelId == key.ChannelId &&
-                role.ChannelTypeId == key.ChannelTypeId &&
-                role.WorkspaceId == key.WorkspaceId;
+        role => role.UserId == key.UserId && role.RoleId == key.RoleId;
+
+    public static UserRoleKey GetKey(UserRole record) => new(record.UserId, record.RoleId);
 }
 
 // TODO: move to another model/table
@@ -80,9 +62,6 @@ public class User : IPgKey<User, Guid>, IPgTimestamped
     [Map("avatar_url")]
     public string? AvatarUrl { get; set; }
 
-    [Map("role_id")]
-    public required int RoleId { get; set; }
-
     [Map("password")]
     [GraphQLIgnore]
     public required string Password { get; set; }
@@ -96,6 +75,8 @@ public class User : IPgKey<User, Guid>, IPgTimestamped
     public DateTime UpdatedAt { get; set; }
 
     public static Expression<Func<User, bool>> MatchByKey(Guid key) => user => user.Id == key;
+
+    public static Guid GetKey(User record) => record.Id;
 }
 
 /// <summary>
@@ -126,7 +107,6 @@ public class UserRegisterDto : IDto<User>
             Verified = false,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
-            RoleId = 0,
         };
     }
 }
@@ -150,9 +130,9 @@ public class CreateUserDto : IDto<User>
 
     public required string Email { get; set; }
 
-    public required int RoleId { get; set; }
-
     public required string Password { get; set; }
+
+    public List<int>? RoleIds { get; set; }
 
     public User ToModel()
     {
@@ -165,7 +145,6 @@ public class CreateUserDto : IDto<User>
             Password = Password,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
-            RoleId = RoleId,
             Active = Active,
             Banned = Banned,
             Verified = Verified,
@@ -192,9 +171,9 @@ public class UpdateUserDto
 
     public required string Email { get; set; }
 
-    public required int RoleId { get; set; }
-
     public string? Password { get; set; }
+
+    public required List<int> RoleIds { get; set; }
 }
 
 public class UpdateMyProfileDto
@@ -222,37 +201,23 @@ public class UserLoginResponse
 public class WebsocketUserRolePayload
 {
     public Guid UserId { get; set; }
-    public int? ChannelId { get; set; }
-    public int? ChannelTypeId { get; set; }
-    public int? WorkspaceId { get; set; }
     public int RoleId { get; set; }
-    public string[] Allowlist { get; set; } = [];
-    public string[] Denylist { get; set; } = [];
 
     public static WebsocketUserRolePayload FromUserRole(UserRole userRole) => new()
     {
         UserId = userRole.UserId,
-        ChannelId = userRole.ChannelId,
-        ChannelTypeId = userRole.ChannelTypeId,
-        WorkspaceId = userRole.WorkspaceId,
         RoleId = userRole.RoleId,
-        Allowlist = userRole.Allowlist,
-        Denylist = userRole.Denylist,
     };
 }
 
 public class WebsocketUserRoleDeletedPayload
 {
     public Guid UserId { get; set; }
-    public int? ChannelId { get; set; }
-    public int? ChannelTypeId { get; set; }
-    public int? WorkspaceId { get; set; }
+    public int RoleId { get; set; }
 
     public static WebsocketUserRoleDeletedPayload FromKey(UserRoleKey key) => new()
     {
         UserId = key.UserId,
-        ChannelId = key.ChannelId,
-        ChannelTypeId = key.ChannelTypeId,
-        WorkspaceId = key.WorkspaceId,
+        RoleId = key.RoleId,
     };
 }
