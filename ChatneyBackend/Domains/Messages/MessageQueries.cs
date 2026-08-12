@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using ChatneyBackend.Domains.Channels;
+using ChatneyBackend.Domains.Permissions;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Infra;
 using ChatneyBackend.Infra.Middleware;
@@ -12,7 +12,7 @@ public class MessageQueries
     [Authorize]
     public async Task<MessagesResult> GetListChannelMessages(
         AppRepos repos,
-        RoleManager roleManager,
+        IPermissionResolver resolver,
         ClaimsPrincipal principal,
         int channelId)
     {
@@ -22,21 +22,22 @@ public class MessageQueries
             ChatneyBackend.Infra.ErrorCodes.ThrowForbidden();
         }
 
-        var user = await principal.GetRequiredUser(repos);
-        var permissions = await roleManager.GetUserPermissions(user, RoleScope.FromChannel(channel!));
-        if (!permissions.Can(ChannelPermissions.ReadMessage))
+        var permissions = await resolver.ForChannel(channel!);
+        if (!permissions.Can(Permission.ChannelReadMessage))
         {
             ChatneyBackend.Infra.ErrorCodes.ThrowForbidden();
         }
 
-        return await GetMessagesHydrated(repos, user.Id,
+        var userId = principal.GetUserGuid();
+
+        return await GetMessagesHydrated(repos, userId,
             m => m.ChannelId == channelId && m.ParentId == null);
     }
 
     [Authorize]
     public async Task<MessagesResult> GetListThreadMessages(
         AppRepos repos,
-        RoleManager roleManager,
+        IPermissionResolver resolver,
         ClaimsPrincipal principal,
         int threadId)
     {
@@ -52,14 +53,15 @@ public class MessageQueries
             ChatneyBackend.Infra.ErrorCodes.ThrowForbidden();
         }
 
-        var user = await principal.GetRequiredUser(repos);
-        var permissions = await roleManager.GetUserPermissions(user, RoleScope.FromChannel(channel!));
-        if (!permissions.Can(ChannelPermissions.ReadMessage))
+        var permissions = await resolver.ForChannel(channel!);
+        if (!permissions.Can(Permission.ChannelReadMessage))
         {
             ChatneyBackend.Infra.ErrorCodes.ThrowForbidden();
         }
 
-        return await GetMessagesHydrated(repos, user.Id,
+        var userId = principal.GetUserGuid();
+
+        return await GetMessagesHydrated(repos, userId,
             m => m.ParentId == threadId);
     }
 

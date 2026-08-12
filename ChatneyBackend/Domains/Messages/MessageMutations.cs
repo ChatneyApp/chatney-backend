@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using ChatneyBackend.Domains.Channels;
+using ChatneyBackend.Domains.Permissions;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Infra;
 using ChatneyBackend.Infra.Middleware;
@@ -20,14 +20,13 @@ public class MessageMutations
     [Authorize]
     public async Task<MessageWithUser?> AddMessage(
         AppRepos repos,
-        RoleManager roleManager,
+        IPermissionResolver resolver,
         ClaimsPrincipal principal,
         MessageDto messageDto,
         WebSocketConnector webSocketConnector
     )
     {
-        var user = await principal.GetRequiredUser(repos);
-        var userId = user.Id;
+        var userId = principal.GetUserGuid();
         Message message = Message.FromDto(messageDto, userId);
 
         var channel = await repos.Channels.GetById(message.ChannelId);
@@ -36,8 +35,8 @@ public class MessageMutations
             throw new InvalidOperationException("Channel or user is invalid");
         }
 
-        var permissions = await roleManager.GetUserPermissions(user, RoleScope.FromChannel(channel));
-        permissions.Require(ChannelPermissions.CreateMessage);
+        var permissions = await resolver.ForChannel(channel);
+        permissions.Require(Permission.ChannelCreateMessage);
 
         var parentMessage = message.ParentId != null
             ? await repos.Messages.GetById(message.ParentId.Value)
@@ -126,15 +125,14 @@ public class MessageMutations
     [Authorize]
     public async Task<bool> UpdateMessage(
         AppRepos repos,
-        RoleManager roleManager,
+        IPermissionResolver resolver,
         ClaimsPrincipal principal,
         WebSocketConnector webSocketConnector,
         MessageUpdateDto message)
     {
         try
         {
-            var user = await principal.GetRequiredUser(repos);
-            var userId = user.Id;
+            var userId = principal.GetUserGuid();
             var existingMessage = await repos.Messages.GetById(message.Id);
             if (existingMessage == null)
             {
@@ -149,9 +147,9 @@ public class MessageMutations
                 return false;
             }
 
-            var permissions = await roleManager.GetUserPermissions(user, RoleScope.FromChannel(channel));
-            if (!permissions.Can(ChannelPermissions.EditMessage) &&
-                !(existingMessage.UserId == userId && permissions.Can(ChannelPermissions.EditOwnMessage)))
+            var permissions = await resolver.ForChannel(channel);
+            if (!permissions.Can(Permission.ChannelEditMessage) &&
+                !(existingMessage.UserId == userId && permissions.Can(Permission.ChannelEditOwnMessage)))
             {
                 ChatneyBackend.Infra.ErrorCodes.ThrowForbidden();
                 return false;
@@ -206,12 +204,11 @@ public class MessageMutations
     public async Task<bool> DeleteMessage(
         WebSocketConnector webSocketConnector,
         AppRepos repos,
-        RoleManager roleManager,
+        IPermissionResolver resolver,
         ClaimsPrincipal principal,
         int id)
     {
-        var user = await principal.GetRequiredUser(repos);
-        var userId = user.Id;
+        var userId = principal.GetUserGuid();
         var message = await repos.Messages.GetById(id);
         if (message == null)
         {
@@ -226,9 +223,9 @@ public class MessageMutations
             return false;
         }
 
-        var permissions = await roleManager.GetUserPermissions(user, RoleScope.FromChannel(channel));
-        if (!permissions.Can(ChannelPermissions.DeleteMessage) &&
-            !(message.UserId == userId && permissions.Can(ChannelPermissions.DeleteOwnMessage)))
+        var permissions = await resolver.ForChannel(channel);
+        if (!permissions.Can(Permission.ChannelDeleteMessage) &&
+            !(message.UserId == userId && permissions.Can(Permission.ChannelDeleteOwnMessage)))
         {
             ChatneyBackend.Infra.ErrorCodes.ThrowForbidden();
         }
@@ -281,7 +278,6 @@ public class MessageMutations
     public async Task<ReactionEndpointOutput> AddReaction(
         WebSocketConnector webSocketConnector,
         AppRepos repos,
-        RoleManager roleManager,
         string code,
         int messageId,
         ClaimsPrincipal principal)
@@ -348,7 +344,6 @@ public class MessageMutations
     public async Task<ReactionEndpointOutput> DeleteReaction(
         WebSocketConnector webSocketConnector,
         AppRepos repos,
-        RoleManager roleManager,
         string code,
         int messageId,
         ClaimsPrincipal principal)

@@ -16,12 +16,6 @@ public class Role : IPgKey<Role, int>, IPgTimestamped
     [MaxLength(255)]
     public required string Name { get; set; }
 
-    [Map("is_protected")]
-    public bool IsProtected { get; set; }
-
-    [Map("permissions")]
-    public string[] Permissions { get; set; } = [];
-
     [Map("created_at")]
     public DateTime CreatedAt { get; set; }
 
@@ -33,32 +27,26 @@ public class Role : IPgKey<Role, int>, IPgTimestamped
         return new Role()
         {
             Name = role.Name,
-            Permissions = role.Permissions.ToArray(),
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
-            IsProtected = role.IsProtected,
         };
     }
 
     public void PatchFromDto(RoleUpdateDto role)
     {
         Name = role.Name;
-        Permissions = role.Permissions.ToArray();
         UpdatedAt = DateTime.UtcNow;
-        IsProtected = role.IsProtected;
     }
 
     public static Expression<Func<Role, bool>> MatchByKey(int key) => role => role.Id == key;
+
+    public static int GetKey(Role record) => record.Id;
 }
 
 public class RoleCreateDto
 {
     [MaxLength(255)]
     public required string Name { get; set; }
-
-    public bool IsProtected { get; set; }
-
-    public List<string> Permissions { get; set; } = [];
 }
 
 public class RoleUpdateDto
@@ -67,25 +55,17 @@ public class RoleUpdateDto
 
     [MaxLength(255)]
     public required string Name { get; set; }
-
-    public bool IsProtected { get; set; }
-
-    public List<string> Permissions { get; set; } = [];
 }
 
 public class WebsocketRolePayload
 {
     public int Id { get; set; }
     public required string Name { get; set; }
-    public string[] Permissions { get; set; } = [];
-    public bool IsProtected { get; set; }
 
     public static WebsocketRolePayload FromRole(Role role) => new()
     {
         Id = role.Id,
         Name = role.Name,
-        Permissions = role.Permissions,
-        IsProtected = role.IsProtected,
     };
 }
 

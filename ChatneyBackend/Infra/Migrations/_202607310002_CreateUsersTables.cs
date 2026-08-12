@@ -18,12 +18,9 @@ public class _202607310002_CreateUsersTables : Migration
                 muted boolean NOT NULL DEFAULT false,
                 email varchar(255) NOT NULL UNIQUE,
                 avatar_url text NULL,
-                role_id int NOT NULL,
                 password text NOT NULL,
                 created_at timestamptz NOT NULL DEFAULT NOW(),
-                updated_at timestamptz NOT NULL DEFAULT NOW(),
-                CONSTRAINT fk_users_global_role_id
-                    FOREIGN KEY (role_id) REFERENCES roles(id)
+                updated_at timestamptz NOT NULL DEFAULT NOW()
             );
 
             CREATE TABLE user_roles (
@@ -56,7 +53,6 @@ public class _202607310002_CreateUsersTables : Migration
         var sql = """
             DROP TABLE IF EXISTS user_acls;
             DROP TABLE IF EXISTS user_roles;
-            ALTER TABLE IF EXISTS users DROP CONSTRAINT IF EXISTS fk_users_global_role_id;
             DROP TABLE IF EXISTS users;
         """;
 

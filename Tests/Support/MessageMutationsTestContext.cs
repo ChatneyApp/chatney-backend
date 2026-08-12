@@ -5,6 +5,7 @@ using ChatneyBackend.Domains.Channels;
 using ChatneyBackend.Domains.Configs;
 using ChatneyBackend.Domains.DraftMessages;
 using ChatneyBackend.Domains.Messages;
+using ChatneyBackend.Domains.Permissions;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Domains.Users;
 using ChatneyBackend.Domains.Workspaces;
@@ -29,17 +30,21 @@ public sealed class MessageMutationsTestContext
     public InMemoryPgRepo<Config, int> ConfigsRepo { get; } = new();
     public InMemoryPgRepo<Workspace, int> WorkspacesRepo { get; } = new();
     public InMemoryPgRepo<SecureObject, int> SecureObjectsRepo { get; } = new();
+    public InMemoryPgRepo<RoleAcl, RoleAclKey> RoleAclsRepo { get; } = new();
+    public InMemoryPgRepo<UserAcl, UserAclKey> UserAclsRepo { get; } = new();
 
     public User User { get; }
+    public Workspace Workspace { get; }
+    public ChannelType ChannelType { get; }
     public Channel Channel { get; }
     public Role Role { get; }
     public ClaimsPrincipal Principal { get; }
     public AppRepos Repos { get; }
-    public RoleManager RoleManager { get; }
+    public IPermissionResolver Resolver { get; }
     public RecordingWebSocketConnector WebSocket { get; } = new();
     public MessageMutations Mutations { get; } = new();
 
-    public MessageMutationsTestContext(string[]? permissions = null)
+    public MessageMutationsTestContext(Permission[]? permissions = null)
     {
         User = new User
         {
@@ -48,7 +53,6 @@ public sealed class MessageMutationsTestContext
             FullName = "Test User",
             Email = "test@example.com",
             Password = "password",
-            RoleId = 1,
             Active = true,
             Verified = true,
             Banned = false,
@@ -61,35 +65,46 @@ public sealed class MessageMutationsTestContext
         {
             Id = 1,
             Name = "member",
-            Permissions = permissions ??
-            [
-                ChannelPermissions.CreateMessage,
-                ChannelPermissions.EditMessage,
-                ChannelPermissions.DeleteMessage,
-                ChannelPermissions.EditOwnMessage,
-                ChannelPermissions.DeleteOwnMessage,
-                ChannelPermissions.ReadMessage,
-                ChannelPermissions.ReadChannel,
-            ],
-            IsProtected = true,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
         };
+
+        Workspace = new Workspace { Id = 1, Name = "workspace", SecObjId = 10 };
+        ChannelType = new ChannelType { Id = 1, Name = "type", Key = "type", SecObjId = 20 };
 
         Channel = new Channel
         {
             Id = 1,
             Name = "general",
-            WorkspaceId = 1,
-            ChannelTypeId = 1,
-            SecObjId = 1,
+            WorkspaceId = Workspace.Id,
+            ChannelTypeId = ChannelType.Id,
+            SecObjId = 30,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
         };
 
         UsersRepo.Seed(User);
         RolesRepo.Seed(Role);
+        WorkspacesRepo.Seed(Workspace);
+        ChannelTypesRepo.Seed(ChannelType);
         ChannelsRepo.Seed(Channel);
+        UserRolesRepo.Seed(new UserRole { UserId = User.Id, RoleId = Role.Id });
+
+        RoleAclsRepo.Seed(new RoleAcl
+        {
+            RoleId = Role.Id,
+            SecObjId = Channel.SecObjId,
+            Permissions = permissions ??
+            [
+                Permission.ChannelCreateMessage,
+                Permission.ChannelEditMessage,
+                Permission.ChannelDeleteMessage,
+                Permission.ChannelEditOwnMessage,
+                Permission.ChannelDeleteOwnMessage,
+                Permission.ChannelReadMessage,
+                Permission.ChannelReadChannel,
+            ],
+        });
 
         Principal = new ClaimsPrincipal(new ClaimsIdentity(
         [
@@ -112,9 +127,11 @@ public sealed class MessageMutationsTestContext
             ChannelGroupsRepo,
             ConfigsRepo,
             WorkspacesRepo,
-            SecureObjectsRepo);
+            SecureObjectsRepo,
+            RoleAclsRepo,
+            UserAclsRepo);
 
-        RoleManager = new RoleManager(RolesRepo, UserRolesRepo);
+        Resolver = PermissionResolver.For(Repos, User);
     }
 
     public Message SeedMessage(

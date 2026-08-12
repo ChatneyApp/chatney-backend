@@ -48,6 +48,8 @@ public class DraftMessage : IPgKey<DraftMessage, int>, IPgTimestamped
         };
 
     public static Expression<Func<DraftMessage, bool>> MatchByKey(int key) => message => message.Id == key;
+
+    public static int GetKey(DraftMessage record) => record.Id;
 }
 
 public class DraftMessageDto

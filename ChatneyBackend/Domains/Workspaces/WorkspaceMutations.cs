@@ -1,4 +1,4 @@
-using System.Security.Claims;
+using ChatneyBackend.Domains.Permissions;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Infra;
 using ChatneyBackend.Infra.Middleware;
@@ -11,33 +11,32 @@ public class WorkspaceMutations
     [Authorize]
     public async Task<Workspace> AddWorkspace(
         AppRepos repos,
-        RoleManager roleManager,
-        ClaimsPrincipal principal,
+        IPermissionResolver resolver,
         WorkspaceDto workspaceDto,
         WebSocketConnector webSocketConnector)
     {
-        var user = await principal.GetRequiredUser(repos);
-        var permissions = await roleManager.GetUserPermissions(user, RoleScope.Global());
-        permissions.Require(WorkspacePermissions.CreateWorkspace);
+        var permissions = await resolver.Global();
+        permissions.Require(Permission.WorkspaceCreateWorkspace);
 
         var workspace = Workspace.FromDto(workspaceDto);
-        workspace.SecObjId = await SecureObjectHelper.Create(repos);
+        workspace.SecObjId = await SecureObjectHelper.Create(
+            repos,
+            new SecureObjectDescription { Kind = "workspace", Name = workspace.Name });
         workspace.Id = await repos.Workspaces.InsertOne(workspace);
         await webSocketConnector.SendNewWorkspaceAsync(WebsocketWorkspacePayload.FromWorkspace(workspace));
+        resolver.Invalidate();
         return workspace;
     }
 
     [Authorize]
     public async Task<Workspace?> UpdateWorkspace(
         AppRepos repos,
-        RoleManager roleManager,
-        ClaimsPrincipal principal,
+        IPermissionResolver resolver,
         Workspace workspace,
         WebSocketConnector webSocketConnector)
     {
-        var user = await principal.GetRequiredUser(repos);
-        var permissions = await roleManager.GetUserPermissions(user, RoleScope.FromWorkspace(workspace));
-        permissions.Require(WorkspacePermissions.UpdateWorkspace);
+        var permissions = await resolver.ForWorkspace(workspace);
+        permissions.Require(Permission.WorkspaceUpdateWorkspace);
 
         var updated = await repos.Workspaces.UpdateOne(workspace);
         if (updated)
@@ -50,8 +49,7 @@ public class WorkspaceMutations
     [Authorize]
     public async Task<bool> DeleteWorkspace(
         AppRepos repos,
-        RoleManager roleManager,
-        ClaimsPrincipal principal,
+        IPermissionResolver resolver,
         int id,
         WebSocketConnector webSocketConnector)
     {
@@ -61,9 +59,8 @@ public class WorkspaceMutations
             return false;
         }
 
-        var user = await principal.GetRequiredUser(repos);
-        var permissions = await roleManager.GetUserPermissions(user, RoleScope.FromWorkspace(workspace));
-        permissions.Require(WorkspacePermissions.DeleteWorkspace);
+        var permissions = await resolver.ForWorkspace(workspace);
+        permissions.Require(Permission.WorkspaceDeleteWorkspace);
 
         var deleted = await repos.Workspaces.DeleteById(id);
         if (deleted)

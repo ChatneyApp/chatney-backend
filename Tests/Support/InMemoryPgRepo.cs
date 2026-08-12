@@ -1,8 +1,9 @@
 using System.Collections;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Text.Json;
 using ChatneyBackend.Domains.Messages;
-using ChatneyBackend.Domains.Users;
+using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Infra;
 using Npgsql;
 
@@ -12,6 +13,27 @@ public class InMemoryPgRepo<T, TKey> : IPgRepo<T, TKey> where T : class, IPgKey<
 {
     private readonly List<T> _items = [];
     private readonly object _lock = new();
+    private int _readCallCount;
+
+    /// <summary>Number of GetById/GetOne/GetList calls made against this repo (used to guard against N+1 regressions).</summary>
+    public int ReadCallCount
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return _readCallCount;
+            }
+        }
+    }
+
+    public void ResetReadCallCount()
+    {
+        lock (_lock)
+        {
+            _readCallCount = 0;
+        }
+    }
 
     public IReadOnlyList<T> Items
     {
@@ -40,6 +62,7 @@ public class InMemoryPgRepo<T, TKey> : IPgRepo<T, TKey> where T : class, IPgKey<
     {
         lock (_lock)
         {
+            _readCallCount++;
             return Task.FromResult(_items.ToList());
         }
     }
@@ -48,6 +71,7 @@ public class InMemoryPgRepo<T, TKey> : IPgRepo<T, TKey> where T : class, IPgKey<
     {
         lock (_lock)
         {
+            _readCallCount++;
             var predicate = where.Compile();
             return Task.FromResult(_items.Where(predicate).ToList());
         }
@@ -153,6 +177,11 @@ public class InMemoryPgRepo<T, TKey> : IPgRepo<T, TKey> where T : class, IPgKey<
             return Task.FromResult(ExecuteMessageScalar<TResult>(sql, param));
         }
 
+        if (typeof(T) == typeof(SecureObject))
+        {
+            return Task.FromResult(ExecuteSecureObjectScalar<TResult>(sql, param));
+        }
+
         throw new NotSupportedException($"ExecuteScalarAsync is not supported for {typeof(T).Name}");
     }
 
@@ -180,6 +209,7 @@ public class InMemoryPgRepo<T, TKey> : IPgRepo<T, TKey> where T : class, IPgKey<
     {
         lock (_lock)
         {
+            _readCallCount++;
             var predicate = where.Compile();
             return _items.FirstOrDefault(predicate);
         }
@@ -215,39 +245,17 @@ public class InMemoryPgRepo<T, TKey> : IPgRepo<T, TKey> where T : class, IPgKey<
         }
     }
 
-    private static TKey ReadKey(T record)
-    {
-        if (typeof(T) == typeof(MessageReaction))
-        {
-            var reaction = (MessageReaction)(object)record;
-            return (TKey)(object)new MessageReactionKey(reaction.MessageId, reaction.UserId, reaction.Code);
-        }
-
-        if (typeof(T) == typeof(UserRole))
-        {
-            var userRole = (UserRole)(object)record;
-            return (TKey)(object)new UserRoleKey(
-                userRole.UserId,
-                userRole.ChannelId,
-                userRole.ChannelTypeId,
-                userRole.WorkspaceId);
-        }
-
-        var idProperty = typeof(T).GetProperty("Id", BindingFlags.Public | BindingFlags.Instance)
-            ?? throw new InvalidOperationException($"{typeof(T).Name} does not have an Id property.");
-
-        return (TKey)idProperty.GetValue(record)!;
-    }
+    private static TKey ReadKey(T record) => T.GetKey(record);
 
     private static void SetKey(T record, TKey key)
     {
-        if (typeof(T) == typeof(MessageReaction) || typeof(T) == typeof(UserRole))
+        var idProperty = typeof(T).GetProperty("Id", BindingFlags.Public | BindingFlags.Instance);
+        if (idProperty == null)
         {
+            // Composite-key models don't have a settable "Id" property; identity
+            // assignment only applies to single int-keyed models (see AssignKeyIfNeeded).
             return;
         }
-
-        var idProperty = typeof(T).GetProperty("Id", BindingFlags.Public | BindingFlags.Instance)
-            ?? throw new InvalidOperationException($"{typeof(T).Name} does not have an Id property.");
 
         idProperty.SetValue(record, key);
     }
@@ -257,6 +265,30 @@ public class InMemoryPgRepo<T, TKey> : IPgRepo<T, TKey> where T : class, IPgKey<
         if (record is IPgTimestamped timestamped)
         {
             PgTimestamps.TouchForUpdate(timestamped);
+        }
+    }
+
+    private TResult? ExecuteSecureObjectScalar<TResult>(string sql, object? param)
+    {
+        if (!sql.Contains("INSERT INTO secure_objects", StringComparison.Ordinal))
+        {
+            throw new NotSupportedException($"Unsupported secure_objects SQL: {sql}");
+        }
+
+        var descriptionJson = ReadAnonymousString(param, "Description");
+        var description = descriptionJson == null
+            ? null
+            : JsonSerializer.Deserialize<SecureObjectDescription>(descriptionJson);
+
+        lock (_lock)
+        {
+            var nextId = _items.Count == 0
+                ? 1
+                : _items.Cast<SecureObject>().Select(item => item.Id).Max() + 1;
+
+            var secureObject = new SecureObject { Id = nextId, Description = description };
+            _items.Add((T)(object)secureObject);
+            return (TResult)(object)nextId;
         }
     }
 

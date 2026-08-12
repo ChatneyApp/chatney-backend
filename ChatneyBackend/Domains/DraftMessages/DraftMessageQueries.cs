@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using ChatneyBackend.Domains.Channels;
+using ChatneyBackend.Domains.Permissions;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Infra;
 using ChatneyBackend.Infra.Middleware;
@@ -13,10 +13,9 @@ public class DraftMessageQueries
     public async Task<List<DraftMessage>> GetDraftMessages(
         ClaimsPrincipal principal,
         AppRepos repos,
-        RoleManager roleManager)
+        IPermissionResolver resolver)
     {
-        var user = await principal.GetRequiredUser(repos);
-        var userId = user.Id;
+        var userId = principal.GetUserGuid();
         var drafts = await repos.DraftMessages.GetList(m => m.UserId == userId);
 
         var channelIds = drafts.Select(d => d.ChannelId).Distinct().ToList();
@@ -31,8 +30,8 @@ public class DraftMessageQueries
                 continue;
             }
 
-            var permissions = await roleManager.GetUserPermissions(user, RoleScope.FromChannel(channel));
-            if (permissions.Can(ChannelPermissions.ReadChannel))
+            var permissions = await resolver.ForChannel(channel);
+            if (permissions.Can(Permission.ChannelReadChannel))
             {
                 readableDrafts.Add(draft);
             }

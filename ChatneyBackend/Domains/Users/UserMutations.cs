@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using ChatneyBackend.Domains.Configs;
+using ChatneyBackend.Domains.Permissions;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Infra;
 using ChatneyBackend.Infra.Middleware;
@@ -14,26 +15,43 @@ public class UserMutations
     public async Task<User> CreateUser(
         AppConfig appConfig,
         AppRepos repos,
-        RoleManager roleManager,
-        ClaimsPrincipal principal,
-        CreateUserDto userDto)
+        IPermissionResolver resolver,
+        CreateUserDto userDto,
+        WebSocketConnector webSocketConnector)
     {
-        var currentUser = await principal.GetRequiredUser(repos);
-        var permissions = await roleManager.GetUserPermissions(currentUser, RoleScope.Global());
-        permissions.Require(UserPermissionNames.CreateUser);
+        var permissions = await resolver.Global();
+        permissions.Require(Permission.UserCreateUser);
 
         var nickname = NicknameValidator.NormalizeAndValidate(userDto.Nickname);
         await NicknameValidator.EnsureUnique(repos, nickname);
+
+        List<int> roleIds = userDto.RoleIds is { Count: > 0 } explicitRoleIds
+            ? explicitRoleIds
+            : [await GetDefaultRoleId(repos)];
+        await EnsureRolesExist(repos, roleIds);
 
         var user = userDto.ToModel();
         user.Nickname = nickname;
         user.Password = Helpers.GetMd5Hash(user.Password + appConfig.UserPasswordSalt);
 
         user.Id = await repos.Users.InsertOne(user);
+
+        foreach (var roleId in roleIds)
+        {
+            var userRole = new UserRole { UserId = user.Id, RoleId = roleId };
+            await repos.UserRoles.InsertOne(userRole);
+            await webSocketConnector.SendNewUserRoleAsync(userRole);
+        }
+
+        resolver.Invalidate();
         return user;
     }
 
-    public async Task<User> Register(AppConfig appConfig, AppRepos repos, UserRegisterDto userDto)
+    public async Task<User> Register(
+        AppConfig appConfig,
+        AppRepos repos,
+        IPermissionResolver resolver,
+        UserRegisterDto userDto)
     {
         var nickname = NicknameValidator.NormalizeAndValidate(userDto.Nickname);
         await NicknameValidator.EnsureUnique(repos, nickname);
@@ -42,35 +60,61 @@ public class UserMutations
         user.Nickname = nickname;
         user.Password = Helpers.GetMd5Hash(user.Password + appConfig.UserPasswordSalt);
 
+        var defaultRoleId = await GetDefaultRoleId(repos);
+
+        user.Id = await repos.Users.InsertOne(user);
+        await repos.UserRoles.InsertOne(new UserRole { UserId = user.Id, RoleId = defaultRoleId });
+
+        resolver.Invalidate();
+        return user;
+    }
+
+    private static async Task<int> GetDefaultRoleId(AppRepos repos)
+    {
         var defaultRoleId = await SystemConfigReader.GetIntByName(
             repos.Configs,
             Configs.DomainSettings.NewUserDefaultRole);
+
         if (defaultRoleId == null)
         {
             throw new Exception("New user default role is not configured");
         }
 
-        var userRole = await repos.Roles.GetById(defaultRoleId.Value);
-        if (userRole == null)
+        var defaultRole = await repos.Roles.GetById(defaultRoleId.Value);
+
+        if (defaultRole == null)
         {
             throw new Exception("New user default role not found");
         }
-        user.RoleId = userRole.Id;
 
-        user.Id = await repos.Users.InsertOne(user);
-        return user;
+        return defaultRole.Id;
+    }
+
+    private static async Task EnsureRolesExist(AppRepos repos, IEnumerable<int> roleIds)
+    {
+        var distinctRoleIds = roleIds.ToHashSet();
+
+        if (distinctRoleIds.Count == 0)
+        {
+            return;
+        }
+
+        var existingRoles = await repos.Roles.GetList(role => distinctRoleIds.Contains(role.Id));
+
+        if (existingRoles.Count != distinctRoleIds.Count)
+        {
+            ChatneyBackend.Infra.ErrorCodes.ThrowRoleNotFound();
+        }
     }
 
     [Authorize]
     public async Task<bool> DeleteUser(
         AppRepos repos,
-        RoleManager roleManager,
-        ClaimsPrincipal principal,
+        IPermissionResolver resolver,
         Guid id)
     {
-        var currentUser = await principal.GetRequiredUser(repos);
-        var permissions = await roleManager.GetUserPermissions(currentUser, RoleScope.Global());
-        permissions.Require(UserPermissionNames.DeleteUser);
+        var permissions = await resolver.Global();
+        permissions.Require(Permission.UserDeleteUser);
 
         return await repos.Users.DeleteById(id);
     }
@@ -79,19 +123,20 @@ public class UserMutations
     public async Task<User> UpdateUser(
         AppConfig appConfig,
         AppRepos repos,
-        RoleManager roleManager,
-        ClaimsPrincipal principal,
-        UpdateUserDto userDto)
+        IPermissionResolver resolver,
+        UpdateUserDto userDto,
+        WebSocketConnector webSocketConnector)
     {
-        var currentUser = await principal.GetRequiredUser(repos);
-        var permissions = await roleManager.GetUserPermissions(currentUser, RoleScope.Global());
-        permissions.Require(UserPermissionNames.EditUser);
+        var permissions = await resolver.Global();
+        permissions.Require(Permission.UserEditUser);
 
         var user = await repos.Users.GetById(userDto.Id);
         if (user == null)
         {
             ChatneyBackend.Infra.ErrorCodes.ThrowNotFound();
         }
+
+        await EnsureRolesExist(repos, userDto.RoleIds);
 
         var nickname = NicknameValidator.NormalizeAndValidate(userDto.Nickname);
         if (nickname != user.Nickname)
@@ -106,7 +151,6 @@ public class UserMutations
         user.Verified = userDto.Verified;
         user.Banned = userDto.Banned;
         user.Muted = userDto.Muted;
-        user.RoleId = userDto.RoleId;
 
         if (!string.IsNullOrWhiteSpace(userDto.Password))
         {
@@ -114,6 +158,26 @@ public class UserMutations
         }
 
         await repos.Users.UpdateOne(user);
+
+        var existingUserRoles = await repos.UserRoles.GetList(userRole => userRole.UserId == user.Id);
+        var existingRoleIds = existingUserRoles.Select(userRole => userRole.RoleId).ToHashSet();
+        var desiredRoleIds = userDto.RoleIds.ToHashSet();
+
+        foreach (var roleId in desiredRoleIds.Except(existingRoleIds))
+        {
+            var userRole = new UserRole { UserId = user.Id, RoleId = roleId };
+            await repos.UserRoles.InsertOne(userRole);
+            await webSocketConnector.SendNewUserRoleAsync(userRole);
+        }
+
+        foreach (var roleId in existingRoleIds.Except(desiredRoleIds))
+        {
+            var key = new UserRoleKey(user.Id, roleId);
+            await repos.UserRoles.DeleteById(key);
+            await webSocketConnector.SendDeletedUserRoleAsync(WebsocketUserRoleDeletedPayload.FromKey(key));
+        }
+
+        resolver.Invalidate();
         return user;
     }
 
