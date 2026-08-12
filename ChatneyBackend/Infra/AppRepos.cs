@@ -23,7 +23,9 @@ public class AppRepos(
     IPgRepo<ChannelGroup, int> channelGroups,
     IPgRepo<Config, int> configs,
     IPgRepo<Workspace, int> workspaces,
-    IPgRepo<SecureObject, int> secureObjects)
+    IPgRepo<SecureObject, int> secureObjects,
+    IPgRepo<RoleAcl, RoleAclKey> roleAcls,
+    IPgRepo<UserAcl, UserAclKey> userAcls)
 {
     public IPgRepo<User, Guid> Users { get; } = users;
     public IPgRepo<UserRole, UserRoleKey> UserRoles { get; } = userRoles;
@@ -39,4 +41,6 @@ public class AppRepos(
     public IPgRepo<Config, int> Configs { get; } = configs;
     public IPgRepo<Workspace, int> Workspaces { get; } = workspaces;
     public IPgRepo<SecureObject, int> SecureObjects { get; } = secureObjects;
+    public IPgRepo<RoleAcl, RoleAclKey> RoleAcls { get; } = roleAcls;
+    public IPgRepo<UserAcl, UserAclKey> UserAcls { get; } = userAcls;
 }

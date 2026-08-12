@@ -1,4 +1,4 @@
-using System.Security.Claims;
+using ChatneyBackend.Domains.Permissions;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Infra;
 using ChatneyBackend.Infra.Middleware;
@@ -9,73 +9,51 @@ namespace ChatneyBackend.Domains.Users;
 public class UserRoleMutations
 {
     [Authorize]
-    public async Task<UserRole> AddUserRole(
+    public async Task<UserRole> AssignRole(
         AppRepos repos,
-        RoleManager roleManager,
-        ClaimsPrincipal principal,
-        UserRole userRole,
+        IPermissionResolver resolver,
+        Guid userId,
+        int roleId,
         WebSocketConnector webSocketConnector)
     {
-        var user = await principal.GetRequiredUser(repos);
-        var permissions = await roleManager.GetUserPermissions(user, RoleScope.Global());
-        permissions.Require(UserPermissionNames.EditUser);
+        var permissions = await resolver.Global();
+        permissions.Require(Permission.UserEditUser);
 
-        var key = new UserRoleKey(
-            userRole.UserId,
-            userRole.ChannelId,
-            userRole.ChannelTypeId,
-            userRole.WorkspaceId);
+        var key = new UserRoleKey(userId, roleId);
+        var existing = await repos.UserRoles.GetById(key);
 
-        if (await repos.UserRoles.GetById(key) != null)
+        if (existing != null)
         {
-            ChatneyBackend.Infra.ErrorCodes.ThrowNotFound();
+            return existing;
         }
 
+        var userRole = new UserRole { UserId = userId, RoleId = roleId };
         await repos.UserRoles.InsertOne(userRole);
         await webSocketConnector.SendNewUserRoleAsync(userRole);
+        resolver.Invalidate();
         return userRole;
     }
 
     [Authorize]
-    public async Task<UserRole> UpdateUserRole(
+    public async Task<bool> UnassignRole(
         AppRepos repos,
-        RoleManager roleManager,
-        ClaimsPrincipal principal,
-        UserRole userRole,
+        IPermissionResolver resolver,
+        Guid userId,
+        int roleId,
         WebSocketConnector webSocketConnector)
     {
-        var user = await principal.GetRequiredUser(repos);
-        var permissions = await roleManager.GetUserPermissions(user, RoleScope.Global());
-        permissions.Require(UserPermissionNames.EditUser);
+        var permissions = await resolver.Global();
+        permissions.Require(Permission.UserEditUser);
 
-        var updated = await repos.UserRoles.UpdateOne(userRole);
-        if (!updated)
-        {
-            ChatneyBackend.Infra.ErrorCodes.ThrowNotFound();
-        }
-
-        await webSocketConnector.SendUpdatedUserRoleAsync(userRole);
-        return userRole;
-    }
-
-    [Authorize]
-    public async Task<bool> DeleteUserRole(
-        AppRepos repos,
-        RoleManager roleManager,
-        ClaimsPrincipal principal,
-        UserRoleKey key,
-        WebSocketConnector webSocketConnector)
-    {
-        var user = await principal.GetRequiredUser(repos);
-        var permissions = await roleManager.GetUserPermissions(user, RoleScope.Global());
-        permissions.Require(UserPermissionNames.EditUser);
-
+        var key = new UserRoleKey(userId, roleId);
         var deleted = await repos.UserRoles.DeleteById(key);
+
         if (deleted)
         {
             await webSocketConnector.SendDeletedUserRoleAsync(WebsocketUserRoleDeletedPayload.FromKey(key));
         }
 
+        resolver.Invalidate();
         return deleted;
     }
 }

@@ -60,4 +60,6 @@ public class UrlPreview : IPgKey<UrlPreview, int>, IPgTimestamped
     public int? ThumbnailHeight { get; set; }
 
     public static Expression<Func<UrlPreview, bool>> MatchByKey(int key) => preview => preview.Id == key;
+
+    public static int GetKey(UrlPreview record) => record.Id;
 }

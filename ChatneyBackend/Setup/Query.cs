@@ -18,6 +18,7 @@ public class Query
     public MessageQueries Messages() => new();
     public DraftMessageQueries DraftMessages() => new();
     public PermissionQueries Permissions() => new();
+    public AclQueries Acls() => new();
     public RoleQueries Roles() => new();
     public UserQueries Users() => new();
     public WorkspaceQueries Workspaces() => new();

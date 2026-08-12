@@ -1,4 +1,4 @@
-using System.Security.Claims;
+using ChatneyBackend.Domains.Permissions;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Infra;
 using ChatneyBackend.Infra.Middleware;
@@ -11,33 +11,32 @@ public class ChannelMutations
     [Authorize]
     public async Task<ChannelType> AddChannelType(
         AppRepos repos,
-        RoleManager roleManager,
-        ClaimsPrincipal principal,
+        IPermissionResolver resolver,
         ChannelTypeDto channelTypeDto,
         WebSocketConnector webSocketConnector)
     {
-        var user = await principal.GetRequiredUser(repos);
-        var permissions = await roleManager.GetUserPermissions(user, RoleScope.Global());
-        permissions.Require(ChannelPermissions.CreateChannel);
+        var permissions = await resolver.Global();
+        permissions.Require(Permission.ChannelCreateChannel);
 
         var channelType = ChannelType.FromDto(channelTypeDto);
-        channelType.SecObjId = await SecureObjectHelper.Create(repos);
+        channelType.SecObjId = await SecureObjectHelper.Create(
+            repos,
+            new SecureObjectDescription { Kind = "channelType", Name = channelType.Name });
         channelType.Id = await repos.ChannelTypes.InsertOne(channelType);
         await webSocketConnector.SendNewChannelTypeAsync(WebsocketChannelTypePayload.FromChannelType(channelType));
+        resolver.Invalidate();
         return channelType;
     }
 
     [Authorize]
     public async Task<ChannelType?> UpdateChannelType(
         AppRepos repos,
-        RoleManager roleManager,
-        ClaimsPrincipal principal,
+        IPermissionResolver resolver,
         ChannelType channelType,
         WebSocketConnector webSocketConnector)
     {
-        var user = await principal.GetRequiredUser(repos);
-        var permissions = await roleManager.GetUserPermissions(user, RoleScope.FromChannelType(channelType));
-        permissions.Require(ChannelPermissions.EditChannel);
+        var permissions = await resolver.ForChannelType(channelType);
+        permissions.Require(Permission.ChannelEditChannel);
 
         var updated = await repos.ChannelTypes.UpdateOne(channelType);
         if (updated)
@@ -50,8 +49,7 @@ public class ChannelMutations
     [Authorize]
     public async Task<bool> DeleteChannelType(
         AppRepos repos,
-        RoleManager roleManager,
-        ClaimsPrincipal principal,
+        IPermissionResolver resolver,
         int id,
         WebSocketConnector webSocketConnector)
     {
@@ -61,9 +59,8 @@ public class ChannelMutations
             return false;
         }
 
-        var user = await principal.GetRequiredUser(repos);
-        var permissions = await roleManager.GetUserPermissions(user, RoleScope.FromChannelType(channelType));
-        permissions.Require(ChannelPermissions.DeleteChannelType);
+        var permissions = await resolver.ForChannelType(channelType);
+        permissions.Require(Permission.ChannelDeleteChannelType);
 
         var deleted = await repos.ChannelTypes.DeleteById(id);
         if (deleted)
@@ -76,8 +73,7 @@ public class ChannelMutations
     [Authorize]
     public async Task<Channel> AddChannel(
         AppRepos repos,
-        RoleManager roleManager,
-        ClaimsPrincipal principal,
+        IPermissionResolver resolver,
         ChannelDto channelDto,
         WebSocketConnector webSocketConnector)
     {
@@ -87,28 +83,28 @@ public class ChannelMutations
             ChatneyBackend.Infra.ErrorCodes.ThrowNotFound();
         }
 
-        var user = await principal.GetRequiredUser(repos);
-        var permissions = await roleManager.GetUserPermissions(user, RoleScope.FromWorkspace(workspace!));
-        permissions.Require(ChannelPermissions.CreateChannel);
+        var permissions = await resolver.ForWorkspace(workspace!);
+        permissions.Require(Permission.ChannelCreateChannel);
 
         var channel = channelDto.ToModel();
-        channel.SecObjId = await SecureObjectHelper.Create(repos);
+        channel.SecObjId = await SecureObjectHelper.Create(
+            repos,
+            new SecureObjectDescription { Kind = "channel", Name = channel.Name });
         channel.Id = await repos.Channels.InsertOne(channel);
         await webSocketConnector.SendNewChannelAsync(WebsocketChannelPayload.FromChannel(channel));
+        resolver.Invalidate();
         return channel;
     }
 
     [Authorize]
     public async Task<Channel?> UpdateChannel(
         AppRepos repos,
-        RoleManager roleManager,
-        ClaimsPrincipal principal,
+        IPermissionResolver resolver,
         Channel channel,
         WebSocketConnector webSocketConnector)
     {
-        var user = await principal.GetRequiredUser(repos);
-        var permissions = await roleManager.GetUserPermissions(user, RoleScope.FromChannel(channel));
-        permissions.Require(ChannelPermissions.EditChannel);
+        var permissions = await resolver.ForChannel(channel);
+        permissions.Require(Permission.ChannelEditChannel);
 
         var updated = await repos.Channels.UpdateOne(channel);
         if (updated)
@@ -121,8 +117,7 @@ public class ChannelMutations
     [Authorize]
     public async Task<bool> DeleteChannel(
         AppRepos repos,
-        RoleManager roleManager,
-        ClaimsPrincipal principal,
+        IPermissionResolver resolver,
         int id,
         WebSocketConnector webSocketConnector)
     {
@@ -132,9 +127,8 @@ public class ChannelMutations
             return false;
         }
 
-        var user = await principal.GetRequiredUser(repos);
-        var permissions = await roleManager.GetUserPermissions(user, RoleScope.FromChannel(channel));
-        permissions.Require(ChannelPermissions.DeleteChannel);
+        var permissions = await resolver.ForChannel(channel);
+        permissions.Require(Permission.ChannelDeleteChannel);
 
         var deleted = await repos.Channels.DeleteById(id);
         if (deleted)
@@ -151,8 +145,7 @@ public class ChannelMutations
     [Authorize]
     public async Task<ChannelGroup> AddChannelGroup(
         AppRepos repos,
-        RoleManager roleManager,
-        ClaimsPrincipal principal,
+        IPermissionResolver resolver,
         ChannelGroupDto channelGroupDto)
     {
         var workspace = await repos.Workspaces.GetById(channelGroupDto.WorkspaceId);
@@ -161,9 +154,8 @@ public class ChannelMutations
             ChatneyBackend.Infra.ErrorCodes.ThrowNotFound();
         }
 
-        var user = await principal.GetRequiredUser(repos);
-        var permissions = await roleManager.GetUserPermissions(user, RoleScope.FromWorkspace(workspace!));
-        permissions.Require(ChannelPermissions.AddChannelGroup);
+        var permissions = await resolver.ForWorkspace(workspace!);
+        permissions.Require(Permission.ChannelAddChannelGroup);
 
         var channelGroup = ChannelGroup.FromDto(channelGroupDto);
         channelGroup.Id = await repos.ChannelGroups.InsertOne(channelGroup);
@@ -173,8 +165,7 @@ public class ChannelMutations
     [Authorize]
     public async Task<ChannelGroup?> UpdateChannelGroup(
         AppRepos repos,
-        RoleManager roleManager,
-        ClaimsPrincipal principal,
+        IPermissionResolver resolver,
         ChannelGroup channelGroup)
     {
         var workspace = await repos.Workspaces.GetById(channelGroup.WorkspaceId);
@@ -183,9 +174,8 @@ public class ChannelMutations
             return null;
         }
 
-        var user = await principal.GetRequiredUser(repos);
-        var permissions = await roleManager.GetUserPermissions(user, RoleScope.FromWorkspace(workspace));
-        permissions.Require(ChannelPermissions.EditChannelGroup);
+        var permissions = await resolver.ForWorkspace(workspace);
+        permissions.Require(Permission.ChannelEditChannelGroup);
 
         var updated = await repos.ChannelGroups.UpdateOne(channelGroup);
         return updated ? channelGroup : null;
@@ -194,8 +184,7 @@ public class ChannelMutations
     [Authorize]
     public async Task<bool> DeleteChannelGroup(
         AppRepos repos,
-        RoleManager roleManager,
-        ClaimsPrincipal principal,
+        IPermissionResolver resolver,
         int id)
     {
         var channelGroup = await repos.ChannelGroups.GetById(id);
@@ -210,9 +199,8 @@ public class ChannelMutations
             return false;
         }
 
-        var user = await principal.GetRequiredUser(repos);
-        var permissions = await roleManager.GetUserPermissions(user, RoleScope.FromWorkspace(workspace));
-        permissions.Require(ChannelPermissions.DeleteChannelGroup);
+        var permissions = await resolver.ForWorkspace(workspace);
+        permissions.Require(Permission.ChannelDeleteChannelGroup);
 
         return await repos.ChannelGroups.DeleteById(id);
     }

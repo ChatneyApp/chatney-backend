@@ -11,6 +11,7 @@ using ChatneyBackend.Infra.Middleware;
 using ChatneyBackend.Utils;
 using FluentMigrator.Runner;
 using HotChocolate.Authorization;
+using Npgsql;
 
 namespace ChatneyBackend.Domains.InstallWizard;
 
@@ -25,12 +26,21 @@ public class InstallWizardMutations
     public async Task<InstallSystemResult> InstallSystem(
         AppConfig appConfig,
         AppRepos repos,
-        IMigrationRunner migrationRunner
+        IMigrationRunner migrationRunner,
+        NpgsqlDataSource dataSource
     )
     {
         try
         {
             migrationRunner.MigrateUp();
+
+            // MapEnum registers the 'permission' enum lazily, but Npgsql only loads the
+            // Postgres type catalog once, at the first physical connection open (before
+            // migrations run on a fresh DB). Without reloading+clearing here, every later
+            // read/write of permission[] fails with "Cannot resolve 'permission' to a
+            // fully qualified datatype name" for the rest of the process lifetime.
+            await dataSource.ReloadTypesAsync();
+            dataSource.Clear();
 
             Role? adminRole = await repos.Roles.GetOne(r => r.Name == Roles.DomainSettings.AdminRoleName);
 
@@ -49,8 +59,13 @@ public class InstallWizardMutations
             var userRole = seedRoles.Single(r => r.Name == Roles.DomainSettings.UserRoleName);
             adminRole = seedRoles.Single(r => r.Name == Roles.DomainSettings.AdminRoleName);
 
-            var mainWorkspaceSecObjId = await SecureObjectHelper.Create(repos);
-            var secondaryWorkspaceSecObjId = await SecureObjectHelper.Create(repos);
+            // The admin role must exist before any secure object is created (see
+            // SecureObjectHelper.Create) so every seeded workspace/channel type/channel gets its
+            // admin role_acls row automatically instead of being orphaned under D2.
+            var mainWorkspaceSecObjId = await SecureObjectHelper.Create(
+                repos, new SecureObjectDescription { Kind = "workspace", Name = "Main" });
+            var secondaryWorkspaceSecObjId = await SecureObjectHelper.Create(
+                repos, new SecureObjectDescription { Kind = "workspace", Name = "Secondary" });
 
             List<Workspace> workspaces = new List<Workspace>
             {
@@ -59,8 +74,10 @@ public class InstallWizardMutations
             };
             await repos.Workspaces.InsertBulk(workspaces);
 
-            var publicChannelTypeSecObjId = await SecureObjectHelper.Create(repos);
-            var privateChannelTypeSecObjId = await SecureObjectHelper.Create(repos);
+            var publicChannelTypeSecObjId = await SecureObjectHelper.Create(
+                repos, new SecureObjectDescription { Kind = "channelType", Name = "public" });
+            var privateChannelTypeSecObjId = await SecureObjectHelper.Create(
+                repos, new SecureObjectDescription { Kind = "channelType", Name = "private" });
 
             List<Channels.ChannelType> channelTypes = new List<Channels.ChannelType>
             {
@@ -79,10 +96,14 @@ public class InstallWizardMutations
             };
             await repos.ChannelTypes.InsertBulk(channelTypes);
 
-            var publicChannel1SecObjId = await SecureObjectHelper.Create(repos);
-            var publicChannel2SecObjId = await SecureObjectHelper.Create(repos);
-            var privateChannel1SecObjId = await SecureObjectHelper.Create(repos);
-            var privateChannel2SecObjId = await SecureObjectHelper.Create(repos);
+            var publicChannel1SecObjId = await SecureObjectHelper.Create(
+                repos, new SecureObjectDescription { Kind = "channel", Name = "public 1" });
+            var publicChannel2SecObjId = await SecureObjectHelper.Create(
+                repos, new SecureObjectDescription { Kind = "channel", Name = "public 2" });
+            var privateChannel1SecObjId = await SecureObjectHelper.Create(
+                repos, new SecureObjectDescription { Kind = "channel", Name = "private 1" });
+            var privateChannel2SecObjId = await SecureObjectHelper.Create(
+                repos, new SecureObjectDescription { Kind = "channel", Name = "private 2" });
 
             List<Channels.Channel> channels = new List<Channels.Channel>()
             {
@@ -117,6 +138,9 @@ public class InstallWizardMutations
             };
             await repos.Channels.InsertBulk(channels);
 
+            var roleAcls = DefaultRoles.CreateSeedRoleAcls(seedRoles, mainWorkspaceSecObjId);
+            await repos.RoleAcls.InsertBulk([..roleAcls]);
+
             List<Users.User> users = new()
             {
                 new()
@@ -125,7 +149,6 @@ public class InstallWizardMutations
                     Nickname = "test_user_1",
                     FullName = "Test User 1",
                     Email = "test1@test.com",
-                    RoleId = adminRole.Id,
                     Password = Helpers.GetMd5Hash("123" + appConfig.UserPasswordSalt),
                 },
                 new()
@@ -134,11 +157,17 @@ public class InstallWizardMutations
                     Nickname = "test_user_2",
                     FullName = "Test User 2",
                     Email = "test2@test.com",
-                    RoleId = userRole.Id,
                     Password = Helpers.GetMd5Hash("123" + appConfig.UserPasswordSalt),
                 },
             };
             await repos.Users.InsertBulk(users);
+
+            List<Users.UserRole> userRoles = new()
+            {
+                new() { UserId = users[0].Id, RoleId = adminRole.Id },
+                new() { UserId = users[1].Id, RoleId = userRole.Id },
+            };
+            await repos.UserRoles.InsertBulk(userRoles);
 
             List<Configs.Config> configs = new()
             {
@@ -177,11 +206,11 @@ public class InstallWizardMutations
         };
     }
 
-    public Task<InstallSystemResult> UnInstallSystem(
+    public async Task<InstallSystemResult> UnInstallSystem(
         AppRepos repos,
-        RoleManager roleManager,
         ClaimsPrincipal principal,
-        IMigrationRunner migrationRunner)
+        IMigrationRunner migrationRunner,
+        NpgsqlDataSource dataSource)
     {
         try
         {
@@ -189,19 +218,25 @@ public class InstallWizardMutations
             {
                 migrationRunner.Rollback(1);
             }
+
+            // Down() drops and a subsequent install recreates the 'permission' type with a
+            // DIFFERENT OID. Without reloading+clearing here, the stale cached type info
+            // would send wrong-OID binary traffic on the next install, failing obscurely.
+            await dataSource.ReloadTypesAsync();
+            dataSource.Clear();
         }
         catch (Exception e)
         {
-            return Task.FromResult(new InstallSystemResult()
+            return new InstallSystemResult()
             {
                 status = "failed",
                 message = e.ToString()
-            });
+            };
         }
 
-        return Task.FromResult(new InstallSystemResult()
+        return new InstallSystemResult()
         {
             status = "success"
-        });
+        };
     }
 }

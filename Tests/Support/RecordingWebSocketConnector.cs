@@ -19,8 +19,11 @@ public class RecordingWebSocketConnector : WebSocketConnector
     public List<WebsocketRolePayload> UpdatedRoles { get; } = [];
     public List<WebsocketRoleDeletedPayload> DeletedRoles { get; } = [];
     public List<WebsocketUserRolePayload> NewUserRoles { get; } = [];
-    public List<WebsocketUserRolePayload> UpdatedUserRoles { get; } = [];
     public List<WebsocketUserRoleDeletedPayload> DeletedUserRoles { get; } = [];
+    public List<WebsocketRoleAclPayload> ChangedRoleAcls { get; } = [];
+    public List<WebsocketRoleAclDeletedPayload> DeletedRoleAcls { get; } = [];
+    public List<WebsocketUserAclPayload> ChangedUserAcls { get; } = [];
+    public List<WebsocketUserAclDeletedPayload> DeletedUserAcls { get; } = [];
     public List<WebsocketChannelPayload> NewChannels { get; } = [];
     public List<WebsocketChannelPayload> UpdatedChannels { get; } = [];
     public List<WebsocketChannelDeletedPayload> DeletedChannels { get; } = [];
@@ -91,15 +94,33 @@ public class RecordingWebSocketConnector : WebSocketConnector
         return Task.CompletedTask;
     }
 
-    public override Task SendUpdatedUserRoleAsync(UserRole userRole)
-    {
-        UpdatedUserRoles.Add(WebsocketUserRolePayload.FromUserRole(userRole));
-        return Task.CompletedTask;
-    }
-
     public override Task SendDeletedUserRoleAsync(WebsocketUserRoleDeletedPayload payload)
     {
         DeletedUserRoles.Add(payload);
+        return Task.CompletedTask;
+    }
+
+    public override Task SendRoleAclChangedAsync(WebsocketRoleAclPayload payload)
+    {
+        ChangedRoleAcls.Add(payload);
+        return Task.CompletedTask;
+    }
+
+    public override Task SendRoleAclDeletedAsync(WebsocketRoleAclDeletedPayload payload)
+    {
+        DeletedRoleAcls.Add(payload);
+        return Task.CompletedTask;
+    }
+
+    public override Task SendUserAclChangedAsync(WebsocketUserAclPayload payload)
+    {
+        ChangedUserAcls.Add(payload);
+        return Task.CompletedTask;
+    }
+
+    public override Task SendUserAclDeletedAsync(WebsocketUserAclDeletedPayload payload)
+    {
+        DeletedUserAcls.Add(payload);
         return Task.CompletedTask;
     }
 

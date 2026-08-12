@@ -1,6 +1,6 @@
 using System.Security.Claims;
-using ChatneyBackend.Domains.Channels;
 using ChatneyBackend.Domains.Messages;
+using ChatneyBackend.Domains.Permissions;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Infra;
 using ChatneyBackend.Infra.Middleware;
@@ -13,13 +13,12 @@ public class DraftMessageMutations
     [Authorize]
     public async Task<DraftMessage?> UpdateDraftMessage(
         AppRepos repos,
-        RoleManager roleManager,
+        IPermissionResolver resolver,
         ClaimsPrincipal principal,
         DraftMessageDto messageDto
     )
     {
-        var user = await principal.GetRequiredUser(repos);
-        var userId = user.Id;
+        var userId = principal.GetUserGuid();
         var channel = await repos.Channels.GetById(messageDto.ChannelId);
 
         if (channel == null)
@@ -27,8 +26,8 @@ public class DraftMessageMutations
             throw new InvalidOperationException("Channel or user is invalid");
         }
 
-        var permissions = await roleManager.GetUserPermissions(user, RoleScope.FromChannel(channel));
-        permissions.Require(ChannelPermissions.CreateMessage);
+        var permissions = await resolver.ForChannel(channel);
+        permissions.Require(Permission.ChannelCreateMessage);
 
         var existingMessage = await repos.DraftMessages.GetOne(m =>
             m.UserId == userId &&
@@ -51,11 +50,10 @@ public class DraftMessageMutations
     public async Task<bool> DeleteMessage(
         ClaimsPrincipal principal,
         AppRepos repos,
-        RoleManager roleManager,
+        IPermissionResolver resolver,
         int id)
     {
-        var user = await principal.GetRequiredUser(repos);
-        var userId = user.Id;
+        var userId = principal.GetUserGuid();
         var message = await repos.DraftMessages.GetById(id);
         if (message == null)
         {
@@ -72,8 +70,8 @@ public class DraftMessageMutations
             return false;
         }
 
-        var permissions = await roleManager.GetUserPermissions(user, RoleScope.FromChannel(channel));
-        permissions.Require(ChannelPermissions.ReadChannel);
+        var permissions = await resolver.ForChannel(channel);
+        permissions.Require(Permission.ChannelReadChannel);
 
         try
         {

@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Text.RegularExpressions;
 using Amazon.S3;
 using Amazon.S3.Model;
+using ChatneyBackend.Domains.Permissions;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Infra;
 using ChatneyBackend.Infra.Middleware;
@@ -14,7 +15,7 @@ public class AttachmentMutations
     [Authorize]
     public async Task<Attachment> Upload(
         AppRepos repos,
-        RoleManager roleManager,
+        IPermissionResolver resolver,
         ClaimsPrincipal principal,
         IAmazonS3 s3Client,
         IFile file,
@@ -24,9 +25,8 @@ public class AttachmentMutations
         int? duration
     )
     {
-        var user = await principal.GetRequiredUser(repos);
-        var permissions = await roleManager.GetUserPermissions(user, RoleScope.Global());
-        permissions.Require(AttachmentPermissions.Upload);
+        var permissions = await resolver.Global();
+        permissions.Require(Permission.AttachmentUpload);
 
         if (file == null)
         {

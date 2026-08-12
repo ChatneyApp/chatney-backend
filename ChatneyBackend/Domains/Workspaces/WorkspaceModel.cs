@@ -36,6 +36,8 @@ public class Workspace : IPgKey<Workspace, int>, IPgTimestamped
     }
 
     public static Expression<Func<Workspace, bool>> MatchByKey(int key) => workspace => workspace.Id == key;
+
+    public static int GetKey(Workspace record) => record.Id;
 }
 
 public class WorkspaceDto

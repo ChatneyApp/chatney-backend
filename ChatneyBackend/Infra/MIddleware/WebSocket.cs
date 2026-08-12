@@ -30,8 +30,11 @@ public readonly struct WebSocketPayloadType
     public static readonly WebSocketPayloadType UpdatedRole = new("updatedRole");
     public static readonly WebSocketPayloadType DeletedRole = new("deletedRole");
     public static readonly WebSocketPayloadType NewUserRole = new("newUserRole");
-    public static readonly WebSocketPayloadType UpdatedUserRole = new("updatedUserRole");
     public static readonly WebSocketPayloadType DeletedUserRole = new("deletedUserRole");
+    public static readonly WebSocketPayloadType RoleAclChanged = new("roleAclChanged");
+    public static readonly WebSocketPayloadType RoleAclDeleted = new("roleAclDeleted");
+    public static readonly WebSocketPayloadType UserAclChanged = new("userAclChanged");
+    public static readonly WebSocketPayloadType UserAclDeleted = new("userAclDeleted");
     public static readonly WebSocketPayloadType NewChannel = new("newChannel");
     public static readonly WebSocketPayloadType UpdatedChannel = new("updatedChannel");
     public static readonly WebSocketPayloadType DeletedChannel = new("deletedChannel");
@@ -217,17 +220,33 @@ public class WebSocketConnector
             WebsocketUserRolePayload.FromUserRole(userRole));
     }
 
-    public virtual Task SendUpdatedUserRoleAsync(UserRole userRole)
-    {
-        return SendToUserAsync(
-            userRole.UserId,
-            WebSocketPayloadType.UpdatedUserRole,
-            WebsocketUserRolePayload.FromUserRole(userRole));
-    }
-
     public virtual Task SendDeletedUserRoleAsync(WebsocketUserRoleDeletedPayload payload)
     {
         return SendToUserAsync(payload.UserId, WebSocketPayloadType.DeletedUserRole, payload);
+    }
+    #endregion
+
+    #region Role Acls
+    public virtual Task SendRoleAclChangedAsync(WebsocketRoleAclPayload payload)
+    {
+        return SendToAllAsync(WebSocketPayloadType.RoleAclChanged, payload);
+    }
+
+    public virtual Task SendRoleAclDeletedAsync(WebsocketRoleAclDeletedPayload payload)
+    {
+        return SendToAllAsync(WebSocketPayloadType.RoleAclDeleted, payload);
+    }
+    #endregion
+
+    #region User Acls
+    public virtual Task SendUserAclChangedAsync(WebsocketUserAclPayload payload)
+    {
+        return SendToUserAsync(payload.UserId, WebSocketPayloadType.UserAclChanged, payload);
+    }
+
+    public virtual Task SendUserAclDeletedAsync(WebsocketUserAclDeletedPayload payload)
+    {
+        return SendToUserAsync(payload.UserId, WebSocketPayloadType.UserAclDeleted, payload);
     }
     #endregion
 

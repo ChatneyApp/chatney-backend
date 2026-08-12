@@ -8,6 +8,7 @@ public class ErrorCodes
     public const string NotFound = "NOT_FOUND";
     public const string InvalidNickname = "INVALID_NICKNAME";
     public const string NicknameTaken = "NICKNAME_TAKEN";
+    public const string RoleNotFound = "ROLE_NOT_FOUND";
 
     public static void ThrowForbidden()
     {
@@ -42,6 +43,15 @@ public class ErrorCodes
             ErrorBuilder.New()
                 .SetMessage(NicknameTaken)
                 .SetCode(NicknameTaken)
+                .Build());
+    }
+
+    public static void ThrowRoleNotFound()
+    {
+        throw new GraphQLException(
+            ErrorBuilder.New()
+                .SetMessage(RoleNotFound)
+                .SetCode(RoleNotFound)
                 .Build());
     }
 }

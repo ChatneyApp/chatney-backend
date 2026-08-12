@@ -33,4 +33,6 @@ public class Config : IPgKey<Config, int>, IPgTimestamped
     public DateTime UpdatedAt { get; set; }
 
     public static Expression<Func<Config, bool>> MatchByKey(int key) => config => config.Id == key;
+
+    public static int GetKey(Config record) => record.Id;
 }

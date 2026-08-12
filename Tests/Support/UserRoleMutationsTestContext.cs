@@ -4,6 +4,7 @@ using ChatneyBackend.Domains.Channels;
 using ChatneyBackend.Domains.Configs;
 using ChatneyBackend.Domains.DraftMessages;
 using ChatneyBackend.Domains.Messages;
+using ChatneyBackend.Domains.Permissions;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Domains.Users;
 using ChatneyBackend.Domains.Workspaces;
@@ -28,6 +29,8 @@ public sealed class UserRoleMutationsTestContext
     public InMemoryPgRepo<Config, int> ConfigsRepo { get; } = new();
     public InMemoryPgRepo<Workspace, int> WorkspacesRepo { get; } = new();
     public InMemoryPgRepo<SecureObject, int> SecureObjectsRepo { get; } = new();
+    public InMemoryPgRepo<RoleAcl, RoleAclKey> RoleAclsRepo { get; } = new();
+    public InMemoryPgRepo<UserAcl, UserAclKey> UserAclsRepo { get; } = new();
 
     public User Admin { get; }
     public User TargetUser { get; }
@@ -36,18 +39,16 @@ public sealed class UserRoleMutationsTestContext
     public Workspace Workspace { get; }
     public ClaimsPrincipal Principal { get; }
     public AppRepos Repos { get; }
-    public RoleManager RoleManager { get; }
+    public IPermissionResolver Resolver { get; }
     public RecordingWebSocketConnector WebSocket { get; } = new();
     public UserRoleMutations Mutations { get; } = new();
 
-    public UserRoleMutationsTestContext(string[]? adminPermissions = null)
+    public UserRoleMutationsTestContext(Permission[]? adminPermissions = null)
     {
         AdminRole = new Role
         {
             Id = 1,
             Name = "admin",
-            Permissions = adminPermissions ?? [UserPermissionNames.EditUser],
-            IsProtected = false,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
         };
@@ -56,8 +57,6 @@ public sealed class UserRoleMutationsTestContext
         {
             Id = 2,
             Name = "moderator",
-            Permissions = [ChannelPermissions.EditMessage],
-            IsProtected = false,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
         };
@@ -66,7 +65,7 @@ public sealed class UserRoleMutationsTestContext
         {
             Id = 1,
             Name = "Main",
-            SecObjId = 1,
+            SecObjId = 10,
         };
 
         Admin = new User
@@ -76,7 +75,6 @@ public sealed class UserRoleMutationsTestContext
             FullName = "Admin",
             Email = "admin@example.com",
             Password = "password",
-            RoleId = AdminRole.Id,
             Active = true,
             Verified = true,
             Banned = false,
@@ -92,7 +90,6 @@ public sealed class UserRoleMutationsTestContext
             FullName = "Target User",
             Email = "target@example.com",
             Password = "password",
-            RoleId = AdminRole.Id,
             Active = true,
             Verified = true,
             Banned = false,
@@ -104,6 +101,14 @@ public sealed class UserRoleMutationsTestContext
         RolesRepo.Seed(AdminRole, AssignedRole);
         UsersRepo.Seed(Admin, TargetUser);
         WorkspacesRepo.Seed(Workspace);
+        UserRolesRepo.Seed(new UserRole { UserId = Admin.Id, RoleId = AdminRole.Id });
+
+        RoleAclsRepo.Seed(new RoleAcl
+        {
+            RoleId = AdminRole.Id,
+            SecObjId = SecureObjectIds.Global,
+            Permissions = adminPermissions ?? [Permission.UserEditUser],
+        });
 
         Principal = new ClaimsPrincipal(new ClaimsIdentity(
         [
@@ -126,24 +131,10 @@ public sealed class UserRoleMutationsTestContext
             ChannelGroupsRepo,
             ConfigsRepo,
             WorkspacesRepo,
-            SecureObjectsRepo);
+            SecureObjectsRepo,
+            RoleAclsRepo,
+            UserAclsRepo);
 
-        RoleManager = new RoleManager(RolesRepo, UserRolesRepo);
+        Resolver = PermissionResolver.For(Repos, Admin);
     }
-
-    public UserRole CreateUserRole(
-        Guid? userId = null,
-        int? workspaceId = null,
-        int? roleId = null,
-        string[]? allowlist = null,
-        string[]? denylist = null) => new()
-    {
-        UserId = userId ?? TargetUser.Id,
-        WorkspaceId = workspaceId ?? Workspace.Id,
-        ChannelId = null,
-        ChannelTypeId = null,
-        RoleId = roleId ?? AssignedRole.Id,
-        Allowlist = allowlist ?? [],
-        Denylist = denylist ?? [],
-    };
 }

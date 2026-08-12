@@ -1,7 +1,6 @@
-using System.Security.Claims;
+using ChatneyBackend.Domains.Permissions;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Infra;
-using ChatneyBackend.Infra.Middleware;
 using HotChocolate.Authorization;
 
 namespace ChatneyBackend.Domains.Configs;
@@ -11,13 +10,11 @@ public class ConfigMutations
     [Authorize]
     public async Task<Config?> UpdateConfig(
         AppRepos repos,
-        RoleManager roleManager,
-        ClaimsPrincipal principal,
+        IPermissionResolver resolver,
         Config config)
     {
-        var user = await principal.GetRequiredUser(repos);
-        var permissions = await roleManager.GetUserPermissions(user, RoleScope.Global());
-        permissions.Require(SystemConfigPermissions.UpdateValue);
+        var permissions = await resolver.Global();
+        permissions.Require(Permission.ConfigUpdateValue);
 
         var updated = await repos.Configs.UpdateOne(config);
         return updated ? config : null;
