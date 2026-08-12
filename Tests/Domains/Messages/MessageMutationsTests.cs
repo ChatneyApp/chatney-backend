@@ -1,4 +1,5 @@
 using ChatneyBackend.Domains.Channels;
+using ChatneyBackend.Domains.Permissions;
 using ChatneyBackend.Domains.Messages;
 using ChatneyBackend.Infra;
 using ChatneyBackend.Tests.Support;
@@ -102,7 +103,7 @@ public class MessageMutationsTests
 
     var result = await context.Mutations.AddMessage(
       context.Repos,
-      context.RoleManager,
+      context.Resolver,
       context.Principal,
       dto,
       context.WebSocket);
@@ -127,7 +128,7 @@ public class MessageMutationsTests
     await Assert.ThrowsAsync<InvalidOperationException>(() =>
       context.Mutations.AddMessage(
         context.Repos,
-        context.RoleManager,
+        context.Resolver,
         context.Principal,
         dto,
         context.WebSocket));
@@ -136,7 +137,7 @@ public class MessageMutationsTests
   [Fact]
   public async Task AddMessage_ThrowsWhenCreatePermissionMissing()
   {
-    var context = new MessageMutationsTestContext([ChannelPermissions.ReadMessage]);
+    var context = new MessageMutationsTestContext([Permission.ChannelReadMessage]);
     var dto = new MessageDto
     {
       ChannelId = context.Channel.Id,
@@ -146,12 +147,12 @@ public class MessageMutationsTests
     var exception = await Assert.ThrowsAsync<GraphQLException>(() =>
       context.Mutations.AddMessage(
         context.Repos,
-        context.RoleManager,
+        context.Resolver,
         context.Principal,
         dto,
         context.WebSocket));
 
-    Assert.Equal(ChatneyBackend.Infra.ErrorCodes.ForbiddenAction, exception.Message);
+    Assert.Equal(ChatneyBackend.Infra.ErrorCodes.ForbiddenAction, Assert.Single(exception.Errors).Code);
   }
 
   [Fact]
@@ -169,7 +170,7 @@ public class MessageMutationsTests
 
     await context.Mutations.AddMessage(
       context.Repos,
-      context.RoleManager,
+      context.Resolver,
       context.Principal,
       dto,
       context.WebSocket);
@@ -188,7 +189,7 @@ public class MessageMutationsTests
     await Assert.ThrowsAsync<GraphQLException>(() =>
       context.Mutations.UpdateMessage(
         context.Repos,
-        context.RoleManager,
+        context.Resolver,
         context.Principal,
         context.WebSocket,
         new MessageUpdateDto { Id = 404, Content = "updated" }));
@@ -197,13 +198,13 @@ public class MessageMutationsTests
   [Fact]
   public async Task UpdateMessage_ThrowsForbiddenWithoutPermission()
   {
-    var context = new MessageMutationsTestContext([ChannelPermissions.ReadMessage]);
+    var context = new MessageMutationsTestContext([Permission.ChannelReadMessage]);
     var message = context.SeedMessage(id: 1);
 
     await Assert.ThrowsAsync<GraphQLException>(() =>
       context.Mutations.UpdateMessage(
         context.Repos,
-        context.RoleManager,
+        context.Resolver,
         context.Principal,
         context.WebSocket,
         new MessageUpdateDto { Id = message.Id, Content = "updated" }));
@@ -212,12 +213,12 @@ public class MessageMutationsTests
   [Fact]
   public async Task UpdateMessage_AllowsOwnerToEditOwnMessage()
   {
-    var context = new MessageMutationsTestContext([ChannelPermissions.EditOwnMessage]);
+    var context = new MessageMutationsTestContext([Permission.ChannelEditOwnMessage]);
     var message = context.SeedMessage("before", id: 1);
 
     var updated = await context.Mutations.UpdateMessage(
       context.Repos,
-      context.RoleManager,
+      context.Resolver,
       context.Principal,
       context.WebSocket,
       new MessageUpdateDto { Id = message.Id, Content = "after", AttachmentIds = [5] });
@@ -237,7 +238,7 @@ public class MessageMutationsTests
 
     var updated = await context.Mutations.UpdateMessage(
       context.Repos,
-      context.RoleManager,
+      context.Resolver,
       context.Principal,
       context.WebSocket,
       new MessageUpdateDto { Id = message.Id, Content = "same" });
@@ -255,7 +256,7 @@ public class MessageMutationsTests
       context.Mutations.DeleteMessage(
         context.WebSocket,
         context.Repos,
-        context.RoleManager,
+        context.Resolver,
         context.Principal,
         404));
   }
@@ -263,14 +264,14 @@ public class MessageMutationsTests
   [Fact]
   public async Task DeleteMessage_ThrowsForbiddenWithoutPermission()
   {
-    var context = new MessageMutationsTestContext([ChannelPermissions.ReadMessage]);
+    var context = new MessageMutationsTestContext([Permission.ChannelReadMessage]);
     var message = context.SeedMessage(id: 1);
 
     await Assert.ThrowsAsync<GraphQLException>(() =>
       context.Mutations.DeleteMessage(
         context.WebSocket,
         context.Repos,
-        context.RoleManager,
+        context.Resolver,
         context.Principal,
         message.Id));
   }
@@ -285,7 +286,7 @@ public class MessageMutationsTests
     var deleted = await context.Mutations.DeleteMessage(
       context.WebSocket,
       context.Repos,
-      context.RoleManager,
+      context.Resolver,
       context.Principal,
       parent.Id);
 
@@ -304,7 +305,7 @@ public class MessageMutationsTests
     var deleted = await context.Mutations.DeleteMessage(
       context.WebSocket,
       context.Repos,
-      context.RoleManager,
+      context.Resolver,
       context.Principal,
       reply.Id);
 
@@ -323,7 +324,6 @@ public class MessageMutationsTests
     var result = await context.Mutations.AddReaction(
       context.WebSocket,
       context.Repos,
-      context.RoleManager,
       "thumbsup",
       404,
       context.Principal);
@@ -341,7 +341,6 @@ public class MessageMutationsTests
     var result = await context.Mutations.AddReaction(
       context.WebSocket,
       context.Repos,
-      context.RoleManager,
       "thumbsup",
       message.Id,
       context.Principal);
@@ -361,7 +360,6 @@ public class MessageMutationsTests
     var result = await context.Mutations.DeleteReaction(
       context.WebSocket,
       context.Repos,
-      context.RoleManager,
       "thumbsup",
       message.Id,
       context.Principal);
@@ -384,7 +382,6 @@ public class MessageMutationsTests
     var result = await context.Mutations.DeleteReaction(
       context.WebSocket,
       context.Repos,
-      context.RoleManager,
       "thumbsup",
       message.Id,
       context.Principal);

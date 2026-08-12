@@ -7,106 +7,121 @@ namespace ChatneyBackend.Tests.Domains.Users;
 public class UserRoleMutationsTests
 {
     [Fact]
-    public async Task AddUserRole_StoresUserRoleAndSendsWebSocketToTargetUser()
+    public async Task AssignRole_StoresUserRoleAndSendsWebSocketToTargetUser()
     {
         var context = new UserRoleMutationsTestContext();
-        var userRole = context.CreateUserRole();
 
-        var result = await context.Mutations.AddUserRole(
+        var result = await context.Mutations.AssignRole(
             context.Repos,
-            context.RoleManager,
-            context.Principal,
-            userRole,
+            context.Resolver,
+            context.TargetUser.Id,
+            context.AssignedRole.Id,
             context.WebSocket);
 
         Assert.Equal(context.TargetUser.Id, result.UserId);
         Assert.Equal(context.AssignedRole.Id, result.RoleId);
-        Assert.Equal(context.Workspace.Id, result.WorkspaceId);
-        Assert.Single(context.UserRolesRepo.Items);
 
-        var stored = context.UserRolesRepo.Items.Single();
-        Assert.Equal(context.TargetUser.Id, stored.UserId);
+        var stored = context.UserRolesRepo.Items.Single(userRole => userRole.UserId == context.TargetUser.Id);
         Assert.Equal(context.AssignedRole.Id, stored.RoleId);
 
         Assert.Single(context.WebSocket.NewUserRoles);
-        Assert.Empty(context.WebSocket.UpdatedUserRoles);
         Assert.Equal(context.TargetUser.Id, context.WebSocket.NewUserRoles[0].UserId);
         Assert.Equal(context.AssignedRole.Id, context.WebSocket.NewUserRoles[0].RoleId);
     }
 
     [Fact]
-    public async Task AddUserRole_ThrowsWhenEditUserPermissionMissing()
+    public async Task AssignRole_ThrowsWhenEditUserPermissionMissing()
     {
         var context = new UserRoleMutationsTestContext([]);
-        var userRole = context.CreateUserRole();
 
         var exception = await Assert.ThrowsAsync<GraphQLException>(() =>
-            context.Mutations.AddUserRole(
+            context.Mutations.AssignRole(
                 context.Repos,
-                context.RoleManager,
-                context.Principal,
-                userRole,
+                context.Resolver,
+                context.TargetUser.Id,
+                context.AssignedRole.Id,
                 context.WebSocket));
 
-        Assert.Equal(ChatneyBackend.Infra.ErrorCodes.ForbiddenAction, exception.Message);
-        Assert.Empty(context.UserRolesRepo.Items);
+        Assert.Equal(ChatneyBackend.Infra.ErrorCodes.ForbiddenAction, Assert.Single(exception.Errors).Code);
+        Assert.DoesNotContain(context.UserRolesRepo.Items, userRole => userRole.UserId == context.TargetUser.Id);
         Assert.Empty(context.WebSocket.NewUserRoles);
     }
 
     [Fact]
-    public async Task UpdateUserRole_UpdatesStoredUserRoleAndSendsWebSocketToTargetUser()
+    public async Task AssignRole_IsNoOpWhenAlreadyAssigned()
     {
         var context = new UserRoleMutationsTestContext();
-        var userRole = context.CreateUserRole();
-        context.UserRolesRepo.Seed(userRole);
-
-        userRole.RoleId = context.AdminRole.Id;
-        userRole.Allowlist = ["channel.readChannel"];
-
-        var result = await context.Mutations.UpdateUserRole(
+        await context.Mutations.AssignRole(
             context.Repos,
-            context.RoleManager,
-            context.Principal,
-            userRole,
+            context.Resolver,
+            context.TargetUser.Id,
+            context.AssignedRole.Id,
             context.WebSocket);
 
-        Assert.Equal(context.AdminRole.Id, result.RoleId);
-        Assert.Equal(["channel.readChannel"], result.Allowlist);
+        var result = await context.Mutations.AssignRole(
+            context.Repos,
+            context.Resolver,
+            context.TargetUser.Id,
+            context.AssignedRole.Id,
+            context.WebSocket);
 
-        var stored = context.UserRolesRepo.Items.Single();
-        Assert.Equal(context.AdminRole.Id, stored.RoleId);
-        Assert.Equal(["channel.readChannel"], stored.Allowlist);
-
-        Assert.Empty(context.WebSocket.NewUserRoles);
-        Assert.Single(context.WebSocket.UpdatedUserRoles);
-        Assert.Equal(context.TargetUser.Id, context.WebSocket.UpdatedUserRoles[0].UserId);
-        Assert.Equal(context.AdminRole.Id, context.WebSocket.UpdatedUserRoles[0].RoleId);
+        Assert.Equal(context.AssignedRole.Id, result.RoleId);
+        Assert.Single(context.UserRolesRepo.Items, userRole => userRole.UserId == context.TargetUser.Id);
+        Assert.Single(context.WebSocket.NewUserRoles);
     }
 
     [Fact]
-    public async Task DeleteUserRole_RemovesUserRoleAndSendsWebSocketToTargetUser()
+    public async Task UnassignRole_RemovesUserRoleAndSendsWebSocketToTargetUser()
     {
         var context = new UserRoleMutationsTestContext();
-        var userRole = context.CreateUserRole();
-        context.UserRolesRepo.Seed(userRole);
+        context.UserRolesRepo.Seed(new UserRole { UserId = context.TargetUser.Id, RoleId = context.AssignedRole.Id });
 
-        var key = new UserRoleKey(
-            userRole.UserId,
-            userRole.ChannelId,
-            userRole.ChannelTypeId,
-            userRole.WorkspaceId);
-
-        var deleted = await context.Mutations.DeleteUserRole(
+        var deleted = await context.Mutations.UnassignRole(
             context.Repos,
-            context.RoleManager,
-            context.Principal,
-            key,
+            context.Resolver,
+            context.TargetUser.Id,
+            context.AssignedRole.Id,
             context.WebSocket);
 
         Assert.True(deleted);
-        Assert.Empty(context.UserRolesRepo.Items);
+        Assert.DoesNotContain(context.UserRolesRepo.Items, userRole => userRole.UserId == context.TargetUser.Id);
         Assert.Single(context.WebSocket.DeletedUserRoles);
         Assert.Equal(context.TargetUser.Id, context.WebSocket.DeletedUserRoles[0].UserId);
-        Assert.Equal(context.Workspace.Id, context.WebSocket.DeletedUserRoles[0].WorkspaceId);
+        Assert.Equal(context.AssignedRole.Id, context.WebSocket.DeletedUserRoles[0].RoleId);
+    }
+
+    [Fact]
+    public async Task UnassignRole_ThrowsWhenEditUserPermissionMissing()
+    {
+        var context = new UserRoleMutationsTestContext([]);
+        context.UserRolesRepo.Seed(new UserRole { UserId = context.TargetUser.Id, RoleId = context.AssignedRole.Id });
+
+        var exception = await Assert.ThrowsAsync<GraphQLException>(() =>
+            context.Mutations.UnassignRole(
+                context.Repos,
+                context.Resolver,
+                context.TargetUser.Id,
+                context.AssignedRole.Id,
+                context.WebSocket));
+
+        Assert.Equal(ChatneyBackend.Infra.ErrorCodes.ForbiddenAction, Assert.Single(exception.Errors).Code);
+        Assert.Single(context.UserRolesRepo.Items, userRole => userRole.UserId == context.TargetUser.Id);
+        Assert.Empty(context.WebSocket.DeletedUserRoles);
+    }
+
+    [Fact]
+    public async Task UnassignRole_OnNeverAssignedPair_IsNoOpAndDoesNotBroadcast()
+    {
+        var context = new UserRoleMutationsTestContext();
+
+        var deleted = await context.Mutations.UnassignRole(
+            context.Repos,
+            context.Resolver,
+            context.TargetUser.Id,
+            context.AssignedRole.Id,
+            context.WebSocket);
+
+        Assert.False(deleted);
+        Assert.Empty(context.WebSocket.DeletedUserRoles);
     }
 }
