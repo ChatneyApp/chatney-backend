@@ -1,8 +1,6 @@
-using System.Security.Claims;
+using ChatneyBackend.Domains.Permissions;
 using ChatneyBackend.Domains.Roles;
-using ChatneyBackend.Domains.Workspaces;
 using ChatneyBackend.Infra;
-using ChatneyBackend.Infra.Middleware;
 using HotChocolate.Authorization;
 
 namespace ChatneyBackend.Domains.Channels;
@@ -12,8 +10,7 @@ public class ChannelQueries
     [Authorize]
     public async Task<Channel?> GetChannelById(
         AppRepos repos,
-        RoleManager roleManager,
-        ClaimsPrincipal principal,
+        IPermissionResolver resolver,
         int id)
     {
         var channel = await repos.Channels.GetById(id);
@@ -22,9 +19,8 @@ public class ChannelQueries
             return null;
         }
 
-        var user = await principal.GetRequiredUser(repos);
-        var permissions = await roleManager.GetUserPermissions(user, RoleScope.FromChannel(channel));
-        permissions.Require(ChannelPermissions.ReadChannel);
+        var permissions = await resolver.ForChannel(channel);
+        permissions.Require(Permission.ChannelReadChannel);
 
         return channel;
     }
@@ -32,8 +28,7 @@ public class ChannelQueries
     [Authorize]
     public async Task<Channel?> GetChannelByName(
         AppRepos repos,
-        RoleManager roleManager,
-        ClaimsPrincipal principal,
+        IPermissionResolver resolver,
         string name)
     {
         var channel = await repos.Channels.GetOne(c => c.Name == name);
@@ -42,9 +37,8 @@ public class ChannelQueries
             return null;
         }
 
-        var user = await principal.GetRequiredUser(repos);
-        var permissions = await roleManager.GetUserPermissions(user, RoleScope.FromChannel(channel));
-        permissions.Require(ChannelPermissions.ReadChannel);
+        var permissions = await resolver.ForChannel(channel);
+        permissions.Require(Permission.ChannelReadChannel);
 
         return channel;
     }
@@ -52,8 +46,7 @@ public class ChannelQueries
     [Authorize]
     public async Task<List<Channel>> GetWorkspaceChannelList(
         AppRepos repos,
-        RoleManager roleManager,
-        ClaimsPrincipal principal,
+        IPermissionResolver resolver,
         int workspaceId)
     {
         var workspace = await repos.Workspaces.GetById(workspaceId);
@@ -62,27 +55,7 @@ public class ChannelQueries
             ChatneyBackend.Infra.ErrorCodes.ThrowNotFound();
         }
 
-        var user = await principal.GetRequiredUser(repos);
-
-        var perms = await roleManager.GetUserPermissions(user, RoleScope.Global());
-
-        var haveAccessToAnyChannel = perms.Can(ChannelPermissions.ReadMessage);
-        if (haveAccessToAnyChannel)
-        {
-            return await repos.Channels.GetList(c => c.WorkspaceId == workspaceId);
-        }
-
-        var allUserChannels = await roleManager.GetPermittedChannels(repos, user.Id);
-        var distinctChannelIds = allUserChannels
-            .Select(c => c.Id)
-            .Distinct()
-            .ToList();
-
-        var channels = await repos.Channels.GetList(
-            c => distinctChannelIds.Contains(c.Id) &&
-                 c.WorkspaceId == workspaceId
-        );
-        return channels;
+        return await resolver.VisibleChannels(workspaceId, Permission.ChannelReadChannel);
     }
 
     [Authorize]
@@ -91,8 +64,7 @@ public class ChannelQueries
     [Authorize]
     public async Task<List<ChannelGroup>> GetWorkspaceChannelGroupList(
         AppRepos repos,
-        RoleManager roleManager,
-        ClaimsPrincipal principal,
+        IPermissionResolver resolver,
         int workspaceId)
     {
         var workspace = await repos.Workspaces.GetById(workspaceId);
@@ -101,9 +73,8 @@ public class ChannelQueries
             ChatneyBackend.Infra.ErrorCodes.ThrowNotFound();
         }
 
-        var user = await principal.GetRequiredUser(repos);
-        var permissions = await roleManager.GetUserPermissions(user, RoleScope.FromWorkspace(workspace!));
-        permissions.Require(ChannelPermissions.ReadChannel);
+        var permissions = await resolver.ForWorkspace(workspace!);
+        permissions.Require(Permission.ChannelReadChannel);
 
         return await repos.ChannelGroups.GetList(group => group.WorkspaceId == workspaceId);
     }

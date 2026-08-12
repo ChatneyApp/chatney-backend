@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using ChatneyBackend.Domains.Permissions;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Infra;
 using ChatneyBackend.Infra.Middleware;
@@ -18,7 +19,7 @@ public record UserProfile
 {
     public required User User { get; init; }
 
-    public string? GlobalRoleName { get; init; }
+    public required IReadOnlyList<string> RoleNames { get; init; }
 }
 
 public class UserQueries
@@ -29,19 +30,34 @@ public class UserQueries
         ClaimsPrincipal principal)
     {
         var user = await principal.GetRequiredUser(repos);
-        var role = await repos.Roles.GetById(user.RoleId);
+        var userRoles = await repos.UserRoles.GetList(userRole => userRole.UserId == user.Id);
+        var roleIds = userRoles.Select(userRole => userRole.RoleId).ToList();
+
+        // Matches the same "skip the query for an empty collection" guard AclSnapshotLoader uses -
+        // Contains on an empty roleIds is fail-closed regardless, but this saves a query too.
+        if (roleIds.Count == 0)
+        {
+            return new UserProfile { User = user, RoleNames = [] };
+        }
+
+        var roles = await repos.Roles.GetList(role => roleIds.Contains(role.Id));
 
         return new UserProfile
         {
             User = user,
-            GlobalRoleName = role?.Name,
+            RoleNames = roles.Select(role => role.Name).ToList(),
         };
     }
+
+    /// <summary>The frontend's "what can I do" source - see <see cref="IPermissionResolver.ResolveAll"/>.</summary>
+    [Authorize]
+    public async Task<MyPermissions> MyPermissions(IPermissionResolver resolver) =>
+        await resolver.ResolveAll();
 
     [Authorize]
     public async Task<User?> GetUserById(
         AppRepos repos,
-        RoleManager roleManager,
+        IPermissionResolver resolver,
         ClaimsPrincipal principal,
         Guid id)
     {
@@ -51,9 +67,8 @@ public class UserQueries
             return await repos.Users.GetById(id);
         }
 
-        var currentUser = await principal.GetRequiredUser(repos);
-        var permissions = await roleManager.GetUserPermissions(currentUser, RoleScope.Global());
-        permissions.Require(UserPermissionNames.ReadUser);
+        var permissions = await resolver.Global();
+        permissions.Require(Permission.UserReadUser);
 
         return await repos.Users.GetById(id);
     }
@@ -61,7 +76,7 @@ public class UserQueries
     [Authorize]
     public async Task<User?> GetUserByNickname(
         AppRepos repos,
-        RoleManager roleManager,
+        IPermissionResolver resolver,
         ClaimsPrincipal principal,
         string nickname)
     {
@@ -77,9 +92,8 @@ public class UserQueries
             return user;
         }
 
-        var currentUser = await principal.GetRequiredUser(repos);
-        var permissions = await roleManager.GetUserPermissions(currentUser, RoleScope.Global());
-        permissions.Require(UserPermissionNames.ReadUser);
+        var permissions = await resolver.Global();
+        permissions.Require(Permission.UserReadUser);
 
         return user;
     }
@@ -87,13 +101,11 @@ public class UserQueries
     [Authorize]
     public async Task<List<User>> GetList(
         AppRepos repos,
-        RoleManager roleManager,
-        ClaimsPrincipal principal,
+        IPermissionResolver resolver,
         UserFilter filter)
     {
-        var user = await principal.GetRequiredUser(repos);
-        var permissions = await roleManager.GetUserPermissions(user, RoleScope.Global());
-        permissions.Require(UserPermissionNames.ReadUser);
+        var permissions = await resolver.Global();
+        permissions.Require(Permission.UserReadUser);
 
         var users = await repos.Users.GetList();
 
