@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.Linq.Expressions;
-using ChatneyBackend.Domains.Users;
 using ChatneyBackend.Infra;
 using RepoDb.Attributes;
 
@@ -66,4 +65,6 @@ public class Attachment : IPgKey<Attachment, int>, IPgTimestamped
     public DateTime UpdatedAt { get; set; }
 
     public static Expression<Func<Attachment, bool>> MatchByKey(int key) => attachment => attachment.Id == key;
+
+    public static int GetKey(Attachment record) => record.Id;
 }

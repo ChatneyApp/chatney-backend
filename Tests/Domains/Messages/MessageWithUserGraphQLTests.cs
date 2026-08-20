@@ -25,7 +25,8 @@ public class MessageWithUserJsonTest
             User = new MessageUser
             {
                 Id = Guid.NewGuid(),
-                Name = "User",
+                Nickname = "user",
+                FullName = "User",
                 AvatarUrl = null
             },
             MyReactions = [],

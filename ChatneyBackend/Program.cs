@@ -16,6 +16,7 @@ using UsersDomainSettings = ChatneyBackend.Domains.Users.DomainSettings;
 using MessagesDomainSettings = ChatneyBackend.Domains.Messages.DomainSettings;
 using AttachmentsDomainSettings = ChatneyBackend.Domains.Attachments.DomainSettings;
 using DraftMessagesDomainSettings = ChatneyBackend.Domains.DraftMessages.DomainSettings;
+using RolesDomainSettings = ChatneyBackend.Domains.Roles.DomainSettings;
 using WorkspacesDomainSettings = ChatneyBackend.Domains.Workspaces.DomainSettings;
 using Microsoft.AspNetCore.WebSockets;
 using Amazon.Runtime;
@@ -25,6 +26,7 @@ using ChatneyBackend.Infra;
 using RepoDb;
 using FluentMigrator.Runner;
 using Npgsql;
+using PermissionsDomain = ChatneyBackend.Domains.Permissions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -42,6 +44,7 @@ GlobalConfiguration.Setup().UsePostgreSql();
 var dataSourceBuilder = new NpgsqlDataSourceBuilder(postgresConnectionString);
 dataSourceBuilder.EnableParameterLogging();
 dataSourceBuilder.EnableDynamicJson();
+dataSourceBuilder.MapEnum<PermissionsDomain.Permission>("permission");
 var pgDataSource = dataSourceBuilder.Build();
 
 await using (var pgConnection = await pgDataSource.OpenConnectionAsync())
@@ -71,14 +74,27 @@ var appRepos = new AppRepos(
     channelTypes: new PgRepo<ChannelType, int>(pgDataSource, ChannelDomainSettings.ChannelTypeTableName),
     channelGroups: new PgRepo<ChannelGroup, int>(pgDataSource, ChannelDomainSettings.ChannelGroupTableName),
     configs: new PgRepo<Config, int>(pgDataSource, ConfigsDomainSettings.ConfigTableName),
-    workspaces: new PgRepo<Workspace, int>(pgDataSource, WorkspacesDomainSettings.WorkspaceTableName)
+    workspaces: new PgRepo<Workspace, int>(pgDataSource, WorkspacesDomainSettings.WorkspaceTableName),
+    secureObjects: new PgRepo<SecureObject, int>(pgDataSource, RolesDomainSettings.SecureObjectTableName),
+    roleAcls: new PgRepo<RoleAcl, RoleAclKey>(pgDataSource, RolesDomainSettings.RoleAclTableName),
+    userAcls: new PgRepo<UserAcl, UserAclKey>(pgDataSource, RolesDomainSettings.UserAclTableName)
 );
 
 // Database
 builder.Services.AddSingleton(pgDataSource);
 builder.Services.AddSingleton(_ => new AppConfig { UserPasswordSalt = userPasswordSalt, JwtSecret = jwtSecret });
 builder.Services.AddSingleton(_ => appRepos);
-builder.Services.AddSingleton(_ => new RoleManager(appRepos.Roles));
+builder.Services.AddScoped<IPermissionResolver>(sp =>
+{
+    var http = sp.GetRequiredService<IHttpContextAccessor>().HttpContext;
+    if (http is null)
+    {
+        throw new InvalidOperationException("IPermissionResolver was resolved outside an HTTP request. Use PermissionResolver.For(repos, user) on non-request paths.");
+    }
+
+    var actorId = http.User.Identity?.IsAuthenticated == true ? http.User.GetUserGuid() : (Guid?)null;
+    return new PermissionResolver(sp.GetRequiredService<AppRepos>(), actorId);
+});
 builder.Services
     .AddFluentMigratorCore()
     .ConfigureRunner(runner => runner

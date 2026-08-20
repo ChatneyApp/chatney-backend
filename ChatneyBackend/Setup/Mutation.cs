@@ -17,8 +17,10 @@ public class Mutation
     public MessageMutations Messages() => new();
     public DraftMessageMutations DraftMessages() => new();
     public AttachmentMutations Attachments() => new();
+    public AclMutations Acls() => new();
     public RoleMutations Roles() => new();
-    public UserMutations Users() => new UserMutations();
+    public UserMutations Users() => new();
+    public UserRoleMutations UserRoles() => new();
     public WorkspaceMutations Workspaces() => new();
 
     public InstallWizardMutations InstallWizard() => new();

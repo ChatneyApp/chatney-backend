@@ -1,3 +1,4 @@
+using ChatneyBackend.Domains.Attachments;
 using ChatneyBackend.Domains.Channels;
 using ChatneyBackend.Domains.Configs;
 using ChatneyBackend.Domains.Messages;
@@ -11,11 +12,13 @@ namespace ChatneyBackend.Setup;
 
 public class Query
 {
+    public AttachmentQueries Attachments() => new();
     public ChannelQueries Channels() => new();
     public ConfigQueries Configs() => new();
     public MessageQueries Messages() => new();
     public DraftMessageQueries DraftMessages() => new();
     public PermissionQueries Permissions() => new();
+    public AclQueries Acls() => new();
     public RoleQueries Roles() => new();
     public UserQueries Users() => new();
     public WorkspaceQueries Workspaces() => new();

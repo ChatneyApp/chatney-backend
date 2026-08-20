@@ -3,7 +3,11 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using ChatneyBackend.Domains.Channels;
 using ChatneyBackend.Domains.Messages;
+using ChatneyBackend.Domains.Roles;
+using ChatneyBackend.Domains.Users;
+using ChatneyBackend.Domains.Workspaces;
 
 namespace ChatneyBackend.Infra.Middleware;
 
@@ -22,6 +26,24 @@ public readonly struct WebSocketPayloadType
     public static readonly WebSocketPayloadType DeletedMessage = new("deletedMessage");
     public static readonly WebSocketPayloadType MessageChildrenCountUpdated = new("messageChildrenCountUpdated");
     public static readonly WebSocketPayloadType EditedMessage = new("editedMessage");
+    public static readonly WebSocketPayloadType NewRole = new("newRole");
+    public static readonly WebSocketPayloadType UpdatedRole = new("updatedRole");
+    public static readonly WebSocketPayloadType DeletedRole = new("deletedRole");
+    public static readonly WebSocketPayloadType NewUserRole = new("newUserRole");
+    public static readonly WebSocketPayloadType DeletedUserRole = new("deletedUserRole");
+    public static readonly WebSocketPayloadType RoleAclChanged = new("roleAclChanged");
+    public static readonly WebSocketPayloadType RoleAclDeleted = new("roleAclDeleted");
+    public static readonly WebSocketPayloadType UserAclChanged = new("userAclChanged");
+    public static readonly WebSocketPayloadType UserAclDeleted = new("userAclDeleted");
+    public static readonly WebSocketPayloadType NewChannel = new("newChannel");
+    public static readonly WebSocketPayloadType UpdatedChannel = new("updatedChannel");
+    public static readonly WebSocketPayloadType DeletedChannel = new("deletedChannel");
+    public static readonly WebSocketPayloadType NewChannelType = new("newChannelType");
+    public static readonly WebSocketPayloadType UpdatedChannelType = new("updatedChannelType");
+    public static readonly WebSocketPayloadType DeletedChannelType = new("deletedChannelType");
+    public static readonly WebSocketPayloadType NewWorkspace = new("newWorkspace");
+    public static readonly WebSocketPayloadType UpdatedWorkspace = new("updatedWorkspace");
+    public static readonly WebSocketPayloadType DeletedWorkspace = new("deletedWorkspace");
 
     public override string ToString() => Value;
 
@@ -139,40 +161,171 @@ public class WebSocketConnector
     }
 
     #region Message Reactions
-    public async Task AddReactionAsync(WebsocketReactionPayload reaction)
+    public virtual Task AddReactionAsync(WebsocketReactionPayload reaction)
     {
-        await SendToAllAsync(WebSocketPayloadType.NewReaction, reaction);
+        return SendToAllAsync(WebSocketPayloadType.NewReaction, reaction);
     }
-    public async Task DeleteReactionAsync(WebsocketReactionPayload reaction)
+    public virtual Task DeleteReactionAsync(WebsocketReactionPayload reaction)
     {
-        await SendToAllAsync(WebSocketPayloadType.DeletedReaction, reaction);
+        return SendToAllAsync(WebSocketPayloadType.DeletedReaction, reaction);
     }
     #endregion
 
     #region Messages
-    public async Task SendMessageAsync(MessageWithUser message)
+    public virtual Task SendMessageAsync(MessageWithUser message)
     {
-        await SendToAllAsync(WebSocketPayloadType.NewMessage, message);
+        return SendToAllAsync(WebSocketPayloadType.NewMessage, message);
     }
-    public async Task SendNewMessageAsync(NewMessagePayload payload)
+    public virtual Task SendNewMessageAsync(NewMessagePayload payload)
     {
-        await SendToAllAsync(WebSocketPayloadType.NewMessage, payload);
+        return SendToAllAsync(WebSocketPayloadType.NewMessage, payload);
     }
-    public async Task DeleteMessageAsync(DeletedMessage message)
+    public virtual Task DeleteMessageAsync(DeletedMessage message)
     {
-        await SendToAllAsync(WebSocketPayloadType.DeletedMessage, message);
+        return SendToAllAsync(WebSocketPayloadType.DeletedMessage, message);
     }
-    public async Task UpdateMessageChildrenCountAsync(MessageChildrenCountUpdated message)
+    public virtual Task UpdateMessageChildrenCountAsync(MessageChildrenCountUpdated message)
     {
-        await SendToAllAsync(WebSocketPayloadType.MessageChildrenCountUpdated, message);
+        return SendToAllAsync(WebSocketPayloadType.MessageChildrenCountUpdated, message);
     }
-    public async Task SendEditedMessageAsync(MessageWithUser message)
+    public virtual Task SendEditedMessageAsync(MessageWithUser message)
     {
-        await SendToAllAsync(WebSocketPayloadType.EditedMessage, new EditedMessagePayload { Message = message });
+        return SendToAllAsync(WebSocketPayloadType.EditedMessage, new EditedMessagePayload { Message = message });
     }
     #endregion
 
-    private async Task SendToAllAsync(WebSocketPayloadType type, Object payload)
+    #region Roles
+    public virtual Task SendNewRoleAsync(WebsocketRolePayload role)
+    {
+        return SendToAllAsync(WebSocketPayloadType.NewRole, role);
+    }
+
+    public virtual Task SendUpdatedRoleAsync(WebsocketRolePayload role)
+    {
+        return SendToAllAsync(WebSocketPayloadType.UpdatedRole, role);
+    }
+
+    public virtual Task SendDeletedRoleAsync(WebsocketRoleDeletedPayload role)
+    {
+        return SendToAllAsync(WebSocketPayloadType.DeletedRole, role);
+    }
+    #endregion
+
+    #region User Roles
+    public virtual Task SendNewUserRoleAsync(UserRole userRole)
+    {
+        return SendToUserAsync(
+            userRole.UserId,
+            WebSocketPayloadType.NewUserRole,
+            WebsocketUserRolePayload.FromUserRole(userRole));
+    }
+
+    public virtual Task SendDeletedUserRoleAsync(WebsocketUserRoleDeletedPayload payload)
+    {
+        return SendToUserAsync(payload.UserId, WebSocketPayloadType.DeletedUserRole, payload);
+    }
+    #endregion
+
+    #region Role Acls
+    public virtual Task SendRoleAclChangedAsync(WebsocketRoleAclPayload payload)
+    {
+        return SendToAllAsync(WebSocketPayloadType.RoleAclChanged, payload);
+    }
+
+    public virtual Task SendRoleAclDeletedAsync(WebsocketRoleAclDeletedPayload payload)
+    {
+        return SendToAllAsync(WebSocketPayloadType.RoleAclDeleted, payload);
+    }
+    #endregion
+
+    #region User Acls
+    public virtual Task SendUserAclChangedAsync(WebsocketUserAclPayload payload)
+    {
+        return SendToUserAsync(payload.UserId, WebSocketPayloadType.UserAclChanged, payload);
+    }
+
+    public virtual Task SendUserAclDeletedAsync(WebsocketUserAclDeletedPayload payload)
+    {
+        return SendToUserAsync(payload.UserId, WebSocketPayloadType.UserAclDeleted, payload);
+    }
+    #endregion
+
+    #region Channels
+    public virtual Task SendNewChannelAsync(WebsocketChannelPayload channel)
+    {
+        return SendToAllAsync(WebSocketPayloadType.NewChannel, channel);
+    }
+
+    public virtual Task SendUpdatedChannelAsync(WebsocketChannelPayload channel)
+    {
+        return SendToAllAsync(WebSocketPayloadType.UpdatedChannel, channel);
+    }
+
+    public virtual Task SendDeletedChannelAsync(WebsocketChannelDeletedPayload channel)
+    {
+        return SendToAllAsync(WebSocketPayloadType.DeletedChannel, channel);
+    }
+    #endregion
+
+    #region Channel Types
+    public virtual Task SendNewChannelTypeAsync(WebsocketChannelTypePayload channelType)
+    {
+        return SendToAllAsync(WebSocketPayloadType.NewChannelType, channelType);
+    }
+
+    public virtual Task SendUpdatedChannelTypeAsync(WebsocketChannelTypePayload channelType)
+    {
+        return SendToAllAsync(WebSocketPayloadType.UpdatedChannelType, channelType);
+    }
+
+    public virtual Task SendDeletedChannelTypeAsync(WebsocketChannelTypeDeletedPayload channelType)
+    {
+        return SendToAllAsync(WebSocketPayloadType.DeletedChannelType, channelType);
+    }
+    #endregion
+
+    #region Workspaces
+    public virtual Task SendNewWorkspaceAsync(WebsocketWorkspacePayload workspace)
+    {
+        return SendToAllAsync(WebSocketPayloadType.NewWorkspace, workspace);
+    }
+
+    public virtual Task SendUpdatedWorkspaceAsync(WebsocketWorkspacePayload workspace)
+    {
+        return SendToAllAsync(WebSocketPayloadType.UpdatedWorkspace, workspace);
+    }
+
+    public virtual Task SendDeletedWorkspaceAsync(WebsocketWorkspaceDeletedPayload workspace)
+    {
+        return SendToAllAsync(WebSocketPayloadType.DeletedWorkspace, workspace);
+    }
+    #endregion
+
+    private static bool IsSocketForUser(string socketKey, Guid userId)
+    {
+        var userIdString = userId.ToString();
+        return socketKey == userIdString ||
+               socketKey.StartsWith(userIdString + "--", StringComparison.Ordinal);
+    }
+
+    private Task SendToAllAsync(WebSocketPayloadType type, object payload)
+    {
+        return SendToSocketsAsync(websocketsMapping, type, payload);
+    }
+
+    private Task SendToUserAsync(Guid userId, WebSocketPayloadType type, object payload)
+    {
+        var userSockets = websocketsMapping
+            .Where(kvp => IsSocketForUser(kvp.Key, userId))
+            .ToList();
+
+        return SendToSocketsAsync(userSockets, type, payload);
+    }
+
+    private async Task SendToSocketsAsync(
+        IEnumerable<KeyValuePair<string, WebSocket>> sockets,
+        WebSocketPayloadType type,
+        object payload)
     {
         var options = new JsonSerializerOptions
         {
@@ -191,9 +344,7 @@ public class WebSocketConnector
         var segment = new ArraySegment<byte>(buffer);
         var deadSockets = new List<string>();
 
-        // Console.WriteLine($"Broadcasting: {serializedMessage}");
-
-        foreach (var kvp in websocketsMapping)
+        foreach (var kvp in sockets)
         {
             var socket = kvp.Value;
 
@@ -201,7 +352,6 @@ public class WebSocketConnector
             {
                 try
                 {
-                    // Console.WriteLine($"Sending to {kvp.Key}");
                     await socket.SendAsync(segment, WebSocketMessageType.Text, true, CancellationToken.None);
                 }
                 catch (Exception ex)
@@ -216,8 +366,6 @@ public class WebSocketConnector
                 deadSockets.Add(kvp.Key);
             }
         }
-
-        // Console.WriteLine("cleaning up");
 
         foreach (var deadSocket in deadSockets)
         {

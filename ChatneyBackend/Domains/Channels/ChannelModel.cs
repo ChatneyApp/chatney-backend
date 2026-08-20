@@ -23,6 +23,9 @@ public class Channel : IPgKey<Channel, int>, IPgTimestamped
     [Map("workspace_id")]
     public int WorkspaceId { get; set; }
 
+    [Map("sec_obj_id")]
+    public int SecObjId { get; set; }
+
     [Map("created_at")]
     public DateTime CreatedAt { get; set; }
 
@@ -42,6 +45,8 @@ public class Channel : IPgKey<Channel, int>, IPgTimestamped
     }
 
     public static Expression<Func<Channel, bool>> MatchByKey(int key) => channel => channel.Id == key;
+
+    public static int GetKey(Channel record) => record.Id;
 }
 
 public class ChannelDto : IDto<Channel>
@@ -54,4 +59,26 @@ public class ChannelDto : IDto<Channel>
     public int WorkspaceId { get; set; }
 
     public Channel ToModel() => Channel.FromDto(this);
+}
+
+public class WebsocketChannelPayload
+{
+    public int Id { get; set; }
+    public required string Name { get; set; }
+    public int ChannelTypeId { get; set; }
+    public int WorkspaceId { get; set; }
+
+    public static WebsocketChannelPayload FromChannel(Channel channel) => new()
+    {
+        Id = channel.Id,
+        Name = channel.Name,
+        ChannelTypeId = channel.ChannelTypeId,
+        WorkspaceId = channel.WorkspaceId,
+    };
+}
+
+public class WebsocketChannelDeletedPayload
+{
+    public int Id { get; set; }
+    public int WorkspaceId { get; set; }
 }

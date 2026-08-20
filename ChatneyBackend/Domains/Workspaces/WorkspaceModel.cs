@@ -16,6 +16,9 @@ public class Workspace : IPgKey<Workspace, int>, IPgTimestamped
     [MaxLength(255)]
     public required string Name { get; set; }
 
+    [Map("sec_obj_id")]
+    public int SecObjId { get; set; }
+
     [Map("created_at")]
     public DateTime CreatedAt { get; set; }
 
@@ -33,10 +36,29 @@ public class Workspace : IPgKey<Workspace, int>, IPgTimestamped
     }
 
     public static Expression<Func<Workspace, bool>> MatchByKey(int key) => workspace => workspace.Id == key;
+
+    public static int GetKey(Workspace record) => record.Id;
 }
 
 public class WorkspaceDto
 {
     [MaxLength(255)]
     public required string Name { get; set; }
+}
+
+public class WebsocketWorkspacePayload
+{
+    public int Id { get; set; }
+    public required string Name { get; set; }
+
+    public static WebsocketWorkspacePayload FromWorkspace(Workspace workspace) => new()
+    {
+        Id = workspace.Id,
+        Name = workspace.Name,
+    };
+}
+
+public class WebsocketWorkspaceDeletedPayload
+{
+    public int Id { get; set; }
 }

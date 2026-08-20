@@ -1,27 +1,54 @@
 # chatney-backend
-Open-source Chat Api 
 
-## Installation and running
-0. Install docker, env-cmd (`npm i env-cmd -g`) and wgo (dev runner for go with file watch).
-1. Setup MongoDB and Minio `docker compose up -d` or just run `make install`
-2. Start dev server `env-cmd -f .env.test wgo run server.go` or just run `make dev`
+[![Unit Tests](https://github.com/ChatneyApp/chatney-backend/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/ChatneyApp/chatney-backend/actions/workflows/unit-tests.yml)
 
-## Playground
-1. GraphQl Playground hosted on `localhost:8080`, but I recommend using Altair Chrome Extension.
-2. Test Minio bucket browser - `localhost:9001`. User: `minioadmin`, pass: `miniopass`.
-3. Mongo database Admin dashboard - `localhost:8081`
-4. Mongo Connection URI `mongodb://root:pass@mongo:27017/chatney`
+.NET 9 GraphQL API for Chatney — PostgreSQL, HotChocolate, WebSockets, and S3-compatible file storage.
 
-## Development
+## Prerequisites
 
-## Minio
+- [.NET 9 SDK](https://dotnet.microsoft.com/download)
+- [Docker](https://www.docker.com/)
 
-```shell
-$env:aws_access_key_id="admin"
-$env:aws_secret_access_key="admin"
-$env:aws_endpoint_url="http://localhost:9000"
-aws s3 ls
+## Quick start
 
-# test:
-curl -H "Content-Type: image/png" -sS --data-binary @mario.png -X PUT "${URL}"
+```bash
+make compose    # start Postgres, RustFS (S3), and Kafka
+make restore    # restore NuGet packages
+make dev        # run API with hot reload
 ```
+
+API: **http://localhost:3001**
+
+## Local services
+
+| Service | URL | Credentials |
+| --- | --- | --- |
+| GraphQL | http://localhost:3001/query | Banana Cake Pop (dev only) |
+| WebSocket | `ws://localhost:3001/ws?userId={guid}` | — |
+| PostgreSQL | `localhost:5432/chatney` | `root` / `pass` |
+| RustFS (S3 API) | http://localhost:9000 | `admin` / `admin` |
+| RustFS console | http://localhost:9001 | `admin` / `admin` |
+
+## Configuration
+
+Dev settings: `ChatneyBackend/appsettings.Development.json`
+
+Required values: Postgres connection string, `UserPasswordSalt`, `JwtSecret`, and AWS/S3 credentials for attachments.
+
+## First-time setup
+
+After the API is running, call the `installWizard { installSystem }` GraphQL mutation to run migrations and seed base roles.
+
+## Tests
+
+```bash
+dotnet test Tests/Tests.csproj
+```
+
+## Project layout
+
+- `ChatneyBackend/Domains/` — models, queries, mutations
+- `ChatneyBackend/Infra/` — repo layer, middleware, migrations
+- `Tests/` — unit tests
+
+See `ChatneyBackend/AGENTS.md` for coding conventions.

@@ -1,4 +1,7 @@
 using System.Security.Claims;
+using ChatneyBackend.Domains.Messages;
+using ChatneyBackend.Domains.Permissions;
+using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Infra;
 using ChatneyBackend.Infra.Middleware;
 using HotChocolate.Authorization;
@@ -10,21 +13,24 @@ public class DraftMessageMutations
     [Authorize]
     public async Task<DraftMessage?> UpdateDraftMessage(
         AppRepos repos,
+        IPermissionResolver resolver,
         ClaimsPrincipal principal,
         DraftMessageDto messageDto
     )
     {
-        var user = await repos.Users.GetById(principal.GetUserGuid());
-
+        var userId = principal.GetUserGuid();
         var channel = await repos.Channels.GetById(messageDto.ChannelId);
 
-        if (channel == null || user == null)
+        if (channel == null)
         {
             throw new InvalidOperationException("Channel or user is invalid");
         }
 
+        var permissions = await resolver.ForChannel(channel);
+        permissions.Require(Permission.ChannelCreateMessage);
+
         var existingMessage = await repos.DraftMessages.GetOne(m =>
-            m.UserId == principal.GetUserGuid() &&
+            m.UserId == userId &&
             m.ChannelId == messageDto.ChannelId &&
             m.ParentId == messageDto.ParentId
         );
@@ -35,17 +41,37 @@ public class DraftMessageMutations
             await repos.DraftMessages.UpdateOne(existingMessage);
             return existingMessage;
         }
-        DraftMessage message = DraftMessage.FromDto(messageDto, principal.GetUserGuid());
+        DraftMessage message = DraftMessage.FromDto(messageDto, userId);
         await repos.DraftMessages.InsertOne(message);
         return message;
     }
 
     [Authorize]
-    public async Task<bool> DeleteMessage(ClaimsPrincipal principal, AppRepos repos, int id)
+    public async Task<bool> DeleteMessage(
+        ClaimsPrincipal principal,
+        AppRepos repos,
+        IPermissionResolver resolver,
+        int id)
     {
+        var userId = principal.GetUserGuid();
         var message = await repos.DraftMessages.GetById(id);
-        if (message == null) return false;
-        if (message.UserId != principal.GetUserGuid()) return false;
+        if (message == null)
+        {
+            return false;
+        }
+        if (message.UserId != userId)
+        {
+            return false;
+        }
+
+        var channel = await repos.Channels.GetById(message.ChannelId);
+        if (channel == null)
+        {
+            return false;
+        }
+
+        var permissions = await resolver.ForChannel(channel);
+        permissions.Require(Permission.ChannelReadChannel);
 
         try
         {
@@ -57,5 +83,4 @@ public class DraftMessageMutations
             return false;
         }
     }
-
 }
