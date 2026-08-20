@@ -73,6 +73,7 @@ var appRepos = new AppRepos(
     channels: new PgRepo<Channel, int>(pgDataSource, ChannelDomainSettings.ChannelTableName),
     channelTypes: new PgRepo<ChannelType, int>(pgDataSource, ChannelDomainSettings.ChannelTypeTableName),
     channelGroups: new PgRepo<ChannelGroup, int>(pgDataSource, ChannelDomainSettings.ChannelGroupTableName),
+    channelMembers: new PgRepo<ChannelMember, ChannelMemberKey>(pgDataSource, ChannelDomainSettings.ChannelMemberTableName),
     configs: new PgRepo<Config, int>(pgDataSource, ConfigsDomainSettings.ConfigTableName),
     workspaces: new PgRepo<Workspace, int>(pgDataSource, WorkspacesDomainSettings.WorkspaceTableName),
     secureObjects: new PgRepo<SecureObject, int>(pgDataSource, RolesDomainSettings.SecureObjectTableName),

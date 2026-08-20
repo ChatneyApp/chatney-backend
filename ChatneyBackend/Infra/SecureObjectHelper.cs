@@ -34,16 +34,24 @@ public static class SecureObjectHelper
     }
 
     /// <summary>
-    /// Creates a new secure object with the given description and, if the admin role already
-    /// exists, grants it every object-scoped permission on the new object. Without this, D2 means a
-    /// newly created workspace/channel-type/channel would be invisible to EVERYONE, including admin.
+    /// Creates a new secure object with the given description and, if <paramref name="grantAdminRole"/>
+    /// is true and the admin role already exists, grants it every object-scoped permission on the
+    /// new object. Without this, D2 means a newly created workspace/channel-type/channel would be
+    /// invisible to EVERYONE, including admin.
+    ///
+    /// Pass <c>grantAdminRole: false</c> for objects that must stay private to explicit user ACLs
+    /// (direct-message channels and the <c>dm</c> channel type). An admin grant on those objects
+    /// would let admins list and read every DM via the channel-type/channel chain.
     ///
     /// Ordering note: this only works if the admin role has already been seeded by the time the
     /// first workspace/channel-type/channel is created (true for the normal install flow - see
     /// InstallWizardMutations). If the admin role does not exist yet, no role_acls row is written
     /// here and the object is left without an admin grant rather than throwing.
     /// </summary>
-    public static async Task<int> Create(AppRepos repos, SecureObjectDescription description)
+    public static async Task<int> Create(
+        AppRepos repos,
+        SecureObjectDescription description,
+        bool grantAdminRole = true)
     {
         // RepoDb 1.13.1 pins the @Description parameter's NpgsqlDbType to Text before Npgsql's
         // dynamic-JSON path is reachable, so InsertOne(new SecureObject { Description = ... }) throws
@@ -53,16 +61,19 @@ public static class SecureObjectHelper
             "INSERT INTO secure_objects (description) VALUES (@Description::jsonb) RETURNING id",
             new { Description = JsonSerializer.Serialize(description) });
 
-        var adminRole = await repos.Roles.GetOne(role => role.Name == DomainSettings.AdminRoleName);
-
-        if (adminRole != null)
+        if (grantAdminRole)
         {
-            await repos.RoleAcls.Upsert(new RoleAcl
+            var adminRole = await repos.Roles.GetOne(role => role.Name == DomainSettings.AdminRoleName);
+
+            if (adminRole != null)
             {
-                RoleId = adminRole.Id,
-                SecObjId = secObjId,
-                Permissions = [.. ObjectScopedPermissions],
-            });
+                await repos.RoleAcls.Upsert(new RoleAcl
+                {
+                    RoleId = adminRole.Id,
+                    SecObjId = secObjId,
+                    Permissions = [.. ObjectScopedPermissions],
+                });
+            }
         }
 
         return secObjId;

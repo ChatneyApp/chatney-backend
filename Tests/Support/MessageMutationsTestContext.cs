@@ -27,6 +27,7 @@ public sealed class MessageMutationsTestContext
     public InMemoryPgRepo<Channel, int> ChannelsRepo { get; } = new();
     public InMemoryPgRepo<ChannelType, int> ChannelTypesRepo { get; } = new();
     public InMemoryPgRepo<ChannelGroup, int> ChannelGroupsRepo { get; } = new();
+    public InMemoryPgRepo<ChannelMember, ChannelMemberKey> ChannelMembersRepo { get; } = new();
     public InMemoryPgRepo<Config, int> ConfigsRepo { get; } = new();
     public InMemoryPgRepo<Workspace, int> WorkspacesRepo { get; } = new();
     public InMemoryPgRepo<SecureObject, int> SecureObjectsRepo { get; } = new();
@@ -125,6 +126,7 @@ public sealed class MessageMutationsTestContext
             ChannelsRepo,
             ChannelTypesRepo,
             ChannelGroupsRepo,
+            ChannelMembersRepo,
             ConfigsRepo,
             WorkspacesRepo,
             SecureObjectsRepo,
