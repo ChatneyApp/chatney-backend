@@ -161,13 +161,13 @@ public class WebSocketConnector
     }
 
     #region Message Reactions
-    public virtual Task AddReactionAsync(WebsocketReactionPayload reaction)
+    public virtual Task AddReactionAsync(WebsocketReactionPayload reaction, IReadOnlyList<Guid>? memberUserIds)
     {
-        return SendToAllAsync(WebSocketPayloadType.NewReaction, reaction);
+        return SendForMembersOrAllAsync(memberUserIds, WebSocketPayloadType.NewReaction, reaction);
     }
-    public virtual Task DeleteReactionAsync(WebsocketReactionPayload reaction)
+    public virtual Task DeleteReactionAsync(WebsocketReactionPayload reaction, IReadOnlyList<Guid>? memberUserIds)
     {
-        return SendToAllAsync(WebSocketPayloadType.DeletedReaction, reaction);
+        return SendForMembersOrAllAsync(memberUserIds, WebSocketPayloadType.DeletedReaction, reaction);
     }
     #endregion
 
@@ -176,21 +176,26 @@ public class WebSocketConnector
     {
         return SendToAllAsync(WebSocketPayloadType.NewMessage, message);
     }
-    public virtual Task SendNewMessageAsync(NewMessagePayload payload)
+    public virtual Task SendNewMessageAsync(NewMessagePayload payload, IReadOnlyList<Guid>? memberUserIds)
     {
-        return SendToAllAsync(WebSocketPayloadType.NewMessage, payload);
+        return SendForMembersOrAllAsync(memberUserIds, WebSocketPayloadType.NewMessage, payload);
     }
-    public virtual Task DeleteMessageAsync(DeletedMessage message)
+    public virtual Task DeleteMessageAsync(DeletedMessage message, IReadOnlyList<Guid>? memberUserIds)
     {
-        return SendToAllAsync(WebSocketPayloadType.DeletedMessage, message);
+        return SendForMembersOrAllAsync(memberUserIds, WebSocketPayloadType.DeletedMessage, message);
     }
-    public virtual Task UpdateMessageChildrenCountAsync(MessageChildrenCountUpdated message)
+    public virtual Task UpdateMessageChildrenCountAsync(
+        MessageChildrenCountUpdated message,
+        IReadOnlyList<Guid>? memberUserIds)
     {
-        return SendToAllAsync(WebSocketPayloadType.MessageChildrenCountUpdated, message);
+        return SendForMembersOrAllAsync(memberUserIds, WebSocketPayloadType.MessageChildrenCountUpdated, message);
     }
-    public virtual Task SendEditedMessageAsync(MessageWithUser message)
+    public virtual Task SendEditedMessageAsync(MessageWithUser message, IReadOnlyList<Guid>? memberUserIds)
     {
-        return SendToAllAsync(WebSocketPayloadType.EditedMessage, new EditedMessagePayload { Message = message });
+        return SendForMembersOrAllAsync(
+            memberUserIds,
+            WebSocketPayloadType.EditedMessage,
+            new EditedMessagePayload { Message = message });
     }
     #endregion
 
@@ -253,12 +258,12 @@ public class WebSocketConnector
     #region Channels
     public virtual Task SendNewChannelAsync(WebsocketChannelPayload channel)
     {
-        return SendToAllAsync(WebSocketPayloadType.NewChannel, channel);
+        return SendForMembersOrAllAsync(channel.MemberUserIds, WebSocketPayloadType.NewChannel, channel);
     }
 
     public virtual Task SendUpdatedChannelAsync(WebsocketChannelPayload channel)
     {
-        return SendToAllAsync(WebSocketPayloadType.UpdatedChannel, channel);
+        return SendForMembersOrAllAsync(channel.MemberUserIds, WebSocketPayloadType.UpdatedChannel, channel);
     }
 
     public virtual Task SendDeletedChannelAsync(WebsocketChannelDeletedPayload channel)
@@ -320,6 +325,29 @@ public class WebSocketConnector
             .ToList();
 
         return SendToSocketsAsync(userSockets, type, payload);
+    }
+
+    private Task SendToUsersAsync(IReadOnlyList<Guid> userIds, WebSocketPayloadType type, object payload)
+    {
+        var userIdSet = userIds.ToHashSet();
+        var userSockets = websocketsMapping
+            .Where(kvp => userIdSet.Any(userId => IsSocketForUser(kvp.Key, userId)))
+            .ToList();
+
+        return SendToSocketsAsync(userSockets, type, payload);
+    }
+
+    private Task SendForMembersOrAllAsync(
+        IReadOnlyList<Guid>? memberUserIds,
+        WebSocketPayloadType type,
+        object payload)
+    {
+        if (memberUserIds is { Count: > 0 })
+        {
+            return SendToUsersAsync(memberUserIds, type, payload);
+        }
+
+        return SendToAllAsync(type, payload);
     }
 
     private async Task SendToSocketsAsync(

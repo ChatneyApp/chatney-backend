@@ -78,6 +78,10 @@ public class InstallWizardMutations
                 repos, new SecureObjectDescription { Kind = "channelType", Name = "public" });
             var privateChannelTypeSecObjId = await SecureObjectHelper.Create(
                 repos, new SecureObjectDescription { Kind = "channelType", Name = "private" });
+            var dmChannelTypeSecObjId = await SecureObjectHelper.Create(
+                repos,
+                new SecureObjectDescription { Kind = "channelType", Name = Channels.DomainSettings.DmChannelTypeName },
+                grantAdminRole: false);
 
             List<Channels.ChannelType> channelTypes = new List<Channels.ChannelType>
             {
@@ -92,6 +96,12 @@ public class InstallWizardMutations
                     Name = "private",
                     Key = "private",
                     SecObjId = privateChannelTypeSecObjId,
+                },
+                new()
+                {
+                    Name = Channels.DomainSettings.DmChannelTypeName,
+                    Key = Channels.DomainSettings.DmChannelTypeKey,
+                    SecObjId = dmChannelTypeSecObjId,
                 },
             };
             await repos.ChannelTypes.InsertBulk(channelTypes);

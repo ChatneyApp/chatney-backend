@@ -94,4 +94,25 @@ public class SecureObjectHelperTests
 
         Assert.False(permissions.Can(Permission.WorkspaceReadWorkspace));
     }
+
+    [Fact]
+    public async Task Create_GrantAdminRoleFalse_WritesNoAdminRoleAcl()
+    {
+        var ctx = new PermissionResolverTestContext();
+        var adminRole = new Role
+        {
+            Id = 100,
+            Name = ChatneyBackend.Domains.Roles.DomainSettings.AdminRoleName,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
+        };
+        ctx.RolesRepo.Seed(adminRole);
+
+        var secObjId = await SecureObjectHelper.Create(
+            ctx.Repos,
+            new SecureObjectDescription { Kind = "channel", Name = "DM" },
+            grantAdminRole: false);
+
+        Assert.DoesNotContain(ctx.RoleAclsRepo.Items, acl => acl.SecObjId == secObjId);
+    }
 }
