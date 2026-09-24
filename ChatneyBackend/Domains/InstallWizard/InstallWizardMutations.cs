@@ -159,6 +159,7 @@ public class InstallWizardMutations
                     Nickname = "test_user_1",
                     FullName = "Test User 1",
                     Email = "test1@test.com",
+                    Active = true,
                     Password = Helpers.GetMd5Hash("123" + appConfig.UserPasswordSalt),
                 },
                 new()
@@ -167,6 +168,7 @@ public class InstallWizardMutations
                     Nickname = "test_user_2",
                     FullName = "Test User 2",
                     Email = "test2@test.com",
+                    Active = true,
                     Password = Helpers.GetMd5Hash("123" + appConfig.UserPasswordSalt),
                 },
             };
