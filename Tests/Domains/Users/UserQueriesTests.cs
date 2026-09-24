@@ -74,4 +74,30 @@ public class UserQueriesTests
         Assert.NotNull(profile.RoleNames);
         Assert.Empty(profile.RoleNames);
     }
+
+    [Fact]
+    public async Task SearchByNickname_ReturnsPublicMatches_WithoutUserReadUser()
+    {
+        var context = new UserRoleMutationsTestContext([]);
+        var queries = new UserQueries();
+
+        var results = await queries.SearchByNickname(context.Repos, context.Principal, "tar");
+
+        Assert.Single(results);
+        Assert.Equal(context.TargetUser.Id, results[0].Id);
+        Assert.Equal(context.TargetUser.Nickname, results[0].Nickname);
+    }
+
+    [Fact]
+    public async Task SearchByNickname_ExcludesSelfAndEmptyPrefix()
+    {
+        var context = new UserRoleMutationsTestContext([]);
+        var queries = new UserQueries();
+
+        var selfMatches = await queries.SearchByNickname(context.Repos, context.Principal, "admin");
+        var empty = await queries.SearchByNickname(context.Repos, context.Principal, "   ");
+
+        Assert.Empty(selfMatches);
+        Assert.Empty(empty);
+    }
 }

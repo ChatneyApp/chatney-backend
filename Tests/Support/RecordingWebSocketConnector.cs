@@ -34,37 +34,39 @@ public class RecordingWebSocketConnector : WebSocketConnector
     public List<WebsocketWorkspacePayload> UpdatedWorkspaces { get; } = [];
     public List<WebsocketWorkspaceDeletedPayload> DeletedWorkspaces { get; } = [];
 
-    public override Task SendNewMessageAsync(NewMessagePayload payload)
+    public override Task SendNewMessageAsync(NewMessagePayload payload, IReadOnlyList<Guid>? memberUserIds)
     {
         NewMessages.Add(payload);
         return Task.CompletedTask;
     }
 
-    public override Task SendEditedMessageAsync(MessageWithUser message)
+    public override Task SendEditedMessageAsync(MessageWithUser message, IReadOnlyList<Guid>? memberUserIds)
     {
         EditedMessages.Add(message);
         return Task.CompletedTask;
     }
 
-    public override Task DeleteMessageAsync(DeletedMessage message)
+    public override Task DeleteMessageAsync(DeletedMessage message, IReadOnlyList<Guid>? memberUserIds)
     {
         DeletedMessages.Add(message);
         return Task.CompletedTask;
     }
 
-    public override Task UpdateMessageChildrenCountAsync(MessageChildrenCountUpdated message)
+    public override Task UpdateMessageChildrenCountAsync(
+        MessageChildrenCountUpdated message,
+        IReadOnlyList<Guid>? memberUserIds)
     {
         ChildrenCountUpdates.Add(message);
         return Task.CompletedTask;
     }
 
-    public override Task AddReactionAsync(WebsocketReactionPayload reaction)
+    public override Task AddReactionAsync(WebsocketReactionPayload reaction, IReadOnlyList<Guid>? memberUserIds)
     {
         AddedReactions.Add(reaction);
         return Task.CompletedTask;
     }
 
-    public override Task DeleteReactionAsync(WebsocketReactionPayload reaction)
+    public override Task DeleteReactionAsync(WebsocketReactionPayload reaction, IReadOnlyList<Guid>? memberUserIds)
     {
         DeletedReactions.Add(reaction);
         return Task.CompletedTask;

@@ -21,6 +21,7 @@ public class AppRepos(
     IPgRepo<Channel, int> channels,
     IPgRepo<ChannelType, int> channelTypes,
     IPgRepo<ChannelGroup, int> channelGroups,
+    IPgRepo<ChannelMember, ChannelMemberKey> channelMembers,
     IPgRepo<Config, int> configs,
     IPgRepo<Workspace, int> workspaces,
     IPgRepo<SecureObject, int> secureObjects,
@@ -38,6 +39,7 @@ public class AppRepos(
     public IPgRepo<Channel, int> Channels { get; } = channels;
     public IPgRepo<ChannelType, int> ChannelTypes { get; } = channelTypes;
     public IPgRepo<ChannelGroup, int> ChannelGroups { get; } = channelGroups;
+    public IPgRepo<ChannelMember, ChannelMemberKey> ChannelMembers { get; } = channelMembers;
     public IPgRepo<Config, int> Configs { get; } = configs;
     public IPgRepo<Workspace, int> Workspaces { get; } = workspaces;
     public IPgRepo<SecureObject, int> SecureObjects { get; } = secureObjects;

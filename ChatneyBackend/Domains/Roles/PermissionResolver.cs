@@ -84,8 +84,8 @@ public sealed class AclSnapshot
         Workspaces = workspaces;
     }
 
-    public int? WorkspaceSecObjId(int workspaceId) =>
-        _workspaceSecObjIds.TryGetValue(workspaceId, out var secObjId) ? secObjId : null;
+    public int? WorkspaceSecObjId(int? workspaceId) =>
+        workspaceId is int id && _workspaceSecObjIds.TryGetValue(id, out var secObjId) ? secObjId : null;
 
     public int? ChannelTypeSecObjId(int channelTypeId) =>
         _channelTypeSecObjIds.TryGetValue(channelTypeId, out var secObjId) ? secObjId : null;
@@ -349,7 +349,7 @@ public sealed class PermissionResolver : IPermissionResolver
         var snapshot = await GetSnapshot();
 
         return snapshot.Channels
-            .Where(channel => workspaceId is null || channel.WorkspaceId == workspaceId)
+            .Where(channel => workspaceId is null || (!channel.IsDm && channel.WorkspaceId == workspaceId))
             .Where(channel => snapshot.Resolve(BuildChannelChain(snapshot, channel)).Contains(permission))
             .ToList();
     }

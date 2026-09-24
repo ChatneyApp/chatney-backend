@@ -78,6 +78,10 @@ public class InstallWizardMutations
                 repos, new SecureObjectDescription { Kind = "channelType", Name = "public" });
             var privateChannelTypeSecObjId = await SecureObjectHelper.Create(
                 repos, new SecureObjectDescription { Kind = "channelType", Name = "private" });
+            var dmChannelTypeSecObjId = await SecureObjectHelper.Create(
+                repos,
+                new SecureObjectDescription { Kind = "channelType", Name = Channels.DomainSettings.DmChannelTypeName },
+                grantAdminRole: false);
 
             List<Channels.ChannelType> channelTypes = new List<Channels.ChannelType>
             {
@@ -92,6 +96,12 @@ public class InstallWizardMutations
                     Name = "private",
                     Key = "private",
                     SecObjId = privateChannelTypeSecObjId,
+                },
+                new()
+                {
+                    Name = Channels.DomainSettings.DmChannelTypeName,
+                    Key = Channels.DomainSettings.DmChannelTypeKey,
+                    SecObjId = dmChannelTypeSecObjId,
                 },
             };
             await repos.ChannelTypes.InsertBulk(channelTypes);
@@ -149,6 +159,7 @@ public class InstallWizardMutations
                     Nickname = "test_user_1",
                     FullName = "Test User 1",
                     Email = "test1@test.com",
+                    Active = true,
                     Password = Helpers.GetMd5Hash("123" + appConfig.UserPasswordSalt),
                 },
                 new()
@@ -157,6 +168,7 @@ public class InstallWizardMutations
                     Nickname = "test_user_2",
                     FullName = "Test User 2",
                     Email = "test2@test.com",
+                    Active = true,
                     Password = Helpers.GetMd5Hash("123" + appConfig.UserPasswordSalt),
                 },
             };

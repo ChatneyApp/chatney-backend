@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using ChatneyBackend.Domains.Channels;
 using ChatneyBackend.Domains.Permissions;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Infra;
@@ -52,7 +53,7 @@ public class MessageMutations
             {
                 ChildrenCount = childrenCount,
                 MessageId = parentMessage.Id
-            });
+            }, await ChannelMembership.FanoutUserIds(repos, channel));
         }
 
         message.UrlPreviewIds = await ExtractUrlPreviewIds(repos, message.Content);
@@ -69,7 +70,7 @@ public class MessageMutations
             {
                 Message = messageWithUser,
                 ReplyTo = replyRef,
-            });
+            }, await ChannelMembership.FanoutUserIds(repos, channel));
             return messageWithUser;
         }
         catch (Exception ex)
@@ -182,7 +183,9 @@ public class MessageMutations
                 var messageWithUser = result.Messages.FirstOrDefault();
                 if (messageWithUser != null)
                 {
-                    await webSocketConnector.SendEditedMessageAsync(messageWithUser);
+                    await webSocketConnector.SendEditedMessageAsync(
+                        messageWithUser,
+                        await ChannelMembership.FanoutUserIds(repos, channel));
                 }
                 return true;
             }
@@ -251,7 +254,7 @@ public class MessageMutations
                     {
                         ChildrenCount = childrenCount,
                         MessageId = parentMessage.Id
-                    });
+                    }, await ChannelMembership.FanoutUserIds(repos, channel));
                 }
             }
 
@@ -260,7 +263,7 @@ public class MessageMutations
             {
                 ChannelId = message.ChannelId,
                 MessageId = message.Id
-            });
+            }, await ChannelMembership.FanoutUserIds(repos, channel));
             return result;
         }
         catch (GraphQLException)
@@ -319,7 +322,7 @@ public class MessageMutations
                 UserId = userId,
                 MessageId = messageId,
                 ChannelId = message.ChannelId
-            });
+            }, await ChannelMembership.FanoutUserIds(repos, channel));
 
             return new ReactionEndpointOutput()
             {
@@ -394,7 +397,7 @@ public class MessageMutations
                 UserId = userId,
                 MessageId = messageId,
                 ChannelId = message.ChannelId
-            });
+            }, await ChannelMembership.FanoutUserIds(repos, channel));
 
             return new ReactionEndpointOutput
             {

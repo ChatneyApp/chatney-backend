@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using ChatneyBackend.Domains.Channels;
 using ChatneyBackend.Domains.Permissions;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Infra;
@@ -136,5 +137,38 @@ public class UserQueries
         }
 
         return users;
+    }
+
+    [Authorize]
+    public async Task<List<DirectMessageUser>> SearchByNickname(
+        AppRepos repos,
+        ClaimsPrincipal principal,
+        string prefix)
+    {
+        var trimmed = prefix.Trim();
+        if (trimmed.Length == 0)
+        {
+            return [];
+        }
+
+        var actorId = principal.GetUserGuid();
+        var users = await repos.Users.GetList();
+        const int limit = 20;
+
+        return users
+            .Where(user =>
+                user.Id != actorId &&
+                user.Active &&
+                !user.Banned &&
+                user.Nickname.StartsWith(trimmed, StringComparison.OrdinalIgnoreCase))
+            .OrderBy(user => user.Nickname, StringComparer.OrdinalIgnoreCase)
+            .Take(limit)
+            .Select(user => new DirectMessageUser
+            {
+                Id = user.Id,
+                Nickname = user.Nickname,
+                AvatarUrl = user.AvatarUrl,
+            })
+            .ToList();
     }
 }

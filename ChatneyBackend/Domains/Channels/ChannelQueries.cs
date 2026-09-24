@@ -1,6 +1,8 @@
+using System.Security.Claims;
 using ChatneyBackend.Domains.Permissions;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Infra;
+using ChatneyBackend.Infra.Middleware;
 using HotChocolate.Authorization;
 
 namespace ChatneyBackend.Domains.Channels;
@@ -56,6 +58,31 @@ public class ChannelQueries
         }
 
         return await resolver.VisibleChannels(workspaceId, Permission.ChannelReadChannel);
+    }
+
+    [Authorize]
+    public async Task<List<DirectMessage>> GetDirectMessageList(
+        AppRepos repos,
+        ClaimsPrincipal principal)
+    {
+        var actorId = principal.GetUserGuid();
+        var memberships = await repos.ChannelMembers.GetList(member => member.UserId == actorId);
+        if (memberships.Count == 0)
+        {
+            return [];
+        }
+
+        var channelIds = memberships.Select(member => member.ChannelId).ToList();
+        var channels = await repos.Channels.GetList(channel =>
+            channelIds.Contains(channel.Id) && channel.IsDm);
+
+        var result = new List<DirectMessage>(channels.Count);
+        foreach (var channel in channels)
+        {
+            result.Add(await ChannelMembership.ToDirectMessage(repos, channel, actorId));
+        }
+
+        return result;
     }
 
     [Authorize]
