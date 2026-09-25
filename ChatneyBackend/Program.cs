@@ -136,11 +136,8 @@ builder.Services.AddControllers();
 const string devOpenCors = "DevOpenCors";
 const string prodCors = "ProdCors";
 
-string[] allowedProdOrigins =
-[
-    "http://localhost:3001",
-    "https://chatney.com"
-];
+string[] allowedProdOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+    ?? ["http://localhost:3001", "https://chatney.com"];
 
 builder.Services.AddCors(options =>
 {
