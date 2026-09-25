@@ -1,0 +1,29 @@
+include:
+  - docker-compose.yaml
+
+services:
+  backend:
+    build:
+      context: ./ChatneyBackend
+    container_name: chatney-backend
+    # restarts until postgres accepts connections (no healthcheck in base compose)
+    restart: on-failure
+    depends_on:
+      - postgres
+      - rustfs-init
+    ports:
+      - "3001:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__dbName: chatney
+      ConnectionStrings__Postgres: Host=postgres;Port=5432;Database=chatney;Username=root;Password=pass
+      UserPasswordSalt: local-prod-test-salt
+      JwtSecret: local-prod-test-jwt-secret-at-least-32-chars
+      AWS__Region: us-east-1
+      AWS__AccessKey: admin
+      AWS__SecretKey: admin
+      AWS__ServiceUrl: http://rustfs:9000
+      AWS__ForcePathStyle: "true"
+      AWS__Bucket: chatney
+#   TODO
+#  frontend:

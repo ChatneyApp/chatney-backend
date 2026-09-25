@@ -101,7 +101,8 @@ public class UserRegisterDto : IDto<User>
             FullName = string.IsNullOrWhiteSpace(FullName) ? null : FullName.Trim(),
             Email = Email,
             Password = Password,
-            Active = false,
+            // TODO: set to TRUE if email confirmation required
+            Active = true,
             Muted = false,
             Banned = false,
             Verified = false,
