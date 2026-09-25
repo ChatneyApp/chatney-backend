@@ -16,14 +16,11 @@
         <PackageReference Include="FluentMigrator" Version="8.0.1" />
         <PackageReference Include="FluentMigrator.Runner" Version="8.0.1" />
         <PackageReference Include="FluentMigrator.Runner.Postgres" Version="8.0.1" />
-        <PackageReference Include="Microsoft.AspNetCore.WebSockets" Version="2.3.13" />
         <PackageReference Include="HotChocolate" Version="15.1.8" />
         <PackageReference Include="HotChocolate.AspNetCore" Version="15.1.8" />
         <PackageReference Include="HotChocolate.AspNetCore.Authorization" Version="15.1.8" />
         <PackageReference Include="HotChocolate.AspNetCore.CommandLine" Version="15.1.8" />
         <PackageReference Include="HotChocolate.Types.Analyzers" Version="15.1.8" />
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.12" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.12" />
         <PackageReference Include="Npgsql" Version="10.0.3" />
         <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.23.0" />
     </ItemGroup>
