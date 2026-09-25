@@ -83,7 +83,7 @@ public class PgRepo<T, TKey> : IPgRepo<T, TKey> where T : class, IPgKey<T, TKey>
     public async Task<T?> GetOne(Expression<Func<T, bool>> where)
     {
         await using var conn = await OpenAsync();
-        return (await conn.QueryAsync(where, top: 1)).FirstOrDefault();
+        return (await conn.QueryAsync(SpanContainsRewriter.Rewrite(where), top: 1)).FirstOrDefault();
     }
 
     public async Task<List<T>> GetList()
@@ -95,7 +95,7 @@ public class PgRepo<T, TKey> : IPgRepo<T, TKey> where T : class, IPgKey<T, TKey>
     public async Task<List<T>> GetList(Expression<Func<T, bool>> where)
     {
         await using var conn = await OpenAsync();
-        return (await conn.QueryAsync(where)).ToList();
+        return (await conn.QueryAsync(SpanContainsRewriter.Rewrite(where))).ToList();
     }
 
     public async Task<TKey> InsertOne(T record)
@@ -142,7 +142,7 @@ public class PgRepo<T, TKey> : IPgRepo<T, TKey> where T : class, IPgKey<T, TKey>
     public async Task<long> Delete(Expression<Func<T, bool>> where)
     {
         await using var conn = await OpenAsync();
-        return await conn.DeleteAsync(where);
+        return await conn.DeleteAsync(SpanContainsRewriter.Rewrite(where));
     }
 
     public async Task<bool> UpdateOne(T record)

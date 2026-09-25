@@ -1,18 +1,20 @@
-﻿namespace ChatneyBackend.Infra.Migrations
+namespace ChatneyBackend.Infra.Migrations
 {
     using FluentMigrator.Runner.VersionTableInfo;
 
     [VersionTableMetaData]
-    public class CustomVersionTable : DefaultVersionTableMetaData
+    public class CustomVersionTable : IVersionTableMetaData
     {
-        public override string SchemaName => "dbo"; // Specify your desired schema
+        public bool OwnsSchema => true;
 
-        public override string TableName => "migrations"; // Specify your desired table name
+        public string SchemaName => "dbo"; // Specify your desired schema
 
-        // Other properties you can optionally override:
-        public override string ColumnName => "version";
-        public override string DescriptionColumnName => "description";
-        public override string AppliedOnColumnName => "applied_on";
-        public override string UniqueIndexName => "uc_version";
+        public string TableName => "migrations"; // Specify your desired table name
+
+        public string ColumnName => "version";
+        public string DescriptionColumnName => "description";
+        public string AppliedOnColumnName => "applied_on";
+        public string UniqueIndexName => "uc_version";
+        public bool CreateWithPrimaryKey => false;
     }
 }
