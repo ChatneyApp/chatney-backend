@@ -26,12 +26,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Content Include="appsettings.Production.json">
-            <CopyToPublishDirectory>Always</CopyToPublishDirectory>
-        </Content>
-    </ItemGroup>
-
-    <ItemGroup>
         <Compile Remove="artifacts\**\*.cs" />
         <Content Remove="artifacts\**\*" />
         <EmbeddedResource Remove="artifacts\**\*" />

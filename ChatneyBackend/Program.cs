@@ -1,3 +1,4 @@
+using Amazon;
 using ChatneyBackend.Domains.Channels;
 using ChatneyBackend.Domains.Configs;
 using ChatneyBackend.Domains.Messages;
@@ -31,18 +32,17 @@ using PermissionsDomain = ChatneyBackend.Domains.Permissions;
 var builder = WebApplication.CreateBuilder(args);
 
 var postgresConnectionString = builder.Configuration.GetConnectionString("Postgres");
-var dbName = builder.Configuration.GetConnectionString("dbName");
 var userPasswordSalt = builder.Configuration.GetSection("UserPasswordSalt").Value;
 var jwtSecret = builder.Configuration.GetSection("JwtSecret").Value;
+var s3Bucket = builder.Configuration["AWS:Bucket"];
 
-if (postgresConnectionString == null || dbName == null || userPasswordSalt == null || jwtSecret == null)
+if (postgresConnectionString == null || userPasswordSalt == null || jwtSecret == null || s3Bucket == null)
 {
     throw new ArgumentException("App settings are invalid");
 }
 
 GlobalConfiguration.Setup().UsePostgreSql();
 var dataSourceBuilder = new NpgsqlDataSourceBuilder(postgresConnectionString);
-dataSourceBuilder.EnableParameterLogging();
 dataSourceBuilder.EnableDynamicJson();
 dataSourceBuilder.MapEnum<PermissionsDomain.Permission>("permission");
 var pgDataSource = dataSourceBuilder.Build();
@@ -57,9 +57,6 @@ await using (var pgConnection = await pgDataSource.OpenConnectionAsync())
 }
 
 var wsConfig = new WebSocketConnector();
-
-// var bucket = builder.Configuration.GetSection("AWS").GetValue<string>("Bucket");
-// Console.WriteLine(bucket);
 
 var appRepos = new AppRepos(
     users: new PgRepo<User, Guid>(pgDataSource, UsersDomainSettings.UserTableName),
@@ -83,7 +80,7 @@ var appRepos = new AppRepos(
 
 // Database
 builder.Services.AddSingleton(pgDataSource);
-builder.Services.AddSingleton(_ => new AppConfig { UserPasswordSalt = userPasswordSalt, JwtSecret = jwtSecret });
+builder.Services.AddSingleton(_ => new AppConfig { UserPasswordSalt = userPasswordSalt, JwtSecret = jwtSecret, S3Bucket = s3Bucket });
 builder.Services.AddSingleton(_ => appRepos);
 builder.Services.AddScoped<IPermissionResolver>(sp =>
 {
@@ -106,13 +103,12 @@ builder.Services
 // WebSocket
 builder.Services.AddSingleton(_ => wsConfig);
 // AWS S3 setup
-var awsOptions = builder.Configuration.GetAWSOptions();
-builder.Services.AddDefaultAWSOptions(awsOptions);
 builder.Services.AddSingleton<IAmazonS3>(sp =>
 {
     var cfg = sp.GetRequiredService<IConfiguration>();
 
     var serviceUrl = cfg["AWS:ServiceUrl"]!;
+    var region = RegionEndpoint.GetBySystemName(cfg["AWS:Region"] ?? "us-east-1");
     var forcePathStyle = bool.Parse(cfg["AWS:ForcePathStyle"] ?? "false");
 
     var accessKey = cfg["AWS:AccessKey"] ?? "";
@@ -124,7 +120,9 @@ builder.Services.AddSingleton<IAmazonS3>(sp =>
     var s3Config = new AmazonS3Config
     {
         ServiceURL = serviceUrl,
-        ForcePathStyle = forcePathStyle
+        ForcePathStyle = forcePathStyle,
+        // RegionEndpoint would override ServiceURL, so the region is only used for request signing
+        AuthenticationRegion = region.SystemName,
     };
 
     return new AmazonS3Client(new BasicAWSCredentials(accessKey, secretKey), s3Config);
