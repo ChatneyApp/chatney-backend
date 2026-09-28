@@ -7,7 +7,6 @@ using ChatneyBackend.Domains.DraftMessages;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Domains.Users;
 using ChatneyBackend.Domains.Workspaces;
-using HotChocolate.AspNetCore;
 using ChatneyBackend.Setup;
 using ChatneyBackend.Utils;
 using ChatneyBackend.Infra.Middleware;
@@ -163,8 +162,16 @@ builder.Services
     .AddAuthorization()
     .AddQueryType<Query>()
     .AddMutationType<Mutation>()
-    .AddType<UploadType>();
-
+    .AddType<UploadType>()
+    .ModifyServerOptions(o =>
+    {
+        o.Tool.DisableTelemetry = true;
+#if DEBUG
+        o.Tool.Enable = true;
+#else
+        o.Tool.Enable = false;
+#endif
+    });
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddWebSockets(options =>
@@ -178,16 +185,5 @@ wsConfig.Configure(app);
 app.UseMiddleware<AuthMiddleware>();
 
 app.UseCors(app.Environment.IsDevelopment() ? devOpenCors : prodCors);
-app.MapGraphQL("/query").WithOptions(new GraphQLServerOptions
-{
-    EnableMultipartRequests = true,
-    Tool = {
-        DisableTelemetry = true,
-#if DEBUG
-        Enable = true
-#else
-        Enable = false
-#endif
-    }
-});
+app.MapGraphQL("/query");
 app.Run();

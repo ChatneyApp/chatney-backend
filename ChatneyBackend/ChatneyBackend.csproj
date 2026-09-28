@@ -16,11 +16,11 @@
         <PackageReference Include="FluentMigrator" Version="8.0.1" />
         <PackageReference Include="FluentMigrator.Runner" Version="8.0.1" />
         <PackageReference Include="FluentMigrator.Runner.Postgres" Version="8.0.1" />
-        <PackageReference Include="HotChocolate" Version="15.1.8" />
-        <PackageReference Include="HotChocolate.AspNetCore" Version="15.1.8" />
-        <PackageReference Include="HotChocolate.AspNetCore.Authorization" Version="15.1.8" />
-        <PackageReference Include="HotChocolate.AspNetCore.CommandLine" Version="15.1.8" />
-        <PackageReference Include="HotChocolate.Types.Analyzers" Version="15.1.8" />
+        <PackageReference Include="HotChocolate" Version="16.6.7" />
+        <PackageReference Include="HotChocolate.AspNetCore" Version="16.6.7" />
+        <PackageReference Include="HotChocolate.AspNetCore.Authorization" Version="16.6.7" />
+        <PackageReference Include="HotChocolate.AspNetCore.CommandLine" Version="16.6.7" />
+        <PackageReference Include="HotChocolate.Types.Analyzers" Version="16.6.7" />
         <PackageReference Include="Npgsql" Version="10.0.3" />
         <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.23.0" />
     </ItemGroup>
