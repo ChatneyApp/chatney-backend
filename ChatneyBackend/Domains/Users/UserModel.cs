@@ -34,7 +34,6 @@ public class ChannelSettings
 public class User : IPgKey<User, Guid>, IPgTimestamped
 {
     [Primary]
-    [Identity]
     [Map("id")]
     public Guid Id { get; set; }
 

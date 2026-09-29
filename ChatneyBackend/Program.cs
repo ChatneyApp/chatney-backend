@@ -24,6 +24,8 @@ using Amazon.S3;
 using ChatneyBackend.Infra.Migrations;
 using ChatneyBackend.Infra;
 using RepoDb;
+using RepoDb.Enumerations;
+using RepoDb.Options;
 using FluentMigrator.Runner;
 using Npgsql;
 using PermissionsDomain = ChatneyBackend.Domains.Permissions;
@@ -40,7 +42,12 @@ if (postgresConnectionString == null || userPasswordSalt == null || jwtSecret ==
     throw new ArgumentException("App settings are invalid");
 }
 
-GlobalConfiguration.Setup().UsePostgreSql();
+// Only write back real identity columns after inserts. The default (IdentityOrElsePrimary) falls back
+// to "the first primary key" for composite-key tables, and RepoDb resolves that differently for the
+// RETURNING clause (DB metadata order) and the C# setter ([Primary] order), e.g. role_id -> UserId.
+GlobalConfiguration
+    .Setup(new GlobalConfigurationOptions { KeyColumnReturnBehavior = KeyColumnReturnBehavior.Identity })
+    .UsePostgreSql();
 var dataSourceBuilder = new NpgsqlDataSourceBuilder(postgresConnectionString);
 dataSourceBuilder.EnableDynamicJson();
 dataSourceBuilder.MapEnum<PermissionsDomain.Permission>("permission");

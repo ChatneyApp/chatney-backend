@@ -12,7 +12,7 @@
         <PackageReference Include="AngleSharp" Version="1.8.2" />
         <PackageReference Include="AWSSDK.Extensions.NETCore.Setup" Version="4.0.101.4" />
         <PackageReference Include="AWSSDK.S3" Version="4.0.103.4" />
-        <PackageReference Include="RepoDb.PostgreSql" Version="1.13.1" />
+        <PackageReference Include="RepoDb.PostgreSql" Version="1.16.0" />
         <PackageReference Include="FluentMigrator" Version="8.0.1" />
         <PackageReference Include="FluentMigrator.Runner" Version="8.0.1" />
         <PackageReference Include="FluentMigrator.Runner.Postgres" Version="8.0.1" />

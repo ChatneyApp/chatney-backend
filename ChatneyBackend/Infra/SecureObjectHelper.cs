@@ -53,7 +53,7 @@ public static class SecureObjectHelper
         SecureObjectDescription description,
         bool grantAdminRole = true)
     {
-        // RepoDb 1.13.1 pins the @Description parameter's NpgsqlDbType to Text before Npgsql's
+        // RepoDb pins the @Description parameter's NpgsqlDbType to Text before Npgsql's
         // dynamic-JSON path is reachable, so InsertOne(new SecureObject { Description = ... }) throws
         // InvalidCastException against the jsonb column. Serializing explicitly and casting in SQL
         // sidesteps that - see SecureObjectHelperTests for the round-trip guard.

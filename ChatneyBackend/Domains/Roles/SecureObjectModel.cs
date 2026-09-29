@@ -19,7 +19,7 @@ public class SecureObjectDescription
 }
 
 /// <summary>
-/// RepoDb 1.13.1 has no built-in handler for POCO-typed jsonb columns: without this, a SELECT would
+/// RepoDb has no built-in handler for POCO-typed jsonb columns: without this, a SELECT would
 /// try to cast the raw jsonb value straight into <see cref="SecureObjectDescription"/> and fail. The
 /// write side goes through <c>SecureObjectHelper.Create</c>'s explicit ::jsonb SQL instead (see
 /// InsertOne's InvalidCastException regression), but this handler still needs to serialize on Set

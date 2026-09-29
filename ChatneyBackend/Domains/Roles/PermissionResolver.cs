@@ -180,7 +180,7 @@ public sealed class AclSnapshotLoader : IAclSnapshotLoader
         }
 
         // A role-less user (e.g. just registered, or every role has been unassigned) must resolve
-        // to nothing. Skipping the query entirely also sidesteps a RepoDb 1.13.1 pitfall: an empty
+        // to nothing. Skipping the query entirely also sidesteps a RepoDb pitfall: an empty
         // collection inside `.Any(...)` parses to a QueryGroup with zero fields, which
         // PostgreSqlStatementBuilder renders as a WHERE-less `SELECT * FROM role_acls` - i.e. every
         // role's ACLs on every object. `.Contains` on an empty collection degrades to `WHERE (1 = 0)`
