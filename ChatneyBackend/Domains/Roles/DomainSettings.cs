@@ -7,7 +7,7 @@ public class DomainSettings
     public const string RoleAclTableName = "role_acls";
     public const string UserAclTableName = "user_acls";
 
+    public const int AdminRoleId = 1;
     public const string AdminRoleName = "admin";
-    public const string ModeratorRoleName = "moderator";
     public const string UserRoleName = "user";
 }

@@ -25,24 +25,10 @@ public class DirectMessageTests
         ],
         "TestAuth"));
 
-    private static ChannelType SeedDmChannelType(PermissionResolverTestContext ctx)
-    {
-        var dmType = new ChannelType
-        {
-            Id = 3,
-            Name = ChannelSettings.DmChannelTypeName,
-            Key = ChannelSettings.DmChannelTypeKey,
-            SecObjId = 41,
-        };
-        ctx.ChannelTypesRepo.Seed(dmType);
-        return dmType;
-    }
-
     [Fact]
     public async Task OpenDirectMessage_IsIdempotent_AndIndependentOfUserOrder()
     {
         var ctx = new PermissionResolverTestContext();
-        SeedDmChannelType(ctx);
         var webSocket = new RecordingWebSocketConnector();
         var resolverA = ctx.CreateResolver(ctx.UserWithRoleA);
 
@@ -69,7 +55,6 @@ public class DirectMessageTests
     public async Task OpenDirectMessage_RejectsSelfAndEmpty()
     {
         var ctx = new PermissionResolverTestContext();
-        SeedDmChannelType(ctx);
         var webSocket = new RecordingWebSocketConnector();
         var resolver = ctx.CreateResolver(ctx.UserWithRoleA);
 
@@ -89,7 +74,6 @@ public class DirectMessageTests
     public async Task OpenDirectMessage_GroupOfThree_IsDistinctFromPair()
     {
         var ctx = new PermissionResolverTestContext();
-        SeedDmChannelType(ctx);
         var webSocket = new RecordingWebSocketConnector();
         var resolver = ctx.CreateResolver(ctx.UserWithRoleA);
 
@@ -118,7 +102,6 @@ public class DirectMessageTests
     public async Task OpenDirectMessage_GrantsParticipantUserAcls_WithoutAdminRoleAcl()
     {
         var ctx = new PermissionResolverTestContext();
-        SeedDmChannelType(ctx);
         ctx.RolesRepo.Seed(new Role
         {
             Id = 100,
@@ -153,7 +136,6 @@ public class DirectMessageTests
     public async Task DirectMessageList_ReturnsOnlyActorsDms()
     {
         var ctx = new PermissionResolverTestContext();
-        SeedDmChannelType(ctx);
         var webSocket = new RecordingWebSocketConnector();
 
         await Mutations.OpenDirectMessage(
@@ -183,7 +165,6 @@ public class DirectMessageTests
     public async Task WorkspaceChannelList_DoesNotIncludeDirectMessages()
     {
         var ctx = new PermissionResolverTestContext();
-        SeedDmChannelType(ctx);
         ctx.GrantRoleAcl(ctx.RoleA.Id, PermissionResolverTestContext.C1SecObjId, Permission.ChannelReadChannel);
         var webSocket = new RecordingWebSocketConnector();
         await Mutations.OpenDirectMessage(
@@ -201,34 +182,9 @@ public class DirectMessageTests
     }
 
     [Fact]
-    public async Task AddChannel_RejectsDmChannelType()
-    {
-        var ctx = new PermissionResolverTestContext();
-        var dmType = SeedDmChannelType(ctx);
-        ctx.GrantRoleAcl(ctx.RoleA.Id, PermissionResolverTestContext.W1SecObjId, Permission.ChannelCreateChannel);
-        var webSocket = new RecordingWebSocketConnector();
-        var resolver = ctx.CreateResolver(ctx.UserWithRoleA);
-
-        var exception = await Assert.ThrowsAsync<GraphQLException>(() =>
-            Mutations.AddChannel(
-                ctx.Repos,
-                resolver,
-                new ChannelDto
-                {
-                    Name = "should fail",
-                    ChannelTypeId = dmType.Id,
-                    WorkspaceId = ctx.W1.Id,
-                },
-                webSocket));
-
-        Assert.Equal(ChatneyBackend.Infra.ErrorCodes.ForbiddenAction, Assert.Single(exception.Errors).Code);
-    }
-
-    [Fact]
     public async Task NonParticipant_CannotReadOrMessageDirectMessage()
     {
         var ctx = new PermissionResolverTestContext();
-        SeedDmChannelType(ctx);
         var webSocket = new RecordingWebSocketConnector();
         var opened = await Mutations.OpenDirectMessage(
             ctx.Repos,
@@ -255,7 +211,6 @@ public class DirectMessageTests
     public async Task Participant_CanSendAndReadMessages()
     {
         var ctx = new PermissionResolverTestContext();
-        SeedDmChannelType(ctx);
         var webSocket = new RecordingWebSocketConnector();
         var opened = await Mutations.OpenDirectMessage(
             ctx.Repos,
@@ -287,14 +242,13 @@ public class DirectMessageTests
     public async Task PermissionChain_ForDirectMessage_SkipsWorkspaceGrants()
     {
         var ctx = new PermissionResolverTestContext();
-        var dmType = SeedDmChannelType(ctx);
         ctx.GrantRoleAcl(ctx.RoleA.Id, PermissionResolverTestContext.W1SecObjId, Permission.ChannelReadMessage);
 
         var dm = new Channel
         {
             Id = 50,
             Name = ChannelSettings.DmChannelName,
-            ChannelTypeId = dmType.Id,
+            ChannelTypeId = null,
             WorkspaceId = null,
             IsDm = true,
             SecObjId = 500,

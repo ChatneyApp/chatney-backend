@@ -1,16 +1,10 @@
 using System.Security.Claims;
-using ChatneyBackend.Domains.Attachments;
-using ChatneyBackend.Domains.Channels;
-using ChatneyBackend.Domains.Configs;
-using ChatneyBackend.Domains.Messages;
+using ChatneyBackend.Domains.Permissions;
 using ChatneyBackend.Domains.Roles;
-using ChatneyBackend.Domains.Users;
 using ChatneyBackend.Domains.Workspaces;
 using ChatneyBackend.Infra;
-using ChatneyBackend.Infra.Middleware;
 using ChatneyBackend.Utils;
 using FluentMigrator.Runner;
-using HotChocolate.Authorization;
 using Npgsql;
 
 namespace ChatneyBackend.Domains.InstallWizard;
@@ -22,6 +16,14 @@ public class InstallWizardMutations
         public required string status { get; set; }
         public string? message { get; set; }
     }
+
+    public static readonly Permission[] UserWorkspacePermissions =
+    [
+        Permission.WorkspaceReadWorkspace,
+        Permission.ChannelReadChannel,
+        Permission.ChannelReadMessage,
+        Permission.ChannelCreateMessage,
+    ];
 
     public async Task<InstallSystemResult> InstallSystem(
         AppConfig appConfig,
@@ -42,7 +44,7 @@ public class InstallWizardMutations
             await dataSource.ReloadTypesAsync();
             dataSource.Clear();
 
-            Role? adminRole = await repos.Roles.GetOne(r => r.Name == Roles.DomainSettings.AdminRoleName);
+            Role? adminRole = await repos.Roles.GetById(Roles.DomainSettings.AdminRoleId);
 
             if (adminRole != null)
             {
@@ -53,136 +55,154 @@ public class InstallWizardMutations
             }
 
             var now = DateTime.UtcNow;
-            var seedRoles = DefaultRoles.CreateSeedRoles(now);
-            await repos.Roles.InsertBulk([..seedRoles]);
+            var allPermissions = Enum.GetValues<Permission>();
 
-            var userRole = seedRoles.Single(r => r.Name == Roles.DomainSettings.UserRoleName);
-            adminRole = seedRoles.Single(r => r.Name == Roles.DomainSettings.AdminRoleName);
+            // The admin role gets a fixed id so code can refer to it via AdminRoleId. It must exist
+            // before any secure object is created (see SecureObjectHelper.Create) so every seeded
+            // workspace/channel type/channel gets its admin role_acls row automatically.
+            await repos.Roles.ExecuteAsync(
+                """
+                INSERT INTO roles (id, name, created_at, updated_at) OVERRIDING SYSTEM VALUE
+                VALUES (@Id, @Name, @Now, @Now);
 
-            // The admin role must exist before any secure object is created (see
-            // SecureObjectHelper.Create) so every seeded workspace/channel type/channel gets its
-            // admin role_acls row automatically instead of being orphaned under D2.
-            var mainWorkspaceSecObjId = await SecureObjectHelper.Create(
-                repos, new SecureObjectDescription { Kind = "workspace", Name = "Main" });
-            var secondaryWorkspaceSecObjId = await SecureObjectHelper.Create(
-                repos, new SecureObjectDescription { Kind = "workspace", Name = "Secondary" });
+                SELECT setval(pg_get_serial_sequence('roles', 'id'), (SELECT MAX(id) FROM roles));
+                """,
+                new { Id = Roles.DomainSettings.AdminRoleId, Name = Roles.DomainSettings.AdminRoleName, Now = now });
 
-            List<Workspace> workspaces = new List<Workspace>
+            var userRole = new Role
             {
-                new() { Name = "Main", SecObjId = mainWorkspaceSecObjId },
-                new() { Name = "Secondary", SecObjId = secondaryWorkspaceSecObjId },
+                Name = Roles.DomainSettings.UserRoleName,
+                CreatedAt = now,
+                UpdatedAt = now,
             };
-            await repos.Workspaces.InsertBulk(workspaces);
+            userRole.Id = await repos.Roles.InsertOne(userRole);
 
-            var publicChannelTypeSecObjId = await SecureObjectHelper.Create(
-                repos, new SecureObjectDescription { Kind = "channelType", Name = "public" });
-            var privateChannelTypeSecObjId = await SecureObjectHelper.Create(
-                repos, new SecureObjectDescription { Kind = "channelType", Name = "private" });
-            var dmChannelTypeSecObjId = await SecureObjectHelper.Create(
-                repos,
-                new SecureObjectDescription { Kind = "channelType", Name = Channels.DomainSettings.DmChannelTypeName },
-                grantAdminRole: false);
+            var workspace = new Workspace
+            {
+                Name = "Default workspace",
+                SecObjId = await SecureObjectHelper.Create(
+                    repos, new SecureObjectDescription { Kind = "workspace", Name = "Default workspace" }),
+            };
+            workspace.Id = await repos.Workspaces.InsertOne(workspace);
 
             List<Channels.ChannelType> channelTypes = new List<Channels.ChannelType>
             {
                 new()
                 {
-                    Name = "public",
+                    Name = "Public",
                     Key = "public",
-                    SecObjId = publicChannelTypeSecObjId,
+                    SecObjId = await SecureObjectHelper.Create(
+                        repos, new SecureObjectDescription { Kind = "channelType", Name = "Public" }),
                 },
                 new()
                 {
-                    Name = "private",
+                    Name = "Private",
                     Key = "private",
-                    SecObjId = privateChannelTypeSecObjId,
-                },
-                new()
-                {
-                    Name = Channels.DomainSettings.DmChannelTypeName,
-                    Key = Channels.DomainSettings.DmChannelTypeKey,
-                    SecObjId = dmChannelTypeSecObjId,
+                    SecObjId = await SecureObjectHelper.Create(
+                        repos, new SecureObjectDescription { Kind = "channelType", Name = "Private" }),
                 },
             };
             await repos.ChannelTypes.InsertBulk(channelTypes);
-
-            var publicChannel1SecObjId = await SecureObjectHelper.Create(
-                repos, new SecureObjectDescription { Kind = "channel", Name = "public 1" });
-            var publicChannel2SecObjId = await SecureObjectHelper.Create(
-                repos, new SecureObjectDescription { Kind = "channel", Name = "public 2" });
-            var privateChannel1SecObjId = await SecureObjectHelper.Create(
-                repos, new SecureObjectDescription { Kind = "channel", Name = "private 1" });
-            var privateChannel2SecObjId = await SecureObjectHelper.Create(
-                repos, new SecureObjectDescription { Kind = "channel", Name = "private 2" });
 
             List<Channels.Channel> channels = new List<Channels.Channel>()
             {
                 new()
                 {
-                    Name = "public 1",
+                    Name = "Public channel",
                     ChannelTypeId = channelTypes[0].Id,
-                    WorkspaceId = workspaces[0].Id,
-                    SecObjId = publicChannel1SecObjId,
+                    WorkspaceId = workspace.Id,
+                    SecObjId = await SecureObjectHelper.Create(
+                        repos, new SecureObjectDescription { Kind = "channel", Name = "Public channel" }),
                 },
                 new()
                 {
-                    Name = "public 2",
-                    ChannelTypeId = channelTypes[0].Id,
-                    WorkspaceId = workspaces[0].Id,
-                    SecObjId = publicChannel2SecObjId,
-                },
-                new()
-                {
-                    Name = "private 1",
+                    Name = "Private channel",
                     ChannelTypeId = channelTypes[1].Id,
-                    WorkspaceId = workspaces[0].Id,
-                    SecObjId = privateChannel1SecObjId,
-                },
-                new()
-                {
-                    Name = "private 2",
-                    ChannelTypeId = channelTypes[1].Id,
-                    WorkspaceId = workspaces[0].Id,
-                    SecObjId = privateChannel2SecObjId,
+                    WorkspaceId = workspace.Id,
+                    SecObjId = await SecureObjectHelper.Create(
+                        repos, new SecureObjectDescription { Kind = "channel", Name = "Private channel" }),
                 },
             };
             await repos.Channels.InsertBulk(channels);
 
-            var roleAcls = DefaultRoles.CreateSeedRoleAcls(seedRoles, mainWorkspaceSecObjId);
-            await repos.RoleAcls.InsertBulk([..roleAcls]);
+            // SecureObjectHelper.Create already granted admin the object-scoped permissions on the
+            // workspace; widen that row to every permission explicitly.
+            await repos.RoleAcls.Upsert(new RoleAcl
+            {
+                RoleId = Roles.DomainSettings.AdminRoleId,
+                SecObjId = workspace.SecObjId,
+                Permissions = allPermissions,
+            });
 
-            List<Users.User> users = new()
+            List<RoleAcl> roleAcls = new()
             {
                 new()
                 {
-                    Id = Guid.NewGuid(),
-                    Nickname = "test_user_1",
-                    FullName = "Test User 1",
-                    Email = "test1@test.com",
-                    Active = true,
-                    Password = Helpers.GetMd5Hash("123" + appConfig.UserPasswordSalt),
+                    RoleId = Roles.DomainSettings.AdminRoleId,
+                    SecObjId = SecureObjectIds.Global,
+                    Permissions = allPermissions,
                 },
                 new()
                 {
-                    Id = Guid.NewGuid(),
-                    Nickname = "test_user_2",
-                    FullName = "Test User 2",
-                    Email = "test2@test.com",
-                    Active = true,
-                    Password = Helpers.GetMd5Hash("123" + appConfig.UserPasswordSalt),
+                    RoleId = userRole.Id,
+                    SecObjId = workspace.SecObjId,
+                    Permissions = InstallWizardMutations.UserWorkspacePermissions,
                 },
             };
-            await repos.Users.InsertBulk(users);
+            await repos.RoleAcls.InsertBulk(roleAcls);
 
-            List<Users.UserRole> userRoles = new()
+            var adminUser = new Users.User
             {
-                new() { UserId = users[0].Id, RoleId = adminRole.Id },
-                new() { UserId = users[1].Id, RoleId = userRole.Id },
+                Id = Guid.NewGuid(),
+                Nickname = "admin",
+                FullName = "Administrator",
+                Email = "admin@chatney.local",
+                Active = true,
+                Verified = true,
+                Password = Helpers.GetMd5Hash("admin" + appConfig.UserPasswordSalt),
+                CreatedAt = now,
+                UpdatedAt = now,
             };
+            var testUsers = new List<Users.User>();
+
+            for (var i = 1; i <= 2; i++)
+            {
+                testUsers.Add(new Users.User
+                {
+                    Id = Guid.NewGuid(),
+                    Nickname = $"test{i}",
+                    FullName = $"Test User {i}",
+                    Email = $"test{i}@test.com",
+                    Active = true,
+                    Password = Helpers.GetMd5Hash("123" + appConfig.UserPasswordSalt),
+                    CreatedAt = now,
+                    UpdatedAt = now,
+                });
+            }
+
+            await repos.Users.InsertBulk([adminUser, ..testUsers]);
+
+            List<Users.UserRole> userRoles =
+            [
+                new() { UserId = adminUser.Id, RoleId = Roles.DomainSettings.AdminRoleId },
+                ..testUsers.Select(user => new Users.UserRole { UserId = user.Id, RoleId = userRole.Id }),
+            ];
             await repos.UserRoles.InsertBulk(userRoles);
 
             List<Configs.Config> configs = new()
             {
+                new()
+                {
+                    Name = Configs.DomainSettings.SystemAdminUserId,
+                    Value = adminUser.Id.ToString(),
+                    Type = "string",
+                },
+                new()
+                {
+                    Name = Configs.DomainSettings.SystemDefaultUserRoleId,
+                    Value = userRole.Id.ToString(),
+                    Type = "int",
+                },
                 new()
                 {
                     Name = Configs.DomainSettings.NewUserDefaultRole,
@@ -203,6 +223,9 @@ public class InstallWizardMutations
                 },
             };
             await repos.Configs.InsertBulk(configs);
+
+            appConfig.AdminUserId = adminUser.Id;
+            appConfig.DefaultUserRoleId = userRole.Id;
         }
         catch (Exception e)
         {
@@ -219,6 +242,7 @@ public class InstallWizardMutations
     }
 
     public async Task<InstallSystemResult> UnInstallSystem(
+        AppConfig appConfig,
         AppRepos repos,
         ClaimsPrincipal principal,
         IMigrationRunner migrationRunner,
@@ -236,6 +260,9 @@ public class InstallWizardMutations
             // would send wrong-OID binary traffic on the next install, failing obscurely.
             await dataSource.ReloadTypesAsync();
             dataSource.Clear();
+
+            appConfig.AdminUserId = null;
+            appConfig.DefaultUserRoleId = null;
         }
         catch (Exception e)
         {

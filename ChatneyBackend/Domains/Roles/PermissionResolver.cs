@@ -87,8 +87,8 @@ public sealed class AclSnapshot
     public int? WorkspaceSecObjId(int? workspaceId) =>
         workspaceId is int id && _workspaceSecObjIds.TryGetValue(id, out var secObjId) ? secObjId : null;
 
-    public int? ChannelTypeSecObjId(int channelTypeId) =>
-        _channelTypeSecObjIds.TryGetValue(channelTypeId, out var secObjId) ? secObjId : null;
+    public int? ChannelTypeSecObjId(int? channelTypeId) =>
+        channelTypeId is int id && _channelTypeSecObjIds.TryGetValue(id, out var secObjId) ? secObjId : null;
 
     public IEnumerable<(int WorkspaceId, int SecObjId)> WorkspaceEntries =>
         _workspaceSecObjIds.Select(entry => (WorkspaceId: entry.Key, SecObjId: entry.Value));

@@ -18,7 +18,7 @@ public class Channel : IPgKey<Channel, int>, IPgTimestamped
     public required string Name { get; set; }
 
     [Map("channel_type_id")]
-    public int ChannelTypeId { get; set; }
+    public int? ChannelTypeId { get; set; }
 
     [Map("workspace_id")]
     public int? WorkspaceId { get; set; }
@@ -69,7 +69,7 @@ public class WebsocketChannelPayload
 {
     public int Id { get; set; }
     public required string Name { get; set; }
-    public int ChannelTypeId { get; set; }
+    public int? ChannelTypeId { get; set; }
     public int? WorkspaceId { get; set; }
     public bool IsDm { get; set; }
     public Guid[] MemberUserIds { get; set; } = [];

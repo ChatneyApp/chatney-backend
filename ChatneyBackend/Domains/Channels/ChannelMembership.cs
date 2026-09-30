@@ -32,10 +32,7 @@ public static class ChannelMembership
         return await UserIdsForChannel(repos, channel.Id);
     }
 
-    public static async Task<Channel?> FindByExactMembers(
-        AppRepos repos,
-        int dmChannelTypeId,
-        HashSet<Guid> memberIds)
+    public static async Task<Channel?> FindByExactMembers(AppRepos repos, HashSet<Guid> memberIds)
     {
         var seedUserId = memberIds.First();
         var seedMemberships = await repos.ChannelMembers.GetList(member => member.UserId == seedUserId);
@@ -43,7 +40,7 @@ public static class ChannelMembership
         foreach (var membership in seedMemberships)
         {
             var channel = await repos.Channels.GetById(membership.ChannelId);
-            if (channel == null || !channel.IsDm || channel.ChannelTypeId != dmChannelTypeId)
+            if (channel == null || !channel.IsDm)
             {
                 continue;
             }

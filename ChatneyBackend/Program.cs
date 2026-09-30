@@ -86,7 +86,9 @@ var appRepos = new AppRepos(
 
 // Database
 builder.Services.AddSingleton(pgDataSource);
-builder.Services.AddSingleton(_ => new AppConfig { UserPasswordSalt = userPasswordSalt, JwtSecret = jwtSecret, S3Bucket = s3Bucket });
+var appConfig = new AppConfig { UserPasswordSalt = userPasswordSalt, JwtSecret = jwtSecret, S3Bucket = s3Bucket };
+await SystemConfigReader.LoadInto(appConfig, appRepos.Configs);
+builder.Services.AddSingleton(appConfig);
 builder.Services.AddSingleton(_ => appRepos);
 builder.Services.AddScoped<IPermissionResolver>(sp =>
 {

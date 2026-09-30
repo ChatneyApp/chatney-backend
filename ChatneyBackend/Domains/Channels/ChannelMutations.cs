@@ -85,7 +85,7 @@ public class ChannelMutations
         }
 
         var channelType = await repos.ChannelTypes.GetById(channelDto.ChannelTypeId);
-        if (channelType == null || channelType.Key == DomainSettings.DmChannelTypeKey)
+        if (channelType == null)
         {
             ChatneyBackend.Infra.ErrorCodes.ThrowForbidden();
         }
@@ -237,14 +237,7 @@ public class ChannelMutations
             ChatneyBackend.Infra.ErrorCodes.ThrowNotFound();
         }
 
-        var dmChannelType = await repos.ChannelTypes.GetOne(channelType =>
-            channelType.Key == DomainSettings.DmChannelTypeKey);
-        if (dmChannelType == null)
-        {
-            ChatneyBackend.Infra.ErrorCodes.ThrowNotFound();
-        }
-
-        var existing = await ChannelMembership.FindByExactMembers(repos, dmChannelType!.Id, memberIds);
+        var existing = await ChannelMembership.FindByExactMembers(repos, memberIds);
         if (existing != null)
         {
             return DirectMessage.From(existing, otherUsers.OrderBy(user => user.Nickname));
@@ -253,7 +246,7 @@ public class ChannelMutations
         var channel = new Channel
         {
             Name = DomainSettings.DmChannelName,
-            ChannelTypeId = dmChannelType.Id,
+            ChannelTypeId = null,
             WorkspaceId = null,
             IsDm = true,
         };
