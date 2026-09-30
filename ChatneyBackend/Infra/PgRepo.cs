@@ -83,7 +83,7 @@ public class PgRepo<T, TKey> : IPgRepo<T, TKey> where T : class, IPgKey<T, TKey>
     public async Task<T?> GetOne(Expression<Func<T, bool>> where)
     {
         await using var conn = await OpenAsync();
-        return (await conn.QueryAsync(where, top: 1)).FirstOrDefault();
+        return (await conn.QueryAsync(SpanContainsRewriter.Rewrite(where), top: 1)).FirstOrDefault();
     }
 
     public async Task<List<T>> GetList()
@@ -95,7 +95,7 @@ public class PgRepo<T, TKey> : IPgRepo<T, TKey> where T : class, IPgKey<T, TKey>
     public async Task<List<T>> GetList(Expression<Func<T, bool>> where)
     {
         await using var conn = await OpenAsync();
-        return (await conn.QueryAsync(where)).ToList();
+        return (await conn.QueryAsync(SpanContainsRewriter.Rewrite(where))).ToList();
     }
 
     public async Task<TKey> InsertOne(T record)
@@ -107,15 +107,12 @@ public class PgRepo<T, TKey> : IPgRepo<T, TKey> where T : class, IPgKey<T, TKey>
 
         await using var conn = await OpenAsync();
 
-        if (_compositeKeyQualifiers.Value != null)
-        {
-            // Composite-key entities have no single identity column to return, so
-            // InsertAsync<T, TKey> would try (and fail) to cast the generated identity into TKey.
-            await conn.InsertAsync<T>(record);
-            return T.GetKey(record);
-        }
-
-        return await conn.InsertAsync<T, TKey>(record);
+        // InsertAll rather than Insert: for tables without an identity column RepoDb 1.16 emits
+        // `RETURNING NULL`, and InsertAsync then throws on Converter.ToType<object>(DBNull), while
+        // InsertAll maps DBNull to null. A generated identity is still written back into the record,
+        // so the key is read from the record itself - this also covers app-assigned (Guid, composite) keys.
+        await conn.InsertAllAsync([record]);
+        return T.GetKey(record);
     }
 
     public async Task InsertBulk(List<T> items)
@@ -142,7 +139,7 @@ public class PgRepo<T, TKey> : IPgRepo<T, TKey> where T : class, IPgKey<T, TKey>
     public async Task<long> Delete(Expression<Func<T, bool>> where)
     {
         await using var conn = await OpenAsync();
-        return await conn.DeleteAsync(where);
+        return await conn.DeleteAsync(SpanContainsRewriter.Rewrite(where));
     }
 
     public async Task<bool> UpdateOne(T record)
@@ -164,16 +161,10 @@ public class PgRepo<T, TKey> : IPgRepo<T, TKey> where T : class, IPgKey<T, TKey>
     {
         TouchUpdatedAt(record);
         await using var conn = await OpenAsync();
-        var qualifiers = _compositeKeyQualifiers.Value;
 
-        if (qualifiers != null)
-        {
-            await conn.MergeAsync(record, qualifiers: qualifiers);
-        }
-        else
-        {
-            await conn.MergeAsync(record);
-        }
+        // MergeAll rather than Merge for the same RETURNING NULL / DBNull reason as InsertOne.
+        // Null qualifiers fall back to the primary key.
+        await conn.MergeAllAsync([record], _compositeKeyQualifiers.Value);
     }
 
     public async Task<TResult?> ExecuteScalarAsync<TResult>(string sql, object? param = null)

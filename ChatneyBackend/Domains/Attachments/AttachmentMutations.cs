@@ -6,6 +6,7 @@ using ChatneyBackend.Domains.Permissions;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Infra;
 using ChatneyBackend.Infra.Middleware;
+using ChatneyBackend.Utils;
 using HotChocolate.Authorization;
 
 namespace ChatneyBackend.Domains.Attachments;
@@ -18,6 +19,7 @@ public class AttachmentMutations
         IPermissionResolver resolver,
         ClaimsPrincipal principal,
         IAmazonS3 s3Client,
+        AppConfig appConfig,
         IFile file,
         bool asFile,
         int? width,
@@ -42,7 +44,6 @@ public class AttachmentMutations
 
         var userId = principal.GetUserGuid();
         var fileId = Guid.NewGuid().ToString();
-        var bucketName = "chatney";
         var s3Folder = "attachments";
         var dateString = DateTime.UtcNow.ToString("yyyy-MM-dd");
         var extMatch = Regex.Match(file.Name, "\\.([^\\.]+$)");
@@ -86,7 +87,7 @@ public class AttachmentMutations
         {
             var uploadRequest = new PutObjectRequest
             {
-                BucketName = bucketName,
+                BucketName = appConfig.S3Bucket,
                 Key = s3Key,
                 InputStream = fileStream,
                 ContentType = contentType

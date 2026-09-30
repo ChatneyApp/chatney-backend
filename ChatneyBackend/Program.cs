@@ -1,3 +1,4 @@
+using Amazon;
 using ChatneyBackend.Domains.Channels;
 using ChatneyBackend.Domains.Configs;
 using ChatneyBackend.Domains.Messages;
@@ -6,7 +7,6 @@ using ChatneyBackend.Domains.DraftMessages;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Domains.Users;
 using ChatneyBackend.Domains.Workspaces;
-using HotChocolate.AspNetCore;
 using ChatneyBackend.Setup;
 using ChatneyBackend.Utils;
 using ChatneyBackend.Infra.Middleware;
@@ -24,6 +24,8 @@ using Amazon.S3;
 using ChatneyBackend.Infra.Migrations;
 using ChatneyBackend.Infra;
 using RepoDb;
+using RepoDb.Enumerations;
+using RepoDb.Options;
 using FluentMigrator.Runner;
 using Npgsql;
 using PermissionsDomain = ChatneyBackend.Domains.Permissions;
@@ -31,18 +33,22 @@ using PermissionsDomain = ChatneyBackend.Domains.Permissions;
 var builder = WebApplication.CreateBuilder(args);
 
 var postgresConnectionString = builder.Configuration.GetConnectionString("Postgres");
-var dbName = builder.Configuration.GetConnectionString("dbName");
 var userPasswordSalt = builder.Configuration.GetSection("UserPasswordSalt").Value;
 var jwtSecret = builder.Configuration.GetSection("JwtSecret").Value;
+var s3Bucket = builder.Configuration["AWS:Bucket"];
 
-if (postgresConnectionString == null || dbName == null || userPasswordSalt == null || jwtSecret == null)
+if (postgresConnectionString == null || userPasswordSalt == null || jwtSecret == null || s3Bucket == null)
 {
     throw new ArgumentException("App settings are invalid");
 }
 
-GlobalConfiguration.Setup().UsePostgreSql();
+// Only write back real identity columns after inserts. The default (IdentityOrElsePrimary) falls back
+// to "the first primary key" for composite-key tables, and RepoDb resolves that differently for the
+// RETURNING clause (DB metadata order) and the C# setter ([Primary] order), e.g. role_id -> UserId.
+GlobalConfiguration
+    .Setup(new GlobalConfigurationOptions { KeyColumnReturnBehavior = KeyColumnReturnBehavior.Identity })
+    .UsePostgreSql();
 var dataSourceBuilder = new NpgsqlDataSourceBuilder(postgresConnectionString);
-dataSourceBuilder.EnableParameterLogging();
 dataSourceBuilder.EnableDynamicJson();
 dataSourceBuilder.MapEnum<PermissionsDomain.Permission>("permission");
 var pgDataSource = dataSourceBuilder.Build();
@@ -57,9 +63,6 @@ await using (var pgConnection = await pgDataSource.OpenConnectionAsync())
 }
 
 var wsConfig = new WebSocketConnector();
-
-// var bucket = builder.Configuration.GetSection("AWS").GetValue<string>("Bucket");
-// Console.WriteLine(bucket);
 
 var appRepos = new AppRepos(
     users: new PgRepo<User, Guid>(pgDataSource, UsersDomainSettings.UserTableName),
@@ -83,7 +86,7 @@ var appRepos = new AppRepos(
 
 // Database
 builder.Services.AddSingleton(pgDataSource);
-builder.Services.AddSingleton(_ => new AppConfig { UserPasswordSalt = userPasswordSalt, JwtSecret = jwtSecret });
+builder.Services.AddSingleton(_ => new AppConfig { UserPasswordSalt = userPasswordSalt, JwtSecret = jwtSecret, S3Bucket = s3Bucket });
 builder.Services.AddSingleton(_ => appRepos);
 builder.Services.AddScoped<IPermissionResolver>(sp =>
 {
@@ -106,13 +109,12 @@ builder.Services
 // WebSocket
 builder.Services.AddSingleton(_ => wsConfig);
 // AWS S3 setup
-var awsOptions = builder.Configuration.GetAWSOptions();
-builder.Services.AddDefaultAWSOptions(awsOptions);
 builder.Services.AddSingleton<IAmazonS3>(sp =>
 {
     var cfg = sp.GetRequiredService<IConfiguration>();
 
     var serviceUrl = cfg["AWS:ServiceUrl"]!;
+    var region = RegionEndpoint.GetBySystemName(cfg["AWS:Region"] ?? "us-east-1");
     var forcePathStyle = bool.Parse(cfg["AWS:ForcePathStyle"] ?? "false");
 
     var accessKey = cfg["AWS:AccessKey"] ?? "";
@@ -124,7 +126,9 @@ builder.Services.AddSingleton<IAmazonS3>(sp =>
     var s3Config = new AmazonS3Config
     {
         ServiceURL = serviceUrl,
-        ForcePathStyle = forcePathStyle
+        ForcePathStyle = forcePathStyle,
+        // RegionEndpoint would override ServiceURL, so the region is only used for request signing
+        AuthenticationRegion = region.SystemName,
     };
 
     return new AmazonS3Client(new BasicAWSCredentials(accessKey, secretKey), s3Config);
@@ -136,11 +140,8 @@ builder.Services.AddControllers();
 const string devOpenCors = "DevOpenCors";
 const string prodCors = "ProdCors";
 
-string[] allowedProdOrigins =
-[
-    "http://localhost:3001",
-    "https://chatney.com"
-];
+string[] allowedProdOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+    ?? ["http://localhost:3001", "https://chatney.com"];
 
 builder.Services.AddCors(options =>
 {
@@ -168,8 +169,16 @@ builder.Services
     .AddAuthorization()
     .AddQueryType<Query>()
     .AddMutationType<Mutation>()
-    .AddType<UploadType>();
-
+    .AddType<UploadType>()
+    .ModifyServerOptions(o =>
+    {
+        o.Tool.DisableTelemetry = true;
+#if DEBUG
+        o.Tool.Enable = true;
+#else
+        o.Tool.Enable = false;
+#endif
+    });
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddWebSockets(options =>
@@ -183,16 +192,5 @@ wsConfig.Configure(app);
 app.UseMiddleware<AuthMiddleware>();
 
 app.UseCors(app.Environment.IsDevelopment() ? devOpenCors : prodCors);
-app.MapGraphQL("/query").WithOptions(new GraphQLServerOptions
-{
-    EnableMultipartRequests = true,
-    Tool = {
-        DisableTelemetry = true,
-#if DEBUG
-        Enable = true
-#else
-        Enable = false
-#endif
-    }
-});
+app.MapGraphQL("/query");
 app.Run();
