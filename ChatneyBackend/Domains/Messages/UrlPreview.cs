@@ -5,6 +5,7 @@ using RepoDb.Attributes;
 
 namespace ChatneyBackend.Domains.Messages;
 
+/// <summary>Link preview metadata scraped from a URL in a message (OpenGraph/oEmbed).</summary>
 public class UrlPreview : IPgKey<UrlPreview, int>, IPgTimestamped
 {
     [Primary]
@@ -45,6 +46,7 @@ public class UrlPreview : IPgKey<UrlPreview, int>, IPgTimestamped
     [MaxLength(4096)]
     public string? FavIconUrl { get; set; }
 
+    /// <summary>The page's og:type, e.g. "website", "video", "article".</summary>
     [Map("type")]
     [MaxLength(255)]
     public string? Type { get; set; }

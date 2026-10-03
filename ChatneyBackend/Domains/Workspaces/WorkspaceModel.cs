@@ -5,6 +5,7 @@ using RepoDb.Attributes;
 
 namespace ChatneyBackend.Domains.Workspaces;
 
+/// <summary>Top-level container of channels; the first level of the permission hierarchy.</summary>
 public class Workspace : IPgKey<Workspace, int>, IPgTimestamped
 {
     [Primary]
@@ -16,6 +17,7 @@ public class Workspace : IPgKey<Workspace, int>, IPgTimestamped
     [MaxLength(255)]
     public required string Name { get; set; }
 
+    /// <summary>Secure object id, used to target this workspace's ACLs.</summary>
     [Map("sec_obj_id")]
     public int SecObjId { get; set; }
 
@@ -40,6 +42,7 @@ public class Workspace : IPgKey<Workspace, int>, IPgTimestamped
     public static int GetKey(Workspace record) => record.Id;
 }
 
+/// <summary>Input for creating a workspace.</summary>
 public class WorkspaceDto
 {
     [MaxLength(255)]

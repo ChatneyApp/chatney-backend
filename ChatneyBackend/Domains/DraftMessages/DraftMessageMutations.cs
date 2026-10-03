@@ -10,6 +10,10 @@ namespace ChatneyBackend.Domains.DraftMessages;
 
 public class DraftMessageMutations
 {
+    /// <summary>
+    /// Creates or overwrites the current user's draft for a channel/thread (matched by channelId + parentId).
+    /// Requires ChannelCreateMessage on the channel.
+    /// </summary>
     [Authorize]
     public async Task<DraftMessage?> UpdateDraftMessage(
         AppRepos repos,
@@ -46,6 +50,9 @@ public class DraftMessageMutations
         return message;
     }
 
+    /// <summary>Deletes one of the current user's drafts. Requires ChannelReadChannel on the draft's channel.</summary>
+    /// <param name="id">Draft id.</param>
+    /// <returns>False if the draft doesn't exist or belongs to another user.</returns>
     [Authorize]
     public async Task<bool> DeleteMessage(
         ClaimsPrincipal principal,

@@ -6,6 +6,10 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
         <EnableDefaultContentItems>false</EnableDefaultContentItems>
+        <!-- XML docs feed HotChocolate's schema descriptions -> frontend JSDoc.
+             CS1591: not every public member is documented. CS1573: DI-injected resolver params get no <param>. -->
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <NoWarn>$(NoWarn);CS1591;CS1573</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>

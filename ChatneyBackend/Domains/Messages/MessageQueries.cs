@@ -9,6 +9,7 @@ namespace ChatneyBackend.Domains.Messages;
 
 public class MessageQueries
 {
+    /// <summary>Top-level messages of a channel (thread replies excluded). Requires ChannelReadMessage on the channel.</summary>
     [Authorize]
     public async Task<MessagesResult> GetListChannelMessages(
         AppRepos repos,
@@ -34,6 +35,8 @@ public class MessageQueries
             m => m.ChannelId == channelId && m.ParentId == null);
     }
 
+    /// <summary>Replies in a thread. Requires ChannelReadMessage on the thread's channel.</summary>
+    /// <param name="threadId">Id of the thread's root message.</param>
     [Authorize]
     public async Task<MessagesResult> GetListThreadMessages(
         AppRepos repos,

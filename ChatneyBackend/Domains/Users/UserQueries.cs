@@ -8,14 +8,18 @@ using HotChocolate.Authorization;
 
 namespace ChatneyBackend.Domains.Users;
 
+/// <summary>Optional filters for users.list; null fields are ignored.</summary>
 public record UserFilter
 {
     public bool? Active { get; set; }
     public bool? Banned { get; set; }
+    /// <summary>Exact email match, case-insensitive.</summary>
     public string? Email { get; set; }
+    /// <summary>Exact nickname match, case-insensitive.</summary>
     public string? Nickname { get; set; }
 }
 
+/// <summary>The current user together with the names of their roles.</summary>
 public record UserProfile
 {
     public required User User { get; init; }
@@ -25,6 +29,7 @@ public record UserProfile
 
 public class UserQueries
 {
+    /// <summary>The current user's profile and role names.</summary>
     [Authorize]
     public async Task<UserProfile> GetMyProfile(
         AppRepos repos,
@@ -50,11 +55,15 @@ public class UserQueries
         };
     }
 
-    /// <summary>The frontend's "what can I do" source - see <see cref="IPermissionResolver.ResolveAll"/>.</summary>
+    /// <summary>
+    /// Everything the current user can do: global permissions plus effective permissions per workspace,
+    /// channel type and channel. Use it to show or hide UI actions.
+    /// </summary>
     [Authorize]
     public async Task<MyPermissions> MyPermissions(IPermissionResolver resolver) =>
         await resolver.ResolveAll();
 
+    /// <summary>A user by id, or null. Requires UserReadUser unless it's the current user.</summary>
     [Authorize]
     public async Task<User?> GetUserById(
         AppRepos repos,
@@ -74,6 +83,7 @@ public class UserQueries
         return await repos.Users.GetById(id);
     }
 
+    /// <summary>A user by nickname (case-insensitive), or null. Requires UserReadUser unless it's the current user.</summary>
     [Authorize]
     public async Task<User?> GetUserByNickname(
         AppRepos repos,
@@ -99,6 +109,7 @@ public class UserQueries
         return user;
     }
 
+    /// <summary>All users matching the filter. Requires UserReadUser.</summary>
     [Authorize]
     public async Task<List<User>> GetList(
         AppRepos repos,
@@ -139,6 +150,8 @@ public class UserQueries
         return users;
     }
 
+    /// <summary>Nickname autocomplete for starting direct messages: up to 20 active, non-banned users, excluding yourself.</summary>
+    /// <param name="prefix">Case-insensitive nickname prefix. Blank returns an empty list.</param>
     [Authorize]
     public async Task<List<DirectMessageUser>> SearchByNickname(
         AppRepos repos,

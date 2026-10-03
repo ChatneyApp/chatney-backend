@@ -7,6 +7,7 @@ namespace ChatneyBackend.Domains.Attachments;
 
 public class AttachmentQueries
 {
+    /// <summary>Attachment metadata by id, or null if it doesn't exist. Requires AttachmentRead.</summary>
     [Authorize]
     public async Task<Attachment?> GetById(
         AppRepos repos,

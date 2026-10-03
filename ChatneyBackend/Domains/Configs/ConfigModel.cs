@@ -5,6 +5,7 @@ using RepoDb.Attributes;
 
 namespace ChatneyBackend.Domains.Configs;
 
+/// <summary>A system-wide configuration value.</summary>
 public class Config : IPgKey<Config, int>, IPgTimestamped
 {
     [Primary]
@@ -12,14 +13,17 @@ public class Config : IPgKey<Config, int>, IPgTimestamped
     [Map("id")]
     public int Id { get; set; }
 
+    /// <summary>Unique dotted key, e.g. "messages.sendCooldown".</summary>
     [Map("name")]
     [MaxLength(255)]
     public required string Name { get; set; }
 
+    /// <summary>Value serialized as a string; parse according to type.</summary>
     [Map("value")]
     [MaxLength(2048)]
     public required string Value { get; set; }
 
+    /// <summary>How to parse value: "string", "int" or "string[]" (comma-separated).</summary>
     [Map("type")]
     [MaxLength(255)]
     public string? Type { get; set; }

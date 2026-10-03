@@ -7,6 +7,7 @@ namespace ChatneyBackend.Domains.Users;
 
 public readonly record struct UserRoleKey(Guid UserId, int RoleId);
 
+/// <summary>Assignment of a role to a user. A user can hold several roles.</summary>
 public class UserRole : IPgKey<UserRole, UserRoleKey>
 {
     [Primary]
@@ -31,24 +32,29 @@ public class ChannelSettings
     public bool Muted { get; set; }
 }
 
+/// <summary>A user account.</summary>
 public class User : IPgKey<User, Guid>, IPgTimestamped
 {
     [Primary]
     [Map("id")]
     public Guid Id { get; set; }
 
+    /// <summary>Unique handle: 1-20 chars of [a-zA-Z0-9_].</summary>
     [Map("nickname")]
     public required string Nickname { get; set; }
 
     [Map("full_name")]
     public string? FullName { get; set; }
 
+    /// <summary>Inactive users are hidden from user search.</summary>
     [Map("active")]
     public bool Active { get; set; }
 
+    /// <summary>Email address has been verified.</summary>
     [Map("verified")]
     public bool Verified { get; set; }
 
+    /// <summary>Banned users are hidden from user search.</summary>
     [Map("banned")]
     public bool Banned { get; set; }
 
@@ -78,11 +84,10 @@ public class User : IPgKey<User, Guid>, IPgTimestamped
     public static Guid GetKey(User record) => record.Id;
 }
 
-/// <summary>
-/// User registers themselves
-/// </summary>
+/// <summary>Input for self-registration.</summary>
 public class UserRegisterDto : IDto<User>
 {
+    /// <summary>1-20 chars of [a-zA-Z0-9_], trimmed. INVALID_NICKNAME if malformed, NICKNAME_TAKEN if in use.</summary>
     public required string Nickname { get; set; }
 
     public string? FullName { get; set; }
@@ -111,11 +116,10 @@ public class UserRegisterDto : IDto<User>
     }
 }
 
-/// <summary>
-/// Admin creates a user
-/// </summary>
+/// <summary>Input for an admin creating a user.</summary>
 public class CreateUserDto : IDto<User>
 {
+    /// <summary>1-20 chars of [a-zA-Z0-9_], trimmed. INVALID_NICKNAME if malformed, NICKNAME_TAKEN if in use.</summary>
     public required string Nickname { get; set; }
 
     public string? FullName { get; set; }
@@ -132,6 +136,7 @@ public class CreateUserDto : IDto<User>
 
     public required string Password { get; set; }
 
+    /// <summary>Roles to assign. Null or empty assigns the configured default role.</summary>
     public List<int>? RoleIds { get; set; }
 
     public User ToModel()
@@ -153,10 +158,12 @@ public class CreateUserDto : IDto<User>
     }
 }
 
+/// <summary>Input for an admin updating a user.</summary>
 public class UpdateUserDto
 {
     public Guid Id { get; set; }
 
+    /// <summary>1-20 chars of [a-zA-Z0-9_], trimmed. INVALID_NICKNAME if malformed, NICKNAME_TAKEN if in use.</summary>
     public required string Nickname { get; set; }
 
     public string? FullName { get; set; }
@@ -171,30 +178,40 @@ public class UpdateUserDto
 
     public required string Email { get; set; }
 
+    /// <summary>New password. Null or blank keeps the current one.</summary>
     public string? Password { get; set; }
 
+    /// <summary>Full replacement set of the user's roles.</summary>
     public required List<int> RoleIds { get; set; }
 }
 
+/// <summary>Input for updating your own profile. Null fields are left unchanged.</summary>
 public class UpdateMyProfileDto
 {
+    /// <summary>1-20 chars of [a-zA-Z0-9_], trimmed. INVALID_NICKNAME if malformed, NICKNAME_TAKEN if in use.</summary>
     public string? Nickname { get; set; }
 
+    /// <summary>Empty string clears it.</summary>
     public string? FullName { get; set; }
 
     public string? Email { get; set; }
 
+    /// <summary>Empty string clears it.</summary>
     public string? AvatarUrl { get; set; }
 
+    /// <summary>Required when changing the password. FORBIDDEN_ACTION if missing or wrong.</summary>
     public string? CurrentPassword { get; set; }
 
+    /// <summary>New password. Requires currentPassword.</summary>
     public string? NewPassword { get; set; }
 }
 
+/// <summary>Result of a successful login.</summary>
 public class UserLoginResponse
 {
     public required string Id { get; set; }
 
+    /// <summary>JWT to send as a Bearer token on subsequent requests.</summary>
     public required string Token { get; set; }
 }
 

@@ -6,6 +6,7 @@ using RepoDb.Attributes;
 
 namespace ChatneyBackend.Domains.Channels;
 
+/// <summary>A conversation: a workspace channel or a direct message (isDm).</summary>
 public class Channel : IPgKey<Channel, int>, IPgTimestamped
 {
     [Primary]
@@ -17,15 +18,19 @@ public class Channel : IPgKey<Channel, int>, IPgTimestamped
     [MaxLength(255)]
     public required string Name { get; set; }
 
+    /// <summary>Channel type. Null for direct messages.</summary>
     [Map("channel_type_id")]
     public int? ChannelTypeId { get; set; }
 
+    /// <summary>Owning workspace. Null for direct messages.</summary>
     [Map("workspace_id")]
     public int? WorkspaceId { get; set; }
 
+    /// <summary>True for a direct-message conversation (no workspace or channel type).</summary>
     [Map("is_dm")]
     public bool IsDm { get; set; }
 
+    /// <summary>Secure object id, used to target this channel's ACLs.</summary>
     [Map("sec_obj_id")]
     public int SecObjId { get; set; }
 
@@ -53,6 +58,7 @@ public class Channel : IPgKey<Channel, int>, IPgTimestamped
     public static int GetKey(Channel record) => record.Id;
 }
 
+/// <summary>Input for creating a channel.</summary>
 public class ChannelDto : IDto<Channel>
 {
     [MaxLength(255)]
@@ -92,6 +98,7 @@ public class WebsocketChannelDeletedPayload
     public bool IsDm { get; set; }
 }
 
+/// <summary>Public info of a user, for DM lists and user search.</summary>
 public class DirectMessageUser
 {
     public Guid Id { get; set; }
@@ -106,9 +113,11 @@ public class DirectMessageUser
     };
 }
 
+/// <summary>A DM conversation as seen by the current user.</summary>
 public class DirectMessage
 {
     public required Channel Channel { get; set; }
+    /// <summary>Participants other than the current user, sorted by nickname.</summary>
     public required List<DirectMessageUser> OtherUsers { get; set; }
 
     public static DirectMessage From(

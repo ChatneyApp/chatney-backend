@@ -11,9 +11,12 @@ namespace ChatneyBackend.Domains.InstallWizard;
 
 public class InstallWizardMutations
 {
+    /// <summary>Outcome of an install/uninstall run.</summary>
     public class InstallSystemResult
     {
+        /// <summary>"success", "installed" (already installed, nothing done) or "failed".</summary>
         public required string status { get; set; }
+        /// <summary>Error details when status is "failed".</summary>
         public string? message { get; set; }
     }
 
@@ -25,6 +28,11 @@ public class InstallWizardMutations
         Permission.ChannelCreateMessage,
     ];
 
+    /// <summary>
+    /// Runs migrations and seeds a fresh system: admin and user roles, a default workspace with
+    /// public/private channels, an admin user, test users and default config. Safe to call again: returns
+    /// status "installed" if the system is already installed.
+    /// </summary>
     public async Task<InstallSystemResult> InstallSystem(
         AppConfig appConfig,
         AppRepos repos,
@@ -241,6 +249,7 @@ public class InstallWizardMutations
         };
     }
 
+    /// <summary>Rolls back every migration, deleting ALL data. Development use only.</summary>
     public async Task<InstallSystemResult> UnInstallSystem(
         AppConfig appConfig,
         AppRepos repos,

@@ -13,6 +13,15 @@ namespace ChatneyBackend.Domains.Attachments;
 
 public class AttachmentMutations
 {
+    /// <summary>
+    /// Uploads a file to storage and records its metadata. Requires AttachmentUpload.
+    /// Reference the returned id in a message's attachmentIds.
+    /// </summary>
+    /// <param name="file">The file (multipart upload). Must not be empty.</param>
+    /// <param name="asFile">Show as a downloadable file rather than inline media.</param>
+    /// <param name="width">Media width in pixels, if known by the client.</param>
+    /// <param name="height">Media height in pixels, if known by the client.</param>
+    /// <param name="duration">Audio/video duration in seconds, if known by the client.</param>
     [Authorize]
     public async Task<Attachment> Upload(
         AppRepos repos,

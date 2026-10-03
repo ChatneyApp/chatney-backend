@@ -9,6 +9,7 @@ namespace ChatneyBackend.Domains.DraftMessages;
 
 public class DraftMessageQueries
 {
+    /// <summary>The current user's drafts in channels they can still read.</summary>
     [Authorize]
     public async Task<List<DraftMessage>> GetDraftMessages(
         ClaimsPrincipal principal,

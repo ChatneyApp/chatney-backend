@@ -7,6 +7,8 @@ namespace ChatneyBackend.Domains.Configs;
 
 public class ConfigMutations
 {
+    /// <summary>Overwrites a config entry, matched by id. Requires ConfigUpdateValue.</summary>
+    /// <returns>The saved entry, or null if no entry with that id exists.</returns>
     [Authorize]
     public async Task<Config?> UpdateConfig(
         AppRepos repos,

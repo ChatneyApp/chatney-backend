@@ -9,6 +9,7 @@ namespace ChatneyBackend.Domains.Channels;
 
 public class ChannelMutations
 {
+    /// <summary>Creates a channel type. Requires ChannelCreateChannel globally.</summary>
     [Authorize]
     public async Task<ChannelType> AddChannelType(
         AppRepos repos,
@@ -29,6 +30,8 @@ public class ChannelMutations
         return channelType;
     }
 
+    /// <summary>Updates a channel type, matched by id. Requires ChannelEditChannel on it.</summary>
+    /// <returns>The saved channel type, or null if it doesn't exist.</returns>
     [Authorize]
     public async Task<ChannelType?> UpdateChannelType(
         AppRepos repos,
@@ -47,6 +50,8 @@ public class ChannelMutations
         return updated ? channelType : null;
     }
 
+    /// <summary>Deletes a channel type. Requires ChannelDeleteChannelType on it.</summary>
+    /// <returns>True if it existed and was deleted.</returns>
     [Authorize]
     public async Task<bool> DeleteChannelType(
         AppRepos repos,
@@ -71,6 +76,10 @@ public class ChannelMutations
         return deleted;
     }
 
+    /// <summary>
+    /// Creates a channel in a workspace. Requires ChannelCreateChannel on the workspace.
+    /// NOT_FOUND if the workspace doesn't exist, FORBIDDEN_ACTION if the channel type doesn't exist.
+    /// </summary>
     [Authorize]
     public async Task<Channel> AddChannel(
         AppRepos repos,
@@ -103,6 +112,8 @@ public class ChannelMutations
         return channel;
     }
 
+    /// <summary>Updates a channel, matched by id. Requires ChannelEditChannel on it.</summary>
+    /// <returns>The saved channel, or null if it doesn't exist.</returns>
     [Authorize]
     public async Task<Channel?> UpdateChannel(
         AppRepos repos,
@@ -123,6 +134,8 @@ public class ChannelMutations
         return updated ? channel : null;
     }
 
+    /// <summary>Deletes a channel. Requires ChannelDeleteChannel on it.</summary>
+    /// <returns>True if it existed and was deleted.</returns>
     [Authorize]
     public async Task<bool> DeleteChannel(
         AppRepos repos,
@@ -152,6 +165,7 @@ public class ChannelMutations
         return deleted;
     }
 
+    /// <summary>Creates a channel group (sidebar section). Requires ChannelAddChannelGroup on the workspace.</summary>
     [Authorize]
     public async Task<ChannelGroup> AddChannelGroup(
         AppRepos repos,
@@ -172,6 +186,8 @@ public class ChannelMutations
         return channelGroup;
     }
 
+    /// <summary>Updates a channel group, matched by id. Requires ChannelEditChannelGroup on its workspace.</summary>
+    /// <returns>The saved group, or null if it or its workspace doesn't exist.</returns>
     [Authorize]
     public async Task<ChannelGroup?> UpdateChannelGroup(
         AppRepos repos,
@@ -191,6 +207,8 @@ public class ChannelMutations
         return updated ? channelGroup : null;
     }
 
+    /// <summary>Deletes a channel group. Requires ChannelDeleteChannelGroup on its workspace.</summary>
+    /// <returns>True if it existed and was deleted.</returns>
     [Authorize]
     public async Task<bool> DeleteChannelGroup(
         AppRepos repos,
@@ -215,6 +233,12 @@ public class ChannelMutations
         return await repos.ChannelGroups.DeleteById(id);
     }
 
+    /// <summary>
+    /// Returns the DM conversation with exactly these participants, creating it if needed. Every participant
+    /// gets read/write access to it. FORBIDDEN_ACTION if there's nobody besides yourself, NOT_FOUND if a user
+    /// doesn't exist.
+    /// </summary>
+    /// <param name="otherUserIds">The other participants. You are added automatically; duplicates are ignored.</param>
     [Authorize]
     public async Task<DirectMessage> OpenDirectMessage(
         AppRepos repos,

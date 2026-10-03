@@ -7,6 +7,7 @@ namespace ChatneyBackend.Domains.Workspaces;
 
 public class WorkspaceQueries
 {
+    /// <summary>A workspace by id, or null if it doesn't exist. Requires WorkspaceReadWorkspace on it.</summary>
     [Authorize]
     public async Task<Workspace?> GetWorkspaceById(
         AppRepos repos,
@@ -25,6 +26,7 @@ public class WorkspaceQueries
         return workspace;
     }
 
+    /// <summary>A workspace by exact name, or null if it doesn't exist. Requires WorkspaceReadWorkspace on it.</summary>
     [Authorize]
     public async Task<Workspace?> GetWorkspaceByName(
         AppRepos repos,
@@ -43,6 +45,7 @@ public class WorkspaceQueries
         return workspace;
     }
 
+    /// <summary>Workspaces the current user has WorkspaceReadWorkspace on.</summary>
     [Authorize]
     public async Task<List<Workspace>> GetList(IPermissionResolver resolver) =>
         // Served from the resolver's AclSnapshot (already a full table read for permission

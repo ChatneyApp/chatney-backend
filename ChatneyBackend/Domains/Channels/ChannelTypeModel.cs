@@ -5,6 +5,7 @@ using RepoDb.Attributes;
 
 namespace ChatneyBackend.Domains.Channels;
 
+/// <summary>A category of channels (e.g. public, private); the second level of the permission hierarchy.</summary>
 public class ChannelType : IPgKey<ChannelType, int>, IPgTimestamped
 {
     [Primary]
@@ -16,10 +17,12 @@ public class ChannelType : IPgKey<ChannelType, int>, IPgTimestamped
     [MaxLength(255)]
     public required string Name { get; set; }
 
+    /// <summary>Stable machine name, e.g. "public".</summary>
     [Map("key")]
     [MaxLength(255)]
     public required string Key { get; set; }
 
+    /// <summary>Secure object id, used to target this channel type's ACLs.</summary>
     [Map("sec_obj_id")]
     public int SecObjId { get; set; }
 
@@ -45,6 +48,7 @@ public class ChannelType : IPgKey<ChannelType, int>, IPgTimestamped
     public static int GetKey(ChannelType record) => record.Id;
 }
 
+/// <summary>Input for creating a channel type.</summary>
 public class ChannelTypeDto
 {
     [MaxLength(255)]

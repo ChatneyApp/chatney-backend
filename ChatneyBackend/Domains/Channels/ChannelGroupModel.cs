@@ -5,6 +5,7 @@ using RepoDb.Attributes;
 
 namespace ChatneyBackend.Domains.Channels;
 
+/// <summary>A named, ordered sidebar section of channels within a workspace. It doesn't affect permissions.</summary>
 public class ChannelGroup : IPgKey<ChannelGroup, int>, IPgTimestamped
 {
     [Primary]
@@ -19,9 +20,11 @@ public class ChannelGroup : IPgKey<ChannelGroup, int>, IPgTimestamped
     [Map("workspace_id")]
     public int WorkspaceId { get; set; }
 
+    /// <summary>Channels in this group, in display order.</summary>
     [Map("channel_ids")]
     public required int[] ChannelIds { get; set; }
 
+    /// <summary>Sort position among the workspace's groups.</summary>
     [Map("order")]
     public int Order { get; set; }
 
@@ -49,6 +52,7 @@ public class ChannelGroup : IPgKey<ChannelGroup, int>, IPgTimestamped
     public static int GetKey(ChannelGroup record) => record.Id;
 }
 
+/// <summary>Input for creating a channel group.</summary>
 public class ChannelGroupDto
 {
     [MaxLength(255)]

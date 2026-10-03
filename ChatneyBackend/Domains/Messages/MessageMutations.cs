@@ -12,12 +12,19 @@ namespace ChatneyBackend.Domains.Messages;
 
 public class MessageMutations
 {
+    /// <summary>Outcome of a reaction change.</summary>
     public class ReactionEndpointOutput
     {
+        /// <summary>"success" or "error".</summary>
         public required string status { get; set; }
+        /// <summary>Error reason when status is "error".</summary>
         public string? message { get; set; }
     }
 
+    /// <summary>
+    /// Posts a message, optionally as a thread reply (parentId) or a quote-reply (replyTo).
+    /// Requires ChannelCreateMessage on the channel. URL previews are generated from the content.
+    /// </summary>
     [Authorize]
     public async Task<MessageWithUser?> AddMessage(
         AppRepos repos,
@@ -123,6 +130,11 @@ public class MessageMutations
         return urlPreviewIds.ToArray();
     }
 
+    /// <summary>
+    /// Edits a message's content and attachments. Requires ChannelEditMessage, or ChannelEditOwnMessage
+    /// for your own message. NOT_FOUND if the message doesn't exist.
+    /// </summary>
+    /// <returns>True if the message was updated.</returns>
     [Authorize]
     public async Task<bool> UpdateMessage(
         AppRepos repos,
@@ -203,6 +215,12 @@ public class MessageMutations
         }
     }
 
+    /// <summary>
+    /// Deletes a message. Deleting a thread root also deletes its replies. Requires ChannelDeleteMessage,
+    /// or ChannelDeleteOwnMessage for your own message. NOT_FOUND if the message doesn't exist.
+    /// </summary>
+    /// <param name="id">Message to delete.</param>
+    /// <returns>True if the message was deleted.</returns>
     [Authorize]
     public async Task<bool> DeleteMessage(
         WebSocketConnector webSocketConnector,
@@ -277,6 +295,9 @@ public class MessageMutations
         }
     }
 
+    /// <summary>Adds the current user's reaction to a message. No-op if it already exists.</summary>
+    /// <param name="code">Reaction code (e.g. an emoji shortcode).</param>
+    /// <param name="messageId">Message to react to.</param>
     [Authorize]
     public async Task<ReactionEndpointOutput> AddReaction(
         WebSocketConnector webSocketConnector,
@@ -343,6 +364,9 @@ public class MessageMutations
         }
     }
 
+    /// <summary>Removes the current user's reaction from a message. Returns status "error" if it didn't exist.</summary>
+    /// <param name="code">Reaction code to remove.</param>
+    /// <param name="messageId">Message to remove the reaction from.</param>
     [Authorize]
     public async Task<ReactionEndpointOutput> DeleteReaction(
         WebSocketConnector webSocketConnector,
