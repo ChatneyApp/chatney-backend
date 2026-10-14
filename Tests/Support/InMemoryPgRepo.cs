@@ -111,6 +111,30 @@ public class InMemoryPgRepo<T, TKey> : IPgRepo<T, TKey> where T : class, IPgKey<
             throw new NotSupportedException($"Raw GetList is not supported for {typeof(T).Name}");
         }
 
+        if (sql.Contains("LIMIT 20", StringComparison.Ordinal))
+        {
+            var actorId = ReadAnonymousGuid(param, "ActorId");
+            var prefix = ReadAnonymousString(param, "Prefix") ?? string.Empty;
+
+            lock (_lock)
+            {
+                _readCallCount++;
+                var matches = _items
+                    .Cast<User>()
+                    .Where(user =>
+                        user.Id != actorId &&
+                        user.Active &&
+                        !user.Banned &&
+                        user.Nickname.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                    .OrderBy(user => user.Nickname, StringComparer.OrdinalIgnoreCase)
+                    .Take(20)
+                    .Cast<T>()
+                    .ToList();
+
+                return Task.FromResult(matches);
+            }
+        }
+
         var hasActive = ReadAnonymousBool(param, "HasActive");
         var active = ReadAnonymousBool(param, "Active");
         var hasBanned = ReadAnonymousBool(param, "HasBanned");

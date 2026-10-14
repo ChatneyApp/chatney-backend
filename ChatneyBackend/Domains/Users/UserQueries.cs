@@ -156,17 +156,20 @@ public class UserQueries
         }
 
         var actorId = principal.GetUserGuid();
-        var users = await repos.Users.GetList();
-        const int limit = 20;
+        var users = await repos.Users.GetList(
+            """
+            SELECT *
+            FROM users
+            WHERE id != @ActorId
+              AND active
+              AND NOT banned
+              AND LEFT(LOWER(nickname), LENGTH(@Prefix)) = LOWER(@Prefix)
+            ORDER BY LOWER(nickname)
+            LIMIT 20;
+            """,
+            new { ActorId = actorId, Prefix = trimmed });
 
         return users
-            .Where(user =>
-                user.Id != actorId &&
-                user.Active &&
-                !user.Banned &&
-                user.Nickname.StartsWith(trimmed, StringComparison.OrdinalIgnoreCase))
-            .OrderBy(user => user.Nickname, StringComparer.OrdinalIgnoreCase)
-            .Take(limit)
             .Select(user => new DirectMessageUser
             {
                 Id = user.Id,
