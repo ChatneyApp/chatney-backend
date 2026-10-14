@@ -81,7 +81,10 @@ var appRepos = new AppRepos(
     workspaces: new PgRepo<Workspace, int>(pgDataSource, WorkspacesDomainSettings.WorkspaceTableName),
     secureObjects: new PgRepo<SecureObject, int>(pgDataSource, RolesDomainSettings.SecureObjectTableName),
     roleAcls: new PgRepo<RoleAcl, RoleAclKey>(pgDataSource, RolesDomainSettings.RoleAclTableName),
-    userAcls: new PgRepo<UserAcl, UserAclKey>(pgDataSource, RolesDomainSettings.UserAclTableName)
+    userAcls: new PgRepo<UserAcl, UserAclKey>(pgDataSource, RolesDomainSettings.UserAclTableName),
+    passwordResetRequests: new PgRepo<PasswordResetRequest, Guid>(
+        pgDataSource,
+        UsersDomainSettings.PasswordResetRequestTableName)
 );
 
 // Database
@@ -90,6 +93,9 @@ var appConfig = new AppConfig { UserPasswordSalt = userPasswordSalt, JwtSecret =
 await SystemConfigReader.LoadInto(appConfig, appRepos.Configs);
 builder.Services.AddSingleton(appConfig);
 builder.Services.AddSingleton(_ => appRepos);
+builder.Services.Configure<PasswordResetOptions>(
+    builder.Configuration.GetSection("PasswordReset"));
+builder.Services.AddSingleton<IPasswordResetEmailSender, SmtpPasswordResetEmailSender>();
 builder.Services.AddScoped<IPermissionResolver>(sp =>
 {
     var http = sp.GetRequiredService<IHttpContextAccessor>().HttpContext;

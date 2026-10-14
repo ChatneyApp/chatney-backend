@@ -5,6 +5,19 @@ namespace ChatneyBackend.Domains.Users;
 
 public static class UserLookup
 {
+    public static async Task<User?> FindByLogin(AppRepos repos, string login)
+    {
+        return await repos.Users.GetOne(
+            """
+            SELECT *
+            FROM users
+            WHERE LOWER(email) = LOWER(@Login)
+               OR LOWER(nickname) = LOWER(@Login)
+            LIMIT 1;
+            """,
+            new { Login = login.Trim() });
+    }
+
     public static async Task<User?> FindByLogin(AppRepos repos, string login, string passwordHash)
     {
         var loginTrimmed = login.Trim();

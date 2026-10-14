@@ -62,6 +62,18 @@ Table "user_roles" {
   }
 }
 
+Table "password_reset_requests" {
+  "code" uuid [pk, not null]
+  "user_id" uuid [not null]
+  "created_at" timestamptz [not null]
+  "valid_until" timestamptz [not null]
+
+  Indexes {
+    user_id [type: btree, name: "ix_password_reset_requests_user_id"]
+    valid_until [type: btree, name: "ix_password_reset_requests_valid_until"]
+  }
+}
+
 Table "secure_objects" {
   "id" int4 [pk, not null, increment]
   "description" jsonb
@@ -281,6 +293,8 @@ Ref "fk_user_channel_settings_user_id":"users"."id" < "user_channel_settings"."u
 Ref "fk_user_roles_role_id":"roles"."id" < "user_roles"."role_id" [delete: cascade]
 
 Ref "fk_user_roles_user_id":"users"."id" < "user_roles"."user_id" [delete: cascade]
+
+Ref "fk_password_reset_requests_user_id":"users"."id" < "password_reset_requests"."user_id" [delete: cascade]
 
 Ref "fk_user_acls_user_id":"users"."id" < "user_acls"."user_id" [delete: cascade]
 

@@ -5,6 +5,7 @@ using ChatneyBackend.Domains.Users;
 using ChatneyBackend.Tests.Support;
 using ChatneyBackend.Utils;
 using HotChocolate;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace ChatneyBackend.Tests.Domains.Users;
 
@@ -217,5 +218,122 @@ public class UserMutationsTests
                 Email = "registrant@example.com",
                 Password = "password",
             }));
+    }
+
+    [Fact]
+    public async Task RequestPasswordReset_CreatesOneHourRequestAndSendsEmail()
+    {
+        var context = new UserRoleMutationsTestContext();
+        var emailSender = new RecordingPasswordResetEmailSender();
+        var before = DateTime.UtcNow;
+
+        var result = await Mutations.RequestPasswordReset(
+            context.Repos,
+            emailSender,
+            NullLogger<UserMutations>.Instance,
+            context.TargetUser.Nickname.ToUpperInvariant(),
+            CancellationToken.None);
+
+        var request = Assert.Single(context.PasswordResetRequestsRepo.Items);
+        Assert.True(result);
+        Assert.Equal(context.TargetUser.Id, request.UserId);
+        Assert.InRange(request.ValidUntil, before.AddHours(1), DateTime.UtcNow.AddHours(1));
+        Assert.Equal((context.TargetUser.Email, request.Code), Assert.Single(emailSender.Messages));
+    }
+
+    [Fact]
+    public async Task RequestPasswordReset_ForUnknownLogin_ReturnsSameResponseWithoutCreatingRequest()
+    {
+        var context = new UserRoleMutationsTestContext();
+        var emailSender = new RecordingPasswordResetEmailSender();
+
+        var result = await Mutations.RequestPasswordReset(
+            context.Repos,
+            emailSender,
+            NullLogger<UserMutations>.Instance,
+            "missing@example.com",
+            CancellationToken.None);
+
+        Assert.True(result);
+        Assert.Empty(context.PasswordResetRequestsRepo.Items);
+        Assert.Empty(emailSender.Messages);
+    }
+
+    [Fact]
+    public async Task ResetPassword_UpdatesPasswordAndConsumesAllUserRequests()
+    {
+        var context = new UserRoleMutationsTestContext();
+        var code = Guid.NewGuid();
+        context.PasswordResetRequestsRepo.Seed(
+            new PasswordResetRequest
+            {
+                Code = code,
+                UserId = context.TargetUser.Id,
+                CreatedAt = DateTime.UtcNow,
+                ValidUntil = DateTime.UtcNow.AddHours(1),
+            },
+            new PasswordResetRequest
+            {
+                Code = Guid.NewGuid(),
+                UserId = context.TargetUser.Id,
+                CreatedAt = DateTime.UtcNow,
+                ValidUntil = DateTime.UtcNow.AddHours(1),
+            });
+
+        var result = await Mutations.ResetPassword(
+            AppConfig,
+            context.Repos,
+            code,
+            "new-password");
+
+        Assert.True(result);
+        Assert.Equal(
+            Helpers.GetMd5Hash("new-password" + AppConfig.UserPasswordSalt),
+            context.TargetUser.Password);
+        Assert.Empty(context.PasswordResetRequestsRepo.Items);
+        Assert.False(await Mutations.ResetPassword(
+            AppConfig,
+            context.Repos,
+            code,
+            "another-password"));
+    }
+
+    [Fact]
+    public async Task ResetPassword_RejectsAndDeletesExpiredRequest()
+    {
+        var context = new UserRoleMutationsTestContext();
+        var originalPassword = context.TargetUser.Password;
+        var code = Guid.NewGuid();
+        context.PasswordResetRequestsRepo.Seed(new PasswordResetRequest
+        {
+            Code = code,
+            UserId = context.TargetUser.Id,
+            CreatedAt = DateTime.UtcNow.AddHours(-2),
+            ValidUntil = DateTime.UtcNow.AddHours(-1),
+        });
+
+        var result = await Mutations.ResetPassword(
+            AppConfig,
+            context.Repos,
+            code,
+            "new-password");
+
+        Assert.False(result);
+        Assert.Equal(originalPassword, context.TargetUser.Password);
+        Assert.Empty(context.PasswordResetRequestsRepo.Items);
+    }
+
+    private sealed class RecordingPasswordResetEmailSender : IPasswordResetEmailSender
+    {
+        public List<(string Email, Guid Code)> Messages { get; } = [];
+
+        public Task SendAsync(
+            User user,
+            Guid code,
+            CancellationToken cancellationToken = default)
+        {
+            Messages.Add((user.Email, code));
+            return Task.CompletedTask;
+        }
     }
 }

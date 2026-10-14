@@ -33,6 +33,7 @@ public sealed class MessageMutationsTestContext
     public InMemoryPgRepo<SecureObject, int> SecureObjectsRepo { get; } = new();
     public InMemoryPgRepo<RoleAcl, RoleAclKey> RoleAclsRepo { get; } = new();
     public InMemoryPgRepo<UserAcl, UserAclKey> UserAclsRepo { get; } = new();
+    public InMemoryPgRepo<PasswordResetRequest, Guid> PasswordResetRequestsRepo { get; } = new();
 
     public User User { get; }
     public Workspace Workspace { get; }
@@ -131,7 +132,8 @@ public sealed class MessageMutationsTestContext
             WorkspacesRepo,
             SecureObjectsRepo,
             RoleAclsRepo,
-            UserAclsRepo);
+            UserAclsRepo,
+            PasswordResetRequestsRepo);
 
         Resolver = PermissionResolver.For(Repos, User);
     }

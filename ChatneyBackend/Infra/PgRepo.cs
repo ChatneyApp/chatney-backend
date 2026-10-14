@@ -86,6 +86,12 @@ public class PgRepo<T, TKey> : IPgRepo<T, TKey> where T : class, IPgKey<T, TKey>
         return (await conn.QueryAsync(SpanContainsRewriter.Rewrite(where), top: 1)).FirstOrDefault();
     }
 
+    public async Task<T?> GetOne(string sql, object? param = null)
+    {
+        await using var conn = await OpenAsync();
+        return (await conn.ExecuteQueryAsync<T>(sql, param)).FirstOrDefault();
+    }
+
     public async Task<List<T>> GetList()
     {
         await using var conn = await OpenAsync();
@@ -96,6 +102,12 @@ public class PgRepo<T, TKey> : IPgRepo<T, TKey> where T : class, IPgKey<T, TKey>
     {
         await using var conn = await OpenAsync();
         return (await conn.QueryAsync(SpanContainsRewriter.Rewrite(where))).ToList();
+    }
+
+    public async Task<List<T>> GetList(string sql, object? param = null)
+    {
+        await using var conn = await OpenAsync();
+        return (await conn.ExecuteQueryAsync<T>(sql, param)).ToList();
     }
 
     public async Task<TKey> InsertOne(T record)

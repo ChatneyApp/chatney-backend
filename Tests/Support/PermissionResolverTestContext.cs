@@ -39,6 +39,7 @@ public sealed class PermissionResolverTestContext
     public InMemoryPgRepo<SecureObject, int> SecureObjectsRepo { get; } = new();
     public InMemoryPgRepo<RoleAcl, RoleAclKey> RoleAclsRepo { get; } = new();
     public InMemoryPgRepo<UserAcl, UserAclKey> UserAclsRepo { get; } = new();
+    public InMemoryPgRepo<PasswordResetRequest, Guid> PasswordResetRequestsRepo { get; } = new();
 
     public AppRepos Repos { get; }
 
@@ -139,7 +140,8 @@ public sealed class PermissionResolverTestContext
             WorkspacesRepo,
             SecureObjectsRepo,
             RoleAclsRepo,
-            UserAclsRepo);
+            UserAclsRepo,
+            PasswordResetRequestsRepo);
     }
 
     public static User CreateUser(string nickname) => new()

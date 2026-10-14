@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Text.Json;
 using ChatneyBackend.Domains.Messages;
 using ChatneyBackend.Domains.Roles;
+using ChatneyBackend.Domains.Users;
 using ChatneyBackend.Infra;
 using Npgsql;
 
@@ -58,6 +59,31 @@ public class InMemoryPgRepo<T, TKey> : IPgRepo<T, TKey> where T : class, IPgKey<
 
     public Task<T?> GetOne(Expression<Func<T, bool>> where) => Task.FromResult(GetOneSync(where));
 
+    public Task<T?> GetOne(string sql, object? param = null)
+    {
+        if (typeof(T) != typeof(User) ||
+            !sql.Contains("FROM users", StringComparison.Ordinal))
+        {
+            throw new NotSupportedException($"Raw GetOne is not supported for {typeof(T).Name}");
+        }
+
+        var login = ReadAnonymousString(param, "Login") ?? string.Empty;
+
+        lock (_lock)
+        {
+            _readCallCount++;
+            var user = _items
+                .Cast<User>()
+                .FirstOrDefault(item =>
+                    string.Equals(item.Email, login, StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(item.Nickname, login, StringComparison.OrdinalIgnoreCase));
+
+            return Task.FromResult(user == null
+                ? null
+                : (T)(object)user);
+        }
+    }
+
     public Task<List<T>> GetList()
     {
         lock (_lock)
@@ -74,6 +100,64 @@ public class InMemoryPgRepo<T, TKey> : IPgRepo<T, TKey> where T : class, IPgKey<
             _readCallCount++;
             var predicate = where.Compile();
             return Task.FromResult(_items.Where(predicate).ToList());
+        }
+    }
+
+    public Task<List<T>> GetList(string sql, object? param = null)
+    {
+        if (typeof(T) != typeof(User) ||
+            !sql.Contains("FROM users", StringComparison.Ordinal))
+        {
+            throw new NotSupportedException($"Raw GetList is not supported for {typeof(T).Name}");
+        }
+
+        if (sql.Contains("LIMIT 20", StringComparison.Ordinal))
+        {
+            var actorId = ReadAnonymousGuid(param, "ActorId");
+            var prefix = ReadAnonymousString(param, "Prefix") ?? string.Empty;
+
+            lock (_lock)
+            {
+                _readCallCount++;
+                var matches = _items
+                    .Cast<User>()
+                    .Where(user =>
+                        user.Id != actorId &&
+                        user.Active &&
+                        !user.Banned &&
+                        user.Nickname.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                    .OrderBy(user => user.Nickname, StringComparer.OrdinalIgnoreCase)
+                    .Take(20)
+                    .Cast<T>()
+                    .ToList();
+
+                return Task.FromResult(matches);
+            }
+        }
+
+        var hasActive = ReadAnonymousBool(param, "HasActive");
+        var active = ReadAnonymousBool(param, "Active");
+        var hasBanned = ReadAnonymousBool(param, "HasBanned");
+        var banned = ReadAnonymousBool(param, "Banned");
+        var hasEmail = ReadAnonymousBool(param, "HasEmail");
+        var email = ReadAnonymousString(param, "Email");
+        var hasNickname = ReadAnonymousBool(param, "HasNickname");
+        var nickname = ReadAnonymousString(param, "Nickname");
+
+        lock (_lock)
+        {
+            _readCallCount++;
+            var users = _items
+                .Cast<User>()
+                .Where(user =>
+                    (!hasActive || user.Active == active) &&
+                    (!hasBanned || user.Banned == banned) &&
+                    (!hasEmail || string.Equals(user.Email, email, StringComparison.OrdinalIgnoreCase)) &&
+                    (!hasNickname || string.Equals(user.Nickname, nickname, StringComparison.OrdinalIgnoreCase)))
+                .Cast<T>()
+                .ToList();
+
+            return Task.FromResult(users);
         }
     }
 
@@ -441,6 +525,17 @@ public class InMemoryPgRepo<T, TKey> : IPgRepo<T, TKey> where T : class, IPgKey<
 
         var property = param.GetType().GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance);
         return property?.GetValue(param) as string;
+    }
+
+    private static bool ReadAnonymousBool(object? param, string propertyName)
+    {
+        if (param == null)
+        {
+            throw new ArgumentNullException(nameof(param));
+        }
+
+        var property = param.GetType().GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance);
+        return (bool)(property?.GetValue(param) ?? throw new InvalidOperationException($"Missing {propertyName}"));
     }
 
     private static TValue ReadParameter<TValue>(NpgsqlParameter[] parameters, string name)
