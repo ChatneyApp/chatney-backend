@@ -268,4 +268,90 @@ public class UserMutations
             Token = JwtHelpers.GetJwtToken(user.Email, user.Id.ToString(), appConfig.JwtSecret)
         };
     }
+
+    /// <summary>
+    /// Sends a one-hour password-reset link when the email or nickname exists.
+    /// Always returns true so callers cannot discover registered accounts.
+    /// </summary>
+    public async Task<bool> RequestPasswordReset(
+        AppRepos repos,
+        IPasswordResetEmailSender emailSender,
+        ILogger<UserMutations> logger,
+        string login,
+        CancellationToken cancellationToken)
+    {
+        var user = await UserLookup.FindByLogin(repos, login);
+        if (user == null)
+        {
+            return true;
+        }
+
+        await repos.PasswordResetRequests.Delete(request => request.UserId == user.Id);
+
+        var now = DateTime.UtcNow;
+        var request = new PasswordResetRequest
+        {
+            Code = Guid.NewGuid(),
+            UserId = user.Id,
+            CreatedAt = now,
+            ValidUntil = now.AddHours(1),
+        };
+        await repos.PasswordResetRequests.InsertOne(request);
+
+        try
+        {
+            await emailSender.SendAsync(user, request.Code, cancellationToken);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(
+                exception,
+                "Failed to send password-reset email for user {UserId}",
+                user.Id);
+        }
+
+        return true;
+    }
+
+    /// <summary>Sets a new password when the reset code exists, is unexpired, and has not been used.</summary>
+    public async Task<bool> ResetPassword(
+        AppConfig appConfig,
+        AppRepos repos,
+        Guid code,
+        string password)
+    {
+        if (string.IsNullOrWhiteSpace(password))
+        {
+            return false;
+        }
+
+        var request = await repos.PasswordResetRequests.GetById(code);
+        if (request == null)
+        {
+            return false;
+        }
+
+        if (request.ValidUntil <= DateTime.UtcNow)
+        {
+            await repos.PasswordResetRequests.DeleteById(code);
+            return false;
+        }
+
+        // Delete first so two simultaneous submissions cannot both consume the same code.
+        if (!await repos.PasswordResetRequests.DeleteById(code))
+        {
+            return false;
+        }
+
+        var user = await repos.Users.GetById(request.UserId);
+        if (user == null)
+        {
+            return false;
+        }
+
+        user.Password = Helpers.GetMd5Hash(password + appConfig.UserPasswordSalt);
+        await repos.Users.UpdateOne(user);
+        await repos.PasswordResetRequests.Delete(other => other.UserId == user.Id);
+        return true;
+    }
 }

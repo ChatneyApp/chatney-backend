@@ -26,7 +26,8 @@ public class AppRepos(
     IPgRepo<Workspace, int> workspaces,
     IPgRepo<SecureObject, int> secureObjects,
     IPgRepo<RoleAcl, RoleAclKey> roleAcls,
-    IPgRepo<UserAcl, UserAclKey> userAcls)
+    IPgRepo<UserAcl, UserAclKey> userAcls,
+    IPgRepo<PasswordResetRequest, Guid> passwordResetRequests)
 {
     public IPgRepo<User, Guid> Users { get; } = users;
     public IPgRepo<UserRole, UserRoleKey> UserRoles { get; } = userRoles;
@@ -45,4 +46,5 @@ public class AppRepos(
     public IPgRepo<SecureObject, int> SecureObjects { get; } = secureObjects;
     public IPgRepo<RoleAcl, RoleAclKey> RoleAcls { get; } = roleAcls;
     public IPgRepo<UserAcl, UserAclKey> UserAcls { get; } = userAcls;
+    public IPgRepo<PasswordResetRequest, Guid> PasswordResetRequests { get; } = passwordResetRequests;
 }

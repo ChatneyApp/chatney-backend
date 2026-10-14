@@ -28,12 +28,14 @@ API: **http://localhost:3001**
 | PostgreSQL | `localhost:5432/chatney` | `root` / `pass` |
 | RustFS (S3 API) | http://localhost:9000 | `admin` / `admin` |
 | RustFS console | http://localhost:9001 | `admin` / `admin` |
+| Mailpit inbox | http://localhost:8025 | — |
 
 ## Configuration
 
 Dev settings: `ChatneyBackend/appsettings.Development.json`
 
 Required values: Postgres connection string, `UserPasswordSalt`, `JwtSecret`, and AWS/S3 credentials for attachments.
+Password-reset delivery is configured under `PasswordReset`; development uses Mailpit on SMTP port 1025.
 
 ## First-time setup
 
