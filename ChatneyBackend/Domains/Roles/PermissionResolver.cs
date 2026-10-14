@@ -34,14 +34,18 @@ public sealed class EffectivePermissions
     }
 }
 
+/// <summary>Resolved permissions of the current user on one object.</summary>
+/// <param name="Id">Domain id of the object (workspace, channel type or channel id, not secObjId).</param>
+/// <param name="Permissions">Effective permissions after resolving the hierarchy.</param>
 public sealed record ObjectPermissions(int Id, Permission[] Permissions);
 
 /// <summary>
-/// The frontend-facing shape of "everything the acting user can do", grouped by object type.
-/// Objects with an empty resolved set are omitted (empty means "not visible").
+/// Everything the current user can do, grouped by object type. Objects where the user has no
+/// permissions are left out (absent means "not visible").
 /// </summary>
 public sealed class MyPermissions
 {
+    /// <summary>System-level permissions (not inherited by workspaces or channels).</summary>
     public required Permission[] Global { get; init; }
     public required ObjectPermissions[] Workspaces { get; init; }
     public required ObjectPermissions[] ChannelTypes { get; init; }
@@ -87,8 +91,8 @@ public sealed class AclSnapshot
     public int? WorkspaceSecObjId(int? workspaceId) =>
         workspaceId is int id && _workspaceSecObjIds.TryGetValue(id, out var secObjId) ? secObjId : null;
 
-    public int? ChannelTypeSecObjId(int channelTypeId) =>
-        _channelTypeSecObjIds.TryGetValue(channelTypeId, out var secObjId) ? secObjId : null;
+    public int? ChannelTypeSecObjId(int? channelTypeId) =>
+        channelTypeId is int id && _channelTypeSecObjIds.TryGetValue(id, out var secObjId) ? secObjId : null;
 
     public IEnumerable<(int WorkspaceId, int SecObjId)> WorkspaceEntries =>
         _workspaceSecObjIds.Select(entry => (WorkspaceId: entry.Key, SecObjId: entry.Value));

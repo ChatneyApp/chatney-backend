@@ -5,13 +5,23 @@ using HotChocolate.Authorization;
 
 namespace ChatneyBackend.Domains.Roles;
 
+/// <summary>
+/// Grant or revoke permissions for roles and users on secure objects (global, workspace,
+/// channel type, channel). Each call replaces the whole permission set of one (subject, object) pair.
+/// </summary>
 public class AclMutations
 {
+    // An empty permission list DELETES the row rather than storing an empty array, mirroring
+    // SetUserAcl - a present-but-empty row is dead weight that would still surface in
+    // roleAcls/objectAcls and confuse the admin UI. See AclMutationsTests for the guard.
     /// <summary>
-    /// An empty permission list DELETES the row rather than storing an empty array, mirroring
-    /// SetUserAcl - a present-but-empty row is dead weight that would still surface in
-    /// roleAcls/objectAcls and confuse the admin UI. See AclMutationsTests for the guard.
+    /// Sets the permissions a role has on a secure object. Requires RoleEditRole.
+    /// Prefer the setRoleAclFor* wrappers, which take a domain id instead of a secObjId.
     /// </summary>
+    /// <param name="roleId">Role to grant to.</param>
+    /// <param name="secObjId">Secure object id of the target (global, workspace, channel type or channel).</param>
+    /// <param name="permissions">Full replacement set. An empty list deletes the ACL and returns null.</param>
+    /// <returns>The stored ACL, or null if it was deleted.</returns>
     [Authorize]
     public async Task<RoleAcl?> SetRoleAcl(
         AppRepos repos,
@@ -38,6 +48,10 @@ public class AclMutations
         return roleAcl;
     }
 
+    /// <summary>Removes a role's ACL on a secure object. Requires RoleEditRole.</summary>
+    /// <param name="roleId">Role whose ACL is removed.</param>
+    /// <param name="secObjId">Secure object id the ACL is attached to.</param>
+    /// <returns>True if an ACL existed and was deleted.</returns>
     [Authorize]
     public async Task<bool> DeleteRoleAcl(
         AppRepos repos,
@@ -73,12 +87,19 @@ public class AclMutations
         return deleted;
     }
 
+    // An empty permission list DELETES the row rather than storing an empty array - a present-but-
+    // empty user_acls row would still satisfy D1's "any user_acls row in the chain" switch and
+    // would silently suppress every role permission for that chain. See AclMutationsTests for the
+    // guard.
     /// <summary>
-    /// An empty permission list DELETES the row rather than storing an empty array - a present-but-
-    /// empty user_acls row would still satisfy D1's "any user_acls row in the chain" switch and
-    /// would silently suppress every role permission for that chain. See AclMutationsTests for the
-    /// guard.
+    /// Sets the permissions a single user has on a secure object. Requires UserEditUser.
+    /// While a user has any user ACL in an object's hierarchy, their role ACLs are ignored there.
+    /// Prefer the setUserAclFor* wrappers, which take a domain id instead of a secObjId.
     /// </summary>
+    /// <param name="userId">User to grant to.</param>
+    /// <param name="secObjId">Secure object id of the target (global, workspace, channel type or channel).</param>
+    /// <param name="permissions">Full replacement set. An empty list deletes the ACL and returns null.</param>
+    /// <returns>The stored ACL, or null if it was deleted.</returns>
     [Authorize]
     public async Task<UserAcl?> SetUserAcl(
         AppRepos repos,
@@ -105,6 +126,10 @@ public class AclMutations
         return userAcl;
     }
 
+    /// <summary>Removes a user's ACL on a secure object. Requires UserEditUser.</summary>
+    /// <param name="userId">User whose ACL is removed.</param>
+    /// <param name="secObjId">Secure object id the ACL is attached to.</param>
+    /// <returns>True if an ACL existed and was deleted.</returns>
     [Authorize]
     public async Task<bool> DeleteUserAcl(
         AppRepos repos,
@@ -142,17 +167,22 @@ public class AclMutations
 
     #region Convenience wrappers - the frontend never handles sec_obj_id directly
 
+    /// <summary>Sets the permissions a role has globally: system-level permissions (e.g. roles, users, config, attachments, creating workspaces), not inherited by workspaces or channels. Requires RoleEditRole.</summary>
+    /// <param name="roleId">Role to grant to.</param>
+    /// <param name="permissions">Full replacement set. An empty list deletes the ACL and returns null.</param>
     [Authorize]
     public Task<RoleAcl?> SetRoleAclForGlobal(
         AppRepos repos, IPermissionResolver resolver, WebSocketConnector webSocketConnector,
         int roleId, Permission[] permissions) =>
         SetRoleAcl(repos, resolver, webSocketConnector, roleId, SecureObjectIds.Global, permissions);
 
-    /// <summary>
-    /// Authorization runs BEFORE the workspace/channelType/channel lookup on every wrapper below -
-    /// otherwise a NOT_FOUND vs FORBIDDEN response would let any authenticated user enumerate valid
-    /// ids without RoleEditRole/UserEditUser.
-    /// </summary>
+    // Authorization runs BEFORE the workspace/channelType/channel lookup on every wrapper below -
+    // otherwise a NOT_FOUND vs FORBIDDEN response would let any authenticated user enumerate valid
+    // ids without RoleEditRole/UserEditUser.
+    /// <summary>Sets the permissions a role has on a workspace and everything inside it. Requires RoleEditRole.</summary>
+    /// <param name="roleId">Role to grant to.</param>
+    /// <param name="workspaceId">Target workspace. NOT_FOUND if it doesn't exist.</param>
+    /// <param name="permissions">Full replacement set. An empty list deletes the ACL and returns null.</param>
     [Authorize]
     public async Task<RoleAcl?> SetRoleAclForWorkspace(
         AppRepos repos, IPermissionResolver resolver, WebSocketConnector webSocketConnector,
@@ -165,6 +195,10 @@ public class AclMutations
         return await SetRoleAcl(repos, resolver, webSocketConnector, roleId, secObjId, permissions);
     }
 
+    /// <summary>Sets the permissions a role has on a channel type and every channel of that type. Requires RoleEditRole.</summary>
+    /// <param name="roleId">Role to grant to.</param>
+    /// <param name="channelTypeId">Target channel type. NOT_FOUND if it doesn't exist.</param>
+    /// <param name="permissions">Full replacement set. An empty list deletes the ACL and returns null.</param>
     [Authorize]
     public async Task<RoleAcl?> SetRoleAclForChannelType(
         AppRepos repos, IPermissionResolver resolver, WebSocketConnector webSocketConnector,
@@ -177,6 +211,10 @@ public class AclMutations
         return await SetRoleAcl(repos, resolver, webSocketConnector, roleId, secObjId, permissions);
     }
 
+    /// <summary>Sets the permissions a role has on a single channel. Requires RoleEditRole.</summary>
+    /// <param name="roleId">Role to grant to.</param>
+    /// <param name="channelId">Target channel. NOT_FOUND if it doesn't exist.</param>
+    /// <param name="permissions">Full replacement set. An empty list deletes the ACL and returns null.</param>
     [Authorize]
     public async Task<RoleAcl?> SetRoleAclForChannel(
         AppRepos repos, IPermissionResolver resolver, WebSocketConnector webSocketConnector,
@@ -189,12 +227,19 @@ public class AclMutations
         return await SetRoleAcl(repos, resolver, webSocketConnector, roleId, secObjId, permissions);
     }
 
+    /// <summary>Sets the permissions a user has globally: system-level permissions (e.g. roles, users, config, attachments, creating workspaces), not inherited by workspaces or channels. Requires UserEditUser.</summary>
+    /// <param name="userId">User to grant to.</param>
+    /// <param name="permissions">Full replacement set. An empty list deletes the ACL and returns null.</param>
     [Authorize]
     public Task<UserAcl?> SetUserAclForGlobal(
         AppRepos repos, IPermissionResolver resolver, WebSocketConnector webSocketConnector,
         Guid userId, Permission[] permissions) =>
         SetUserAcl(repos, resolver, webSocketConnector, userId, SecureObjectIds.Global, permissions);
 
+    /// <summary>Sets the permissions a user has on a workspace and everything inside it. Requires UserEditUser.</summary>
+    /// <param name="userId">User to grant to.</param>
+    /// <param name="workspaceId">Target workspace. NOT_FOUND if it doesn't exist.</param>
+    /// <param name="permissions">Full replacement set. An empty list deletes the ACL and returns null.</param>
     [Authorize]
     public async Task<UserAcl?> SetUserAclForWorkspace(
         AppRepos repos, IPermissionResolver resolver, WebSocketConnector webSocketConnector,
@@ -207,6 +252,10 @@ public class AclMutations
         return await SetUserAcl(repos, resolver, webSocketConnector, userId, secObjId, permissions);
     }
 
+    /// <summary>Sets the permissions a user has on a channel type and every channel of that type. Requires UserEditUser.</summary>
+    /// <param name="userId">User to grant to.</param>
+    /// <param name="channelTypeId">Target channel type. NOT_FOUND if it doesn't exist.</param>
+    /// <param name="permissions">Full replacement set. An empty list deletes the ACL and returns null.</param>
     [Authorize]
     public async Task<UserAcl?> SetUserAclForChannelType(
         AppRepos repos, IPermissionResolver resolver, WebSocketConnector webSocketConnector,
@@ -219,6 +268,10 @@ public class AclMutations
         return await SetUserAcl(repos, resolver, webSocketConnector, userId, secObjId, permissions);
     }
 
+    /// <summary>Sets the permissions a user has on a single channel. Requires UserEditUser.</summary>
+    /// <param name="userId">User to grant to.</param>
+    /// <param name="channelId">Target channel. NOT_FOUND if it doesn't exist.</param>
+    /// <param name="permissions">Full replacement set. An empty list deletes the ACL and returns null.</param>
     [Authorize]
     public async Task<UserAcl?> SetUserAclForChannel(
         AppRepos repos, IPermissionResolver resolver, WebSocketConnector webSocketConnector,

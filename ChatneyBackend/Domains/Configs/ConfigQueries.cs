@@ -7,6 +7,7 @@ namespace ChatneyBackend.Domains.Configs;
 
 public class ConfigQueries
 {
+    /// <summary>A config entry by id, or null. Requires ConfigReadValue.</summary>
     [Authorize]
     public async Task<Config?> GetConfigById(
         AppRepos repos,
@@ -19,6 +20,7 @@ public class ConfigQueries
         return await repos.Configs.GetById(id);
     }
 
+    /// <summary>A config entry by name (e.g. "messages.sendCooldown"), or null. Requires ConfigReadValue.</summary>
     [Authorize]
     public async Task<Config?> GetConfigByName(
         AppRepos repos,
@@ -31,6 +33,7 @@ public class ConfigQueries
         return await repos.Configs.GetOne(config => config.Name == name);
     }
 
+    /// <summary>All config entries. Requires ConfigReadValue.</summary>
     [Authorize]
     public async Task<List<Config>> GetList(
         AppRepos repos,

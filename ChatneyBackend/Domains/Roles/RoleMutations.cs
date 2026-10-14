@@ -7,6 +7,7 @@ namespace ChatneyBackend.Domains.Roles;
 
 public class RoleMutations
 {
+    /// <summary>Creates a role with no ACLs. Requires RoleCreateRole.</summary>
     [Authorize]
     public async Task<Role> AddRole(
         AppRepos repos,
@@ -24,6 +25,7 @@ public class RoleMutations
         return role;
     }
 
+    /// <summary>Renames a role. Requires RoleEditRole. NOT_FOUND if the role doesn't exist.</summary>
     [Authorize]
     public async Task<Role> UpdateRole(
         AppRepos repos,
@@ -48,6 +50,9 @@ public class RoleMutations
         return role;
     }
 
+    /// <summary>Deletes a role together with its ACLs and user assignments. Requires RoleDeleteRole.</summary>
+    /// <param name="id">Role to delete.</param>
+    /// <returns>True if the role existed and was deleted.</returns>
     [Authorize]
     public async Task<bool> DeleteRole(
         AppRepos repos,

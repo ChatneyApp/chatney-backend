@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 
 namespace ChatneyBackend.Domains.Roles;
 
+/// <summary>A named bundle of ACLs that can be assigned to many users.</summary>
 public class Role : IPgKey<Role, int>, IPgTimestamped
 {
     [Primary]
@@ -43,12 +44,14 @@ public class Role : IPgKey<Role, int>, IPgTimestamped
     public static int GetKey(Role record) => record.Id;
 }
 
+/// <summary>Input for creating a role.</summary>
 public class RoleCreateDto
 {
     [MaxLength(255)]
     public required string Name { get; set; }
 }
 
+/// <summary>Input for renaming a role.</summary>
 public class RoleUpdateDto
 {
     public int Id { get; set; }

@@ -8,6 +8,8 @@ namespace ChatneyBackend.Domains.Users;
 
 public class UserRoleMutations
 {
+    /// <summary>Assigns a role to a user. Requires UserEditUser. No-op if already assigned.</summary>
+    /// <returns>The assignment (existing or new).</returns>
     [Authorize]
     public async Task<UserRole> AssignRole(
         AppRepos repos,
@@ -34,6 +36,8 @@ public class UserRoleMutations
         return userRole;
     }
 
+    /// <summary>Removes a role from a user. Requires UserEditUser.</summary>
+    /// <returns>True if the user had the role.</returns>
     [Authorize]
     public async Task<bool> UnassignRole(
         AppRepos repos,

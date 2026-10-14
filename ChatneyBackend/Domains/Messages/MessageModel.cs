@@ -8,16 +8,20 @@ using RepoDb.Attributes;
 
 namespace ChatneyBackend.Domains.Messages;
 
+/// <summary>Aggregated reactions of one code on a message.</summary>
 public class ReactionInMessage
 {
+    /// <summary>Reaction code (e.g. an emoji shortcode).</summary>
     [Map("code")]
     [MaxLength(255)]
     public required string Code { get; set; }
 
+    /// <summary>Number of users who reacted with this code.</summary>
     [Map("count")]
     public required int Count { get; set; }
 }
 
+/// <summary>A chat message.</summary>
 public class Message : IPgKey<Message, int>, IPgTimestamped
 {
     [Primary]
@@ -28,6 +32,7 @@ public class Message : IPgKey<Message, int>, IPgTimestamped
     [Map("channel_id")]
     public required int ChannelId { get; set; }
 
+    /// <summary>Author.</summary>
     [Map("user_id")]
     public required Guid UserId { get; set; }
 
@@ -46,6 +51,7 @@ public class Message : IPgKey<Message, int>, IPgTimestamped
     public int[] UrlPreviewIds { get; set; } = [];
 
     // Used for soft delete, pending etc
+    /// <summary>Delivery state. Currently always "sent".</summary>
     [Map("status")]
     [MaxLength(50)]
     public required string Status { get; set; }
@@ -56,12 +62,15 @@ public class Message : IPgKey<Message, int>, IPgTimestamped
     [Map("updated_at")]
     public DateTime UpdatedAt { get; set; }
 
+    /// <summary>Thread root message id if this is a thread reply, otherwise null.</summary>
     [Map("parent_id")]
     public int? ParentId { get; set; }
 
+    /// <summary>Number of thread replies (only meaningful on thread roots).</summary>
     [Map("children_count")]
     public required int ChildrenCount { get; set; }
 
+    /// <summary>Id of the message this one quote-replies to. Its preview is in MessagesResult.refs.</summary>
     [Map("reply_to")]
     public int? ReplyTo { get; set; }
 
@@ -88,6 +97,7 @@ public class Message : IPgKey<Message, int>, IPgTimestamped
     public static int GetKey(Message record) => record.Id;
 }
 
+/// <summary>Input for posting a message.</summary>
 public class MessageDto
 {
     public required int ChannelId { get; set; }
@@ -95,13 +105,17 @@ public class MessageDto
     [MaxLength(4096)]
     public required string Content { get; set; }
 
+    /// <summary>Ids of attachments uploaded beforehand via attachments.upload.</summary>
     public int[]? AttachmentIds { get; set; }
 
+    /// <summary>Thread root message id to post as a thread reply.</summary>
     public int? ParentId { get; set; }
 
+    /// <summary>Message id to quote-reply to.</summary>
     public int? ReplyTo { get; set; }
 }
 
+/// <summary>Input for editing a message.</summary>
 public class MessageUpdateDto
 {
     public required int Id { get; set; }
@@ -109,10 +123,12 @@ public class MessageUpdateDto
     [MaxLength(4096)]
     public required string Content { get; set; }
 
+    /// <summary>Full replacement set of attachments. Null removes all.</summary>
     public int[]? AttachmentIds { get; set; }
 }
 
 
+/// <summary>Public info of a message's author.</summary>
 public class MessageUser
 {
     public required Guid Id { get; set; }
@@ -123,9 +139,11 @@ public class MessageUser
 
     public required string? AvatarUrl { get; set; }
 
+    /// <summary>fullName if set, otherwise nickname.</summary>
     public string DisplayName => FullName ?? Nickname;
 }
 
+/// <summary>Short preview of a quote-replied message.</summary>
 public class ReplyToMessage
 {
     public required int Id { get; set; }
@@ -133,15 +151,19 @@ public class ReplyToMessage
     public required string Content { get; set; }
 }
 
+/// <summary>A list of messages plus previews of the messages they quote-reply to.</summary>
 public class MessagesResult
 {
     public required List<MessageWithUser> Messages { get; set; }
+    /// <summary>Previews of messages referenced by replyTo in messages.</summary>
     public required List<ReplyToMessage> Refs { get; set; }
 }
 
+/// <summary>A message with its author, attachments, URL previews and reactions resolved.</summary>
 public class MessageWithUser : Message
 {
     public required MessageUser User { get; set; }
+    /// <summary>Reaction codes the current user has added to this message.</summary>
     public required string[] MyReactions { get; set; }
     public required List<UrlPreview> UrlPreviews { get; set; }
     public required List<Attachment> Attachments { get; set; }

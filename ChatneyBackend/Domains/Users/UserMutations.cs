@@ -11,6 +11,10 @@ namespace ChatneyBackend.Domains.Users;
 
 public class UserMutations
 {
+    /// <summary>
+    /// Creates a user as an admin. Requires UserCreateUser. Assigns roleIds, or the configured default
+    /// role if none are given. ROLE_NOT_FOUND if any role id doesn't exist.
+    /// </summary>
     [Authorize]
     public async Task<User> CreateUser(
         AppConfig appConfig,
@@ -47,6 +51,7 @@ public class UserMutations
         return user;
     }
 
+    /// <summary>Self-registration (no auth). Creates an active user with the configured default role.</summary>
     public async Task<User> Register(
         AppConfig appConfig,
         AppRepos repos,
@@ -107,6 +112,8 @@ public class UserMutations
         }
     }
 
+    /// <summary>Deletes a user with their role assignments and ACLs. Requires UserDeleteUser.</summary>
+    /// <returns>True if the user existed and was deleted.</returns>
     [Authorize]
     public async Task<bool> DeleteUser(
         AppRepos repos,
@@ -119,6 +126,10 @@ public class UserMutations
         return await repos.Users.DeleteById(id);
     }
 
+    /// <summary>
+    /// Updates a user as an admin and replaces their role assignments with roleIds. Requires UserEditUser.
+    /// NOT_FOUND if the user doesn't exist, ROLE_NOT_FOUND if any role id doesn't exist.
+    /// </summary>
     [Authorize]
     public async Task<User> UpdateUser(
         AppConfig appConfig,
@@ -181,6 +192,7 @@ public class UserMutations
         return user;
     }
 
+    /// <summary>Updates the current user's own profile. Only non-null fields are applied.</summary>
     [Authorize]
     public async Task<User> UpdateMyProfile(
         AppConfig appConfig,
@@ -237,6 +249,10 @@ public class UserMutations
         return user;
     }
 
+    /// <summary>Exchanges credentials for a JWT. No auth required.</summary>
+    /// <param name="login">Email or nickname, case-insensitive.</param>
+    /// <param name="password">Plain-text password.</param>
+    /// <returns>The user id and token, or null if the credentials are wrong.</returns>
     public async Task<UserLoginResponse?> Login(AppConfig appConfig, AppRepos repos, string login, string password)
     {
         var passwordHash = Helpers.GetMd5Hash(password + appConfig.UserPasswordSalt);

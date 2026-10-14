@@ -6,6 +6,7 @@ using RepoDb.Attributes;
 
 namespace ChatneyBackend.Domains.DraftMessages;
 
+/// <summary>An unsent message the user is composing. At most one per user, channel and thread (parentId).</summary>
 public class DraftMessage : IPgKey<DraftMessage, int>, IPgTimestamped
 {
     [Primary]
@@ -23,6 +24,7 @@ public class DraftMessage : IPgKey<DraftMessage, int>, IPgTimestamped
     [MaxLength(4096)]
     public required string Content { get; set; }
 
+    /// <summary>Attachments already uploaded for this draft.</summary>
     [Map("attachment_ids")]
     public int[] AttachmentIds { get; set; } = [];
 
@@ -32,6 +34,7 @@ public class DraftMessage : IPgKey<DraftMessage, int>, IPgTimestamped
     [Map("updated_at")]
     public DateTime UpdatedAt { get; set; }
 
+    /// <summary>Thread root message id, or null for a top-level draft.</summary>
     [Map("parent_id")]
     public int? ParentId { get; set; }
 
@@ -52,6 +55,7 @@ public class DraftMessage : IPgKey<DraftMessage, int>, IPgTimestamped
     public static int GetKey(DraftMessage record) => record.Id;
 }
 
+/// <summary>Input for saving a draft.</summary>
 public class DraftMessageDto
 {
     public required int ChannelId { get; set; }

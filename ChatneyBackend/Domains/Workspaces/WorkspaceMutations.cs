@@ -8,6 +8,7 @@ namespace ChatneyBackend.Domains.Workspaces;
 
 public class WorkspaceMutations
 {
+    /// <summary>Creates a workspace. Requires WorkspaceCreateWorkspace globally.</summary>
     [Authorize]
     public async Task<Workspace> AddWorkspace(
         AppRepos repos,
@@ -28,6 +29,8 @@ public class WorkspaceMutations
         return workspace;
     }
 
+    /// <summary>Updates a workspace, matched by id. Requires WorkspaceUpdateWorkspace on it.</summary>
+    /// <returns>The saved workspace, or null if it doesn't exist.</returns>
     [Authorize]
     public async Task<Workspace?> UpdateWorkspace(
         AppRepos repos,
@@ -46,6 +49,8 @@ public class WorkspaceMutations
         return updated ? workspace : null;
     }
 
+    /// <summary>Deletes a workspace. Requires WorkspaceDeleteWorkspace on it.</summary>
+    /// <returns>True if the workspace existed and was deleted.</returns>
     [Authorize]
     public async Task<bool> DeleteWorkspace(
         AppRepos repos,

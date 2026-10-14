@@ -7,12 +7,14 @@ namespace ChatneyBackend.Domains.Roles;
 
 public readonly record struct RoleAclKey(int RoleId, int SecObjId);
 
+/// <summary>The permissions one role has on one secure object.</summary>
 public class RoleAcl : IPgKey<RoleAcl, RoleAclKey>
 {
     [Primary]
     [Map("role_id")]
     public required int RoleId { get; set; }
 
+    /// <summary>Secure object the permissions apply to: 1 for global, otherwise the secObjId of a workspace, channel type or channel.</summary>
     [Primary]
     [Map("sec_obj_id")]
     public required int SecObjId { get; set; }

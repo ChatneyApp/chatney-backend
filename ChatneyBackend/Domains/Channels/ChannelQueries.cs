@@ -9,6 +9,7 @@ namespace ChatneyBackend.Domains.Channels;
 
 public class ChannelQueries
 {
+    /// <summary>A channel by id, or null. Requires ChannelReadChannel on it.</summary>
     [Authorize]
     public async Task<Channel?> GetChannelById(
         AppRepos repos,
@@ -27,6 +28,7 @@ public class ChannelQueries
         return channel;
     }
 
+    /// <summary>A channel by exact name, or null. Requires ChannelReadChannel on it.</summary>
     [Authorize]
     public async Task<Channel?> GetChannelByName(
         AppRepos repos,
@@ -45,6 +47,7 @@ public class ChannelQueries
         return channel;
     }
 
+    /// <summary>Channels in a workspace that the current user has ChannelReadChannel on. NOT_FOUND if the workspace doesn't exist.</summary>
     [Authorize]
     public async Task<List<Channel>> GetWorkspaceChannelList(
         AppRepos repos,
@@ -60,6 +63,7 @@ public class ChannelQueries
         return await resolver.VisibleChannels(workspaceId, Permission.ChannelReadChannel);
     }
 
+    /// <summary>Direct-message conversations the current user is a member of.</summary>
     [Authorize]
     public async Task<List<DirectMessage>> GetDirectMessageList(
         AppRepos repos,
@@ -85,9 +89,11 @@ public class ChannelQueries
         return result;
     }
 
+    /// <summary>All channel types.</summary>
     [Authorize]
     public async Task<List<ChannelType>> GetChannelTypeList(AppRepos repos) => await repos.ChannelTypes.GetList();
 
+    /// <summary>Channel groups (sidebar sections) of a workspace. Requires ChannelReadChannel on the workspace.</summary>
     [Authorize]
     public async Task<List<ChannelGroup>> GetWorkspaceChannelGroupList(
         AppRepos repos,

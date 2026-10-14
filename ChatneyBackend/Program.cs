@@ -86,7 +86,9 @@ var appRepos = new AppRepos(
 
 // Database
 builder.Services.AddSingleton(pgDataSource);
-builder.Services.AddSingleton(_ => new AppConfig { UserPasswordSalt = userPasswordSalt, JwtSecret = jwtSecret, S3Bucket = s3Bucket });
+var appConfig = new AppConfig { UserPasswordSalt = userPasswordSalt, JwtSecret = jwtSecret, S3Bucket = s3Bucket };
+await SystemConfigReader.LoadInto(appConfig, appRepos.Configs);
+builder.Services.AddSingleton(appConfig);
 builder.Services.AddSingleton(_ => appRepos);
 builder.Services.AddScoped<IPermissionResolver>(sp =>
 {
@@ -170,6 +172,8 @@ builder.Services
     .AddQueryType<Query>()
     .AddMutationType<Mutation>()
     .AddType<UploadType>()
+    // __SearchResult / __SchemaDefinition are not in the GraphQL spec and fail schema validation in Altair
+    .ModifyOptions(o => o.EnableSemanticIntrospection = false)
     .ModifyServerOptions(o =>
     {
         o.Tool.DisableTelemetry = true;
@@ -193,4 +197,4 @@ app.UseMiddleware<AuthMiddleware>();
 
 app.UseCors(app.Environment.IsDevelopment() ? devOpenCors : prodCors);
 app.MapGraphQL("/query");
-app.Run();
+await app.RunWithGraphQLCommandsAsync(args);

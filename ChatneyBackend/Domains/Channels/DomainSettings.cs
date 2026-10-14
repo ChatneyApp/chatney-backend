@@ -9,8 +9,6 @@ public class DomainSettings
     public const string ChannelGroupTableName = "channel_groups";
     public const string ChannelMemberTableName = "channel_members";
 
-    public const string DmChannelTypeKey = "dm";
-    public const string DmChannelTypeName = "Direct message";
     public const string DmChannelName = "DM";
 
     public static readonly Permission[] DirectMessageParticipantPermissions =
