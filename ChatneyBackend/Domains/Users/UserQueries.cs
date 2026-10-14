@@ -119,35 +119,26 @@ public class UserQueries
         var permissions = await resolver.Global();
         permissions.Require(Permission.UserReadUser);
 
-        var users = await repos.Users.GetList();
-
-        if (filter.Active != null)
-        {
-            users = users.Where(u => u.Active == filter.Active).ToList();
-        }
-
-        if (filter.Banned != null)
-        {
-            users = users.Where(u => u.Banned == filter.Banned).ToList();
-        }
-
-        if (!string.IsNullOrWhiteSpace(filter.Email))
-        {
-            var email = filter.Email.Trim();
-            users = users
-                .Where(u => string.Equals(u.Email, email, StringComparison.OrdinalIgnoreCase))
-                .ToList();
-        }
-
-        if (!string.IsNullOrWhiteSpace(filter.Nickname))
-        {
-            var nickname = filter.Nickname.Trim();
-            users = users
-                .Where(u => string.Equals(u.Nickname, nickname, StringComparison.OrdinalIgnoreCase))
-                .ToList();
-        }
-
-        return users;
+        return await repos.Users.GetList(
+            """
+            SELECT *
+            FROM users
+            WHERE (NOT @HasActive OR active = @Active)
+              AND (NOT @HasBanned OR banned = @Banned)
+              AND (NOT @HasEmail OR LOWER(email) = LOWER(@Email))
+              AND (NOT @HasNickname OR LOWER(nickname) = LOWER(@Nickname));
+            """,
+            new
+            {
+                HasActive = filter.Active.HasValue,
+                Active = filter.Active ?? false,
+                HasBanned = filter.Banned.HasValue,
+                Banned = filter.Banned ?? false,
+                HasEmail = !string.IsNullOrWhiteSpace(filter.Email),
+                Email = filter.Email?.Trim() ?? string.Empty,
+                HasNickname = !string.IsNullOrWhiteSpace(filter.Nickname),
+                Nickname = filter.Nickname?.Trim() ?? string.Empty,
+            });
     }
 
     /// <summary>Nickname autocomplete for starting direct messages: up to 20 active, non-banned users, excluding yourself.</summary>

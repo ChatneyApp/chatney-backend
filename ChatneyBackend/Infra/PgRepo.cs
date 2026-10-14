@@ -104,6 +104,12 @@ public class PgRepo<T, TKey> : IPgRepo<T, TKey> where T : class, IPgKey<T, TKey>
         return (await conn.QueryAsync(SpanContainsRewriter.Rewrite(where))).ToList();
     }
 
+    public async Task<List<T>> GetList(string sql, object? param = null)
+    {
+        await using var conn = await OpenAsync();
+        return (await conn.ExecuteQueryAsync<T>(sql, param)).ToList();
+    }
+
     public async Task<TKey> InsertOne(T record)
     {
         if (record is IPgTimestamped timestamped)

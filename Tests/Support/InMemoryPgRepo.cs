@@ -103,6 +103,40 @@ public class InMemoryPgRepo<T, TKey> : IPgRepo<T, TKey> where T : class, IPgKey<
         }
     }
 
+    public Task<List<T>> GetList(string sql, object? param = null)
+    {
+        if (typeof(T) != typeof(User) ||
+            !sql.Contains("FROM users", StringComparison.Ordinal))
+        {
+            throw new NotSupportedException($"Raw GetList is not supported for {typeof(T).Name}");
+        }
+
+        var hasActive = ReadAnonymousBool(param, "HasActive");
+        var active = ReadAnonymousBool(param, "Active");
+        var hasBanned = ReadAnonymousBool(param, "HasBanned");
+        var banned = ReadAnonymousBool(param, "Banned");
+        var hasEmail = ReadAnonymousBool(param, "HasEmail");
+        var email = ReadAnonymousString(param, "Email");
+        var hasNickname = ReadAnonymousBool(param, "HasNickname");
+        var nickname = ReadAnonymousString(param, "Nickname");
+
+        lock (_lock)
+        {
+            _readCallCount++;
+            var users = _items
+                .Cast<User>()
+                .Where(user =>
+                    (!hasActive || user.Active == active) &&
+                    (!hasBanned || user.Banned == banned) &&
+                    (!hasEmail || string.Equals(user.Email, email, StringComparison.OrdinalIgnoreCase)) &&
+                    (!hasNickname || string.Equals(user.Nickname, nickname, StringComparison.OrdinalIgnoreCase)))
+                .Cast<T>()
+                .ToList();
+
+            return Task.FromResult(users);
+        }
+    }
+
     public Task<TKey> InsertOne(T record)
     {
         lock (_lock)
@@ -467,6 +501,17 @@ public class InMemoryPgRepo<T, TKey> : IPgRepo<T, TKey> where T : class, IPgKey<
 
         var property = param.GetType().GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance);
         return property?.GetValue(param) as string;
+    }
+
+    private static bool ReadAnonymousBool(object? param, string propertyName)
+    {
+        if (param == null)
+        {
+            throw new ArgumentNullException(nameof(param));
+        }
+
+        var property = param.GetType().GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance);
+        return (bool)(property?.GetValue(param) ?? throw new InvalidOperationException($"Missing {propertyName}"));
     }
 
     private static TValue ReadParameter<TValue>(NpgsqlParameter[] parameters, string name)
