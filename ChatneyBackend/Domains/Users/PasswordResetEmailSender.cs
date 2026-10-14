@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Mail;
 using System.Text.Encodings.Web;
+using ChatneyBackend.Infra;
 using Microsoft.Extensions.Options;
 
 namespace ChatneyBackend.Domains.Users;
@@ -23,7 +24,8 @@ public interface IPasswordResetEmailSender
 }
 
 public sealed class SmtpPasswordResetEmailSender(
-    IOptions<PasswordResetOptions> options) : IPasswordResetEmailSender
+    IOptions<PasswordResetOptions> options,
+    AppRepos repos) : IPasswordResetEmailSender
 {
     private readonly PasswordResetOptions _options = options.Value;
 
@@ -32,13 +34,56 @@ public sealed class SmtpPasswordResetEmailSender(
         Guid code,
         CancellationToken cancellationToken = default)
     {
-        var resetUrl = $"{_options.FrontendBaseUrl.TrimEnd('/')}/reset-password?code={code:D}";
+        var configNames = new[]
+        {
+            Configs.DomainSettings.SmtpEnabled,
+            Configs.DomainSettings.SystemDomainName,
+            Configs.DomainSettings.SmtpHost,
+            Configs.DomainSettings.SmtpPort,
+            Configs.DomainSettings.SmtpUsername,
+            Configs.DomainSettings.SmtpPassword,
+            Configs.DomainSettings.SmtpEnableSsl,
+            Configs.DomainSettings.SmtpFromAddress,
+        };
+        var configs = (await repos.Configs.GetList(
+                "SELECT * FROM configs WHERE name = ANY(@Names)",
+                new { Names = configNames }))
+            .ToDictionary(config => config.Name, config => config.Value);
+
+        var smtpEnabled = GetConfig(configs, Configs.DomainSettings.SmtpEnabled);
+
+        if (smtpEnabled != null && !bool.Parse(smtpEnabled))
+        {
+            throw new InvalidOperationException("SMTP is disabled.");
+        }
+
+        var frontendBaseUrl = GetConfig(configs, Configs.DomainSettings.SystemDomainName)
+            ?? _options.FrontendBaseUrl;
+        var smtpHost = GetConfig(configs, Configs.DomainSettings.SmtpHost) ?? _options.SmtpHost;
+        var smtpPort = int.TryParse(
+            GetConfig(configs, Configs.DomainSettings.SmtpPort),
+            out var configuredPort)
+            ? configuredPort
+            : _options.SmtpPort;
+        var smtpUsername = GetConfig(configs, Configs.DomainSettings.SmtpUsername)
+            ?? _options.SmtpUsername;
+        var smtpPassword = GetConfig(configs, Configs.DomainSettings.SmtpPassword)
+            ?? _options.SmtpPassword;
+        var enableSsl = bool.TryParse(
+            GetConfig(configs, Configs.DomainSettings.SmtpEnableSsl),
+            out var configuredSsl)
+            ? configuredSsl
+            : _options.EnableSsl;
+        var fromAddress = GetConfig(configs, Configs.DomainSettings.SmtpFromAddress)
+            ?? _options.FromAddress;
+
+        var resetUrl = $"{frontendBaseUrl.TrimEnd('/')}/reset-password?code={code:D}";
         var encodedUrl = HtmlEncoder.Default.Encode(resetUrl);
         var encodedNickname = HtmlEncoder.Default.Encode(user.Nickname);
 
         using var message = new MailMessage
         {
-            From = new MailAddress(_options.FromAddress, _options.FromName),
+            From = new MailAddress(fromAddress, _options.FromName),
             Subject = "Reset your Chatney password",
             Body = $"""
                 <p>Hello {encodedNickname},</p>
@@ -51,20 +96,25 @@ public sealed class SmtpPasswordResetEmailSender(
         };
         message.To.Add(user.Email);
 
-        using var smtp = new SmtpClient(_options.SmtpHost, _options.SmtpPort)
+        using var smtp = new SmtpClient(smtpHost, smtpPort)
         {
-            EnableSsl = _options.EnableSsl,
-            UseDefaultCredentials = string.IsNullOrWhiteSpace(_options.SmtpUsername),
+            EnableSsl = enableSsl,
+            UseDefaultCredentials = string.IsNullOrWhiteSpace(smtpUsername),
         };
 
         if (!smtp.UseDefaultCredentials)
         {
             smtp.Credentials = new NetworkCredential(
-                _options.SmtpUsername,
-                _options.SmtpPassword);
+                smtpUsername,
+                smtpPassword);
         }
 
         cancellationToken.ThrowIfCancellationRequested();
         await smtp.SendMailAsync(message, cancellationToken);
+    }
+
+    private static string? GetConfig(Dictionary<string, string> configs, string name)
+    {
+        return configs.TryGetValue(name, out var value) && value != "" ? value : null;
     }
 }
