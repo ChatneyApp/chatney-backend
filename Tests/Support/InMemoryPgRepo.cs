@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Text.Json;
 using ChatneyBackend.Domains.Messages;
 using ChatneyBackend.Domains.Roles;
+using ChatneyBackend.Domains.Users;
 using ChatneyBackend.Infra;
 using Npgsql;
 
@@ -57,6 +58,31 @@ public class InMemoryPgRepo<T, TKey> : IPgRepo<T, TKey> where T : class, IPgKey<
     public Task<T?> GetById(TKey key) => Task.FromResult(GetOneSync(T.MatchByKey(key)));
 
     public Task<T?> GetOne(Expression<Func<T, bool>> where) => Task.FromResult(GetOneSync(where));
+
+    public Task<T?> GetOne(string sql, object? param = null)
+    {
+        if (typeof(T) != typeof(User) ||
+            !sql.Contains("FROM users", StringComparison.Ordinal))
+        {
+            throw new NotSupportedException($"Raw GetOne is not supported for {typeof(T).Name}");
+        }
+
+        var login = ReadAnonymousString(param, "Login") ?? string.Empty;
+
+        lock (_lock)
+        {
+            _readCallCount++;
+            var user = _items
+                .Cast<User>()
+                .FirstOrDefault(item =>
+                    string.Equals(item.Email, login, StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(item.Nickname, login, StringComparison.OrdinalIgnoreCase));
+
+            return Task.FromResult(user == null
+                ? null
+                : (T)(object)user);
+        }
+    }
 
     public Task<List<T>> GetList()
     {

@@ -7,11 +7,15 @@ public static class UserLookup
 {
     public static async Task<User?> FindByLogin(AppRepos repos, string login)
     {
-        var loginTrimmed = login.Trim();
-        var users = await repos.Users.GetList();
-        return users.FirstOrDefault(u =>
-            string.Equals(u.Email, loginTrimmed, StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(u.Nickname, loginTrimmed, StringComparison.OrdinalIgnoreCase));
+        return await repos.Users.GetOne(
+            """
+            SELECT *
+            FROM users
+            WHERE LOWER(email) = LOWER(@Login)
+               OR LOWER(nickname) = LOWER(@Login)
+            LIMIT 1;
+            """,
+            new { Login = login.Trim() });
     }
 
     public static async Task<User?> FindByLogin(AppRepos repos, string login, string passwordHash)

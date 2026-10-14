@@ -7,6 +7,7 @@ public interface IPgRepo<T, TKey> where T : class, IPgKey<T, TKey>
 {
     Task<T?> GetById(TKey key);
     Task<T?> GetOne(Expression<Func<T, bool>> where);
+    Task<T?> GetOne(string sql, object? param = null);
     Task<List<T>> GetList();
     Task<List<T>> GetList(Expression<Func<T, bool>> where);
     Task<TKey> InsertOne(T record);
