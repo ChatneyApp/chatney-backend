@@ -6,6 +6,7 @@ public class DomainSettings
     public const string NewUserDefaultRole = "settings.NewUserDefaultRole";
     public const string SystemAdminUserId = "system.adminUserId";
     public const string SystemDefaultUserRoleId = "system.defaultUserRoleId";
+    public const string SystemInstalled = "system.installed";
     public const string SystemDomainName = "system.domainName";
     public const string SystemTimeZone = "system.timeZone";
     public const string SmtpEnabled = "smtp.enabled";

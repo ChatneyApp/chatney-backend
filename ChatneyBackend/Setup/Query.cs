@@ -3,6 +3,7 @@ using ChatneyBackend.Domains.Channels;
 using ChatneyBackend.Domains.Configs;
 using ChatneyBackend.Domains.Messages;
 using ChatneyBackend.Domains.DraftMessages;
+using ChatneyBackend.Domains.InstallWizard;
 using ChatneyBackend.Domains.Permissions;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Domains.Users;
@@ -18,6 +19,8 @@ public class Query
     public ChannelQueries Channels() => new();
     /// <summary>System-wide configuration values.</summary>
     public ConfigQueries Configs() => new();
+    /// <summary>Public system installation status.</summary>
+    public InstallWizardQueries InstallWizard() => new();
     /// <summary>Channel messages, threads and reactions.</summary>
     public MessageQueries Messages() => new();
     /// <summary>The current user's unsent message drafts.</summary>

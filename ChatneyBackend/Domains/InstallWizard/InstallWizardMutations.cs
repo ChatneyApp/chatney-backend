@@ -76,6 +76,8 @@ public class InstallWizardMutations
 
             if (adminRole != null)
             {
+                await MarkInstalled(repos);
+
                 return new InstallSystemResult()
                 {
                     status = "installed"
@@ -260,6 +262,12 @@ public class InstallWizardMutations
                 },
                 new()
                 {
+                    Name = Configs.DomainSettings.SystemInstalled,
+                    Value = "true",
+                    Type = "bool",
+                },
+                new()
+                {
                     Name = "messages.sendCooldown",
                     Value = "600",
                     Type = "int",
@@ -332,6 +340,28 @@ public class InstallWizardMutations
         {
             status = "success"
         };
+    }
+
+    private static async Task MarkInstalled(AppRepos repos)
+    {
+        var installed = await repos.Configs.GetOne(
+            config => config.Name == Configs.DomainSettings.SystemInstalled);
+
+        if (installed == null)
+        {
+            await repos.Configs.InsertOne(new Configs.Config
+            {
+                Name = Configs.DomainSettings.SystemInstalled,
+                Value = "true",
+                Type = "bool",
+            });
+
+            return;
+        }
+
+        installed.Value = "true";
+        installed.Type = "bool";
+        await repos.Configs.UpdateOne(installed);
     }
 
     private static void ValidateOptions(InstallSystemInput options)

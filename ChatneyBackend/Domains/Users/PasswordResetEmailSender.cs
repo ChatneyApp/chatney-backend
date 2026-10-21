@@ -34,20 +34,32 @@ public sealed class SmtpPasswordResetEmailSender(
         Guid code,
         CancellationToken cancellationToken = default)
     {
-        var configNames = new[]
-        {
-            Configs.DomainSettings.SmtpEnabled,
-            Configs.DomainSettings.SystemDomainName,
-            Configs.DomainSettings.SmtpHost,
-            Configs.DomainSettings.SmtpPort,
-            Configs.DomainSettings.SmtpUsername,
-            Configs.DomainSettings.SmtpPassword,
-            Configs.DomainSettings.SmtpEnableSsl,
-            Configs.DomainSettings.SmtpFromAddress,
-        };
         var configs = (await repos.Configs.GetList(
-                "SELECT * FROM configs WHERE name = ANY(@Names)",
-                new { Names = configNames }))
+                """
+                SELECT *
+                FROM configs
+                WHERE name IN (
+                    @SmtpEnabled,
+                    @SystemDomainName,
+                    @SmtpHost,
+                    @SmtpPort,
+                    @SmtpUsername,
+                    @SmtpPassword,
+                    @SmtpEnableSsl,
+                    @SmtpFromAddress
+                )
+                """,
+                new
+                {
+                    SmtpEnabled = Configs.DomainSettings.SmtpEnabled,
+                    SystemDomainName = Configs.DomainSettings.SystemDomainName,
+                    SmtpHost = Configs.DomainSettings.SmtpHost,
+                    SmtpPort = Configs.DomainSettings.SmtpPort,
+                    SmtpUsername = Configs.DomainSettings.SmtpUsername,
+                    SmtpPassword = Configs.DomainSettings.SmtpPassword,
+                    SmtpEnableSsl = Configs.DomainSettings.SmtpEnableSsl,
+                    SmtpFromAddress = Configs.DomainSettings.SmtpFromAddress,
+                }))
             .ToDictionary(config => config.Name, config => config.Value);
 
         var smtpEnabled = GetConfig(configs, Configs.DomainSettings.SmtpEnabled);
