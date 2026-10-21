@@ -23,7 +23,7 @@ public class Config : IPgKey<Config, int>, IPgTimestamped
     [MaxLength(2048)]
     public required string Value { get; set; }
 
-    /// <summary>How to parse value: "string", "int" or "string[]" (comma-separated).</summary>
+    /// <summary>How to parse value: "string", "int", "bool" or "string[]" (comma-separated).</summary>
     [Map("type")]
     [MaxLength(255)]
     public string? Type { get; set; }
