@@ -26,6 +26,8 @@ public class InstallWizardMutations
         Permission.ChannelReadChannel,
         Permission.ChannelReadMessage,
         Permission.ChannelCreateMessage,
+        Permission.ChannelEditOwnMessage,
+        Permission.ChannelDeleteOwnMessage,
     ];
 
     /// <summary>
