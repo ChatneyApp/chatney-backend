@@ -11,6 +11,24 @@ namespace ChatneyBackend.Domains.InstallWizard;
 
 public class InstallWizardMutations
 {
+    public class SmtpSettingsInput
+    {
+        public required string Host { get; set; }
+        public int Port { get; set; } = 587;
+        public string? Username { get; set; }
+        public string? Password { get; set; }
+        public bool EnableSsl { get; set; } = true;
+        public required string FromAddress { get; set; }
+    }
+
+    public class InstallSystemInput
+    {
+        public required string DomainName { get; set; }
+        public required string TimeZone { get; set; }
+        public bool SeedTestData { get; set; }
+        public SmtpSettingsInput? Smtp { get; set; }
+    }
+
     /// <summary>Outcome of an install/uninstall run.</summary>
     public class InstallSystemResult
     {
@@ -32,10 +50,11 @@ public class InstallWizardMutations
 
     /// <summary>
     /// Runs migrations and seeds a fresh system: admin and user roles, a default workspace with
-    /// public/private channels, an admin user, test users and default config. Safe to call again: returns
-    /// status "installed" if the system is already installed.
+    /// public/private channels, an admin user, optional test users and default config. Safe to call
+    /// again: returns status "installed" if the system is already installed.
     /// </summary>
     public async Task<InstallSystemResult> InstallSystem(
+        InstallSystemInput options,
         AppConfig appConfig,
         AppRepos repos,
         IMigrationRunner migrationRunner,
@@ -44,6 +63,7 @@ public class InstallWizardMutations
     {
         try
         {
+            ValidateOptions(options);
             migrationRunner.MigrateUp();
 
             // MapEnum registers the 'permission' enum lazily, but Npgsql only loads the
@@ -58,6 +78,8 @@ public class InstallWizardMutations
 
             if (adminRole != null)
             {
+                await MarkInstalled(repos);
+
                 return new InstallSystemResult()
                 {
                     status = "installed"
@@ -175,19 +197,22 @@ public class InstallWizardMutations
             };
             var testUsers = new List<Users.User>();
 
-            for (var i = 1; i <= 2; i++)
+            if (options.SeedTestData)
             {
-                testUsers.Add(new Users.User
+                for (var i = 1; i <= 2; i++)
                 {
-                    Id = Guid.NewGuid(),
-                    Nickname = $"test{i}",
-                    FullName = $"Test User {i}",
-                    Email = $"test{i}@test.com",
-                    Active = true,
-                    Password = Helpers.GetMd5Hash("123" + appConfig.UserPasswordSalt),
-                    CreatedAt = now,
-                    UpdatedAt = now,
-                });
+                    testUsers.Add(new Users.User
+                    {
+                        Id = Guid.NewGuid(),
+                        Nickname = $"test{i}",
+                        FullName = $"Test User {i}",
+                        Email = $"test{i}@test.com",
+                        Active = true,
+                        Password = Helpers.GetMd5Hash("123" + appConfig.UserPasswordSalt),
+                        CreatedAt = now,
+                        UpdatedAt = now,
+                    });
+                }
             }
 
             await repos.Users.InsertBulk([adminUser, ..testUsers]);
@@ -221,6 +246,30 @@ public class InstallWizardMutations
                 },
                 new()
                 {
+                    Name = Configs.DomainSettings.SystemDomainName,
+                    Value = options.DomainName.TrimEnd('/'),
+                    Type = "string",
+                },
+                new()
+                {
+                    Name = Configs.DomainSettings.SystemTimeZone,
+                    Value = options.TimeZone,
+                    Type = "string",
+                },
+                new()
+                {
+                    Name = Configs.DomainSettings.SmtpEnabled,
+                    Value = (options.Smtp != null).ToString().ToLowerInvariant(),
+                    Type = "bool",
+                },
+                new()
+                {
+                    Name = Configs.DomainSettings.SystemInstalled,
+                    Value = "true",
+                    Type = "bool",
+                },
+                new()
+                {
                     Name = "messages.sendCooldown",
                     Value = "600",
                     Type = "int",
@@ -232,6 +281,50 @@ public class InstallWizardMutations
                     Type = "string[]",
                 },
             };
+
+            if (options.Smtp != null)
+            {
+                configs.AddRange(
+                [
+                    new()
+                    {
+                        Name = Configs.DomainSettings.SmtpHost,
+                        Value = options.Smtp.Host,
+                        Type = "string",
+                    },
+                    new()
+                    {
+                        Name = Configs.DomainSettings.SmtpPort,
+                        Value = options.Smtp.Port.ToString(),
+                        Type = "int",
+                    },
+                    new()
+                    {
+                        Name = Configs.DomainSettings.SmtpUsername,
+                        Value = options.Smtp.Username ?? "",
+                        Type = "string",
+                    },
+                    new()
+                    {
+                        Name = Configs.DomainSettings.SmtpPassword,
+                        Value = options.Smtp.Password ?? "",
+                        Type = "string",
+                    },
+                    new()
+                    {
+                        Name = Configs.DomainSettings.SmtpEnableSsl,
+                        Value = options.Smtp.EnableSsl.ToString().ToLowerInvariant(),
+                        Type = "bool",
+                    },
+                    new()
+                    {
+                        Name = Configs.DomainSettings.SmtpFromAddress,
+                        Value = options.Smtp.FromAddress,
+                        Type = "string",
+                    },
+                ]);
+            }
+
             await repos.Configs.InsertBulk(configs);
 
             appConfig.AdminUserId = adminUser.Id;
@@ -249,6 +342,50 @@ public class InstallWizardMutations
         {
             status = "success"
         };
+    }
+
+    private static async Task MarkInstalled(AppRepos repos)
+    {
+        var installed = await repos.Configs.GetOne(
+            config => config.Name == Configs.DomainSettings.SystemInstalled);
+
+        if (installed == null)
+        {
+            await repos.Configs.InsertOne(new Configs.Config
+            {
+                Name = Configs.DomainSettings.SystemInstalled,
+                Value = "true",
+                Type = "bool",
+            });
+
+            return;
+        }
+
+        installed.Value = "true";
+        installed.Type = "bool";
+        await repos.Configs.UpdateOne(installed);
+    }
+
+    private static void ValidateOptions(InstallSystemInput options)
+    {
+        if (!Uri.TryCreate(options.DomainName, UriKind.Absolute, out var domain)
+            || (domain.Scheme != Uri.UriSchemeHttp && domain.Scheme != Uri.UriSchemeHttps))
+        {
+            throw new ArgumentException("Domain name must be an absolute HTTP or HTTPS URL.");
+        }
+
+        if (string.IsNullOrWhiteSpace(options.TimeZone))
+        {
+            throw new ArgumentException("Time zone is required.");
+        }
+
+        if (options.Smtp != null
+            && (string.IsNullOrWhiteSpace(options.Smtp.Host)
+                || options.Smtp.Port is < 1 or > 65535
+                || string.IsNullOrWhiteSpace(options.Smtp.FromAddress)))
+        {
+            throw new ArgumentException("SMTP host, port and from address are required.");
+        }
     }
 
     /// <summary>Rolls back every migration, deleting ALL data. Development use only.</summary>

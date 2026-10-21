@@ -7,3 +7,5 @@
 ## Database
 
 Use [DB.md](DB.md) for work with Database.
+
+Compose every SQL request as one query, never fetch whole table if it's not required.
