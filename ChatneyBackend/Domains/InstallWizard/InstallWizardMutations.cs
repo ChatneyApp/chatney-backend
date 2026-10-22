@@ -268,18 +268,6 @@ public class InstallWizardMutations
                     Value = "true",
                     Type = "bool",
                 },
-                new()
-                {
-                    Name = "messages.sendCooldown",
-                    Value = "600",
-                    Type = "int",
-                },
-                new()
-                {
-                    Name = "events.typesEnabled",
-                    Value = "message.sent,message.edited,message.deleted",
-                    Type = "string[]",
-                },
             };
 
             if (options.Smtp != null)
