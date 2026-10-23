@@ -54,7 +54,8 @@ services:
       until aws --endpoint-url http://rustfs:9000 s3api list-buckets > /dev/null 2>&1; do sleep 1; done;
       aws --endpoint-url http://rustfs:9000 s3api head-bucket --bucket chatney 2>/dev/null
       || aws --endpoint-url http://rustfs:9000 s3api create-bucket --bucket chatney;
-      aws --endpoint-url http://rustfs:9000 s3api put-bucket-policy --bucket chatney --policy "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\":[\"*\"]},\"Action\":[\"s3:GetObject\",\"s3:GetObjectTagging\",\"s3:ListBucket\",\"s3:GetBucketLocation\"],\"Resource\":[\"arn:aws:s3:::chatney/*\"]},{\"Effect\":\"Allow\",\"Principal\":{\"AWS\":[\"arn:aws:iam::*:root\"]},\"Action\":[\"s3:PutObject\",\"s3:DeleteObject\",\"s3:PutObjectTagging\",\"s3:DeleteObjectTagging\"],\"Resource\":[\"arn:aws:s3:::chatney/*\"]}]}"
+      aws --endpoint-url http://rustfs:9000 s3api put-bucket-policy --bucket chatney --policy "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\":[\"*\"]},\"Action\":[\"s3:GetObject\",\"s3:GetObjectTagging\",\"s3:ListBucket\",\"s3:GetBucketLocation\"],\"Resource\":[\"arn:aws:s3:::chatney/*\"]},{\"Effect\":\"Allow\",\"Principal\":{\"AWS\":[\"arn:aws:iam::*:root\"]},\"Action\":[\"s3:PutObject\",\"s3:DeleteObject\",\"s3:PutObjectTagging\",\"s3:DeleteObjectTagging\"],\"Resource\":[\"arn:aws:s3:::chatney/*\"]}]}";
+      aws --endpoint-url http://rustfs:9000 s3api put-bucket-cors --bucket chatney --cors-configuration "{\"CORSRules\":[{\"AllowedOrigins\":[\"*\"],\"AllowedMethods\":[\"GET\",\"HEAD\"],\"AllowedHeaders\":[\"*\"],\"MaxAgeSeconds\":3000}]}"
       '
 
 volumes:
