@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text.Json;
 using ChatneyBackend.Domains.Permissions;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Infra;
@@ -205,6 +206,32 @@ public class ChannelMutations
 
         var updated = await repos.ChannelGroups.UpdateOne(channelGroup);
         return updated ? channelGroup : null;
+    }
+
+    /// <summary>
+    /// Sets the order of several channel groups in one request. Requires ChannelEditChannelGroup on each group's
+    /// workspace. Ids that don't exist are ignored.
+    /// </summary>
+    /// <param name="orders">Object keyed by channel group id, valued by its new order, e.g. {"5": 0, "7": 1}.</param>
+    /// <returns>The updated groups.</returns>
+    [Authorize]
+    public async Task<List<ChannelGroup>> UpdateChannelGroupsOrder(
+        AppRepos repos,
+        IPermissionResolver resolver,
+        JsonElement orders)
+    {
+        // round-trip through a typed dictionary so non-int keys/values fail before touching the DB
+        var ordersJson = JsonSerializer.Serialize(orders.Deserialize<Dictionary<int, int>>());
+
+        var workspaces = await ChannelGroupMutationQueries.GetWorkspacesOfGroupsAsync(repos.Workspaces, ordersJson);
+
+        foreach (var workspace in workspaces)
+        {
+            var permissions = await resolver.ForWorkspace(workspace);
+            permissions.Require(Permission.ChannelEditChannelGroup);
+        }
+
+        return await ChannelGroupMutationQueries.UpdateOrdersAsync(repos.ChannelGroups, ordersJson);
     }
 
     /// <summary>Deletes a channel group. Requires ChannelDeleteChannelGroup on its workspace.</summary>
