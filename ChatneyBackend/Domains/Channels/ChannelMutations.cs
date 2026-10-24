@@ -218,10 +218,9 @@ public class ChannelMutations
     public async Task<List<ChannelGroup>> UpdateChannelGroupsOrder(
         AppRepos repos,
         IPermissionResolver resolver,
-        JsonElement orders)
+        [GraphQLType<NonNullType<IntMapType>>] Dictionary<int, int> orders)
     {
-        // round-trip through a typed dictionary so non-int keys/values fail before touching the DB
-        var ordersJson = JsonSerializer.Serialize(orders.Deserialize<Dictionary<int, int>>());
+        var ordersJson = JsonSerializer.Serialize(orders);
 
         var workspaces = await ChannelGroupMutationQueries.GetWorkspacesOfGroupsAsync(repos.Workspaces, ordersJson);
 
