@@ -48,7 +48,8 @@ public static class PermissionGroups
             [
                 Permission.RoleCreateRole,
                 Permission.RoleDeleteRole,
-                Permission.RoleEditRole
+                Permission.RoleEditRole,
+                Permission.RoleReadRole
             ]),
             new PermissionGroup("Attachment permissions",
             [

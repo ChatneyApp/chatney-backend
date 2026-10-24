@@ -44,6 +44,8 @@ public class InstallWizardMutations
         Permission.ChannelReadChannel,
         Permission.ChannelReadMessage,
         Permission.ChannelCreateMessage,
+        Permission.ChannelEditOwnMessage,
+        Permission.ChannelDeleteOwnMessage,
     ];
 
     /// <summary>
@@ -265,18 +267,6 @@ public class InstallWizardMutations
                     Name = Configs.DomainSettings.SystemInstalled,
                     Value = "true",
                     Type = "bool",
-                },
-                new()
-                {
-                    Name = "messages.sendCooldown",
-                    Value = "600",
-                    Type = "int",
-                },
-                new()
-                {
-                    Name = "events.typesEnabled",
-                    Value = "message.sent,message.edited,message.deleted",
-                    Type = "string[]",
                 },
             };
 

@@ -93,6 +93,10 @@ public enum Permission
     [PgName("role.editRole")]
     RoleEditRole,
 
+    /// <summary>View roles and the objects role ACLs can target. Checked globally.</summary>
+    [PgName("role.readRole")]
+    RoleReadRole,
+
     /// <summary>Create users as an admin. Checked globally.</summary>
     [PgName("user.createUser")]
     UserCreateUser,

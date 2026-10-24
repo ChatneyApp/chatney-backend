@@ -1,4 +1,6 @@
+using ChatneyBackend.Domains.Channels;
 using ChatneyBackend.Domains.Permissions;
+using ChatneyBackend.Domains.Workspaces;
 using ChatneyBackend.Infra;
 using HotChocolate.Authorization;
 
@@ -12,6 +14,16 @@ public record ObjectAcls
 {
     public required List<RoleAcl> RoleAcls { get; init; }
     public required List<UserAcl> UserAcls { get; init; }
+}
+
+/// <summary>
+/// Every object a role ACL can target, for the admin role editor. Direct messages are left out.
+/// </summary>
+public record SecureObjectList
+{
+    public required List<Workspace> Workspaces { get; init; }
+    public required List<ChannelType> ChannelTypes { get; init; }
+    public required List<Channel> Channels { get; init; }
 }
 
 public class AclQueries
@@ -58,5 +70,22 @@ public class AclQueries
             : [];
 
         return new ObjectAcls { RoleAcls = roleAcls, UserAcls = userAcls };
+    }
+
+    // DMs are excluded because they are created without an admin grant on purpose: a role ACL on
+    // one would let every member of that role read the conversation.
+    /// <summary>All workspaces, channel types and non-DM channels. Requires RoleReadRole.</summary>
+    [Authorize]
+    public async Task<SecureObjectList> SecureObjects(AppRepos repos, IPermissionResolver resolver)
+    {
+        var permissions = await resolver.Global();
+        permissions.Require(Permission.RoleReadRole);
+
+        return new SecureObjectList
+        {
+            Workspaces = await repos.Workspaces.GetList(),
+            ChannelTypes = await repos.ChannelTypes.GetList(),
+            Channels = await repos.Channels.GetList(channel => !channel.IsDm),
+        };
     }
 }
