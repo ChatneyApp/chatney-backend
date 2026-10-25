@@ -93,7 +93,7 @@ public class ChannelQueries
     [Authorize]
     public async Task<List<ChannelType>> GetChannelTypeList(AppRepos repos) => await repos.ChannelTypes.GetList();
 
-    /// <summary>Channel groups (sidebar sections) of a workspace. Requires ChannelReadChannel on the workspace.</summary>
+    /// <summary>Channel groups (sidebar sections) of a workspace. Requires WorkspaceReadChannelGroup on the workspace.</summary>
     [Authorize]
     public async Task<List<ChannelGroup>> GetWorkspaceChannelGroupList(
         AppRepos repos,
@@ -107,7 +107,7 @@ public class ChannelQueries
         }
 
         var permissions = await resolver.ForWorkspace(workspace!);
-        permissions.Require(Permission.ChannelReadChannel);
+        permissions.Require(Permission.WorkspaceReadChannelGroup);
 
         return await repos.ChannelGroups.GetList(group => group.WorkspaceId == workspaceId);
     }

@@ -17,10 +17,6 @@ public enum Permission
     [PgName("attachment.upload")]
     AttachmentUpload,
 
-    /// <summary>Create channel groups in a workspace. Checked on the workspace.</summary>
-    [PgName("channel.addChannelGroup")]
-    ChannelAddChannelGroup,
-
     /// <summary>Create channels in a workspace (checked on the workspace); granted globally, also allows creating channel types.</summary>
     [PgName("channel.createChannel")]
     ChannelCreateChannel,
@@ -32,10 +28,6 @@ public enum Permission
     /// <summary>Delete a channel. Checked on the channel.</summary>
     [PgName("channel.deleteChannel")]
     ChannelDeleteChannel,
-
-    /// <summary>Delete channel groups in a workspace. Checked on the workspace.</summary>
-    [PgName("channel.deleteChannelGroup")]
-    ChannelDeleteChannelGroup,
 
     /// <summary>Delete a channel type. Checked on the channel type.</summary>
     [PgName("channel.deleteChannelType")]
@@ -52,10 +44,6 @@ public enum Permission
     /// <summary>Edit a channel (checked on the channel) or a channel type (checked on the channel type).</summary>
     [PgName("channel.editChannel")]
     ChannelEditChannel,
-
-    /// <summary>Edit channel groups in a workspace. Checked on the workspace.</summary>
-    [PgName("channel.editChannelGroup")]
-    ChannelEditChannelGroup,
 
     /// <summary>Edit anyone's messages in a channel. Checked on the channel.</summary>
     [PgName("channel.editMessage")]
@@ -113,17 +101,33 @@ public enum Permission
     [PgName("user.readUser")]
     UserReadUser,
 
+    /// <summary>Create channel groups in a workspace. Checked on the workspace.</summary>
+    [PgName("workspace.createChannelGroup")]
+    WorkspaceCreateChannelGroup,
+
     /// <summary>Create workspaces. Checked globally.</summary>
     [PgName("workspace.createWorkspace")]
     WorkspaceCreateWorkspace,
+
+    /// <summary>Delete channel groups in a workspace. Checked on the workspace.</summary>
+    [PgName("workspace.deleteChannelGroup")]
+    WorkspaceDeleteChannelGroup,
 
     /// <summary>Delete a workspace. Checked on the workspace.</summary>
     [PgName("workspace.deleteWorkspace")]
     WorkspaceDeleteWorkspace,
 
+    /// <summary>See channel groups of a workspace. Checked on the workspace.</summary>
+    [PgName("workspace.readChannelGroup")]
+    WorkspaceReadChannelGroup,
+
     /// <summary>See a workspace. Checked on the workspace.</summary>
     [PgName("workspace.readWorkspace")]
     WorkspaceReadWorkspace,
+
+    /// <summary>Edit channel groups in a workspace, including their order. Checked on the workspace.</summary>
+    [PgName("workspace.updateChannelGroup")]
+    WorkspaceUpdateChannelGroup,
 
     /// <summary>Edit a workspace. Checked on the workspace.</summary>
     [PgName("workspace.updateWorkspace")]

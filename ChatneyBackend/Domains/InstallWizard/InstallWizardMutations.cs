@@ -41,6 +41,7 @@ public class InstallWizardMutations
     public static readonly Permission[] UserWorkspacePermissions =
     [
         Permission.WorkspaceReadWorkspace,
+        Permission.WorkspaceReadChannelGroup,
         Permission.ChannelReadChannel,
         Permission.ChannelReadMessage,
         Permission.ChannelCreateMessage,
@@ -208,6 +209,8 @@ public class InstallWizardMutations
                         FullName = $"Test User {i}",
                         Email = $"test{i}@test.com",
                         Active = true,
+                        Verified = true,
+                        Muted = false,
                         Password = Helpers.GetMd5Hash("123" + appConfig.UserPasswordSalt),
                         CreatedAt = now,
                         UpdatedAt = now,
