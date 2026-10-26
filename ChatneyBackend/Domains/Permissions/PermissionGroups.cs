@@ -26,6 +26,7 @@ public static class PermissionGroups
             ]),
             new PermissionGroup("Channel permissions",
             [
+                Permission.ChannelAddReaction,
                 Permission.ChannelCreateChannel,
                 Permission.ChannelCreateMessage,
                 Permission.ChannelDeleteChannel,
@@ -36,7 +37,8 @@ public static class PermissionGroups
                 Permission.ChannelEditMessage,
                 Permission.ChannelEditOwnMessage,
                 Permission.ChannelReadChannel,
-                Permission.ChannelReadMessage
+                Permission.ChannelReadMessage,
+                Permission.ChannelRemoveReaction
             ]),
             new PermissionGroup("User permissions",
             [

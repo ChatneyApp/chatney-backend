@@ -17,6 +17,10 @@ public enum Permission
     [PgName("attachment.upload")]
     AttachmentUpload,
 
+    /// <summary>Add your reactions to messages in a channel. Checked on the channel.</summary>
+    [PgName("channel.addReaction")]
+    ChannelAddReaction,
+
     /// <summary>Create channels in a workspace (checked on the workspace); granted globally, also allows creating channel types.</summary>
     [PgName("channel.createChannel")]
     ChannelCreateChannel,
@@ -60,6 +64,10 @@ public enum Permission
     /// <summary>Read messages in a channel. Checked on the channel.</summary>
     [PgName("channel.readMessage")]
     ChannelReadMessage,
+
+    /// <summary>Remove your reactions from messages in a channel. Checked on the channel.</summary>
+    [PgName("channel.removeReaction")]
+    ChannelRemoveReaction,
 
     /// <summary>Read system configuration values. Checked globally.</summary>
     [PgName("config.readValue")]

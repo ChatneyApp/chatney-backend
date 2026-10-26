@@ -295,13 +295,17 @@ public class MessageMutations
         }
     }
 
-    /// <summary>Adds the current user's reaction to a message. No-op if it already exists.</summary>
+    /// <summary>
+    /// Adds the current user's reaction to a message. No-op if it already exists.
+    /// Requires ChannelAddReaction on the message's channel.
+    /// </summary>
     /// <param name="code">Reaction code (e.g. an emoji shortcode).</param>
     /// <param name="messageId">Message to react to.</param>
     [Authorize]
     public async Task<ReactionEndpointOutput> AddReaction(
         WebSocketConnector webSocketConnector,
         AppRepos repos,
+        IPermissionResolver resolver,
         string code,
         int messageId,
         ClaimsPrincipal principal)
@@ -329,6 +333,9 @@ public class MessageMutations
                     message = "channel not found"
                 };
             }
+
+            var permissions = await resolver.ForChannel(channel);
+            permissions.Require(Permission.ChannelAddReaction);
 
             await MessageMutationQueries.InsertReactionAsync(
                 repos.Reactions,
@@ -364,13 +371,17 @@ public class MessageMutations
         }
     }
 
-    /// <summary>Removes the current user's reaction from a message. Returns status "error" if it didn't exist.</summary>
+    /// <summary>
+    /// Removes the current user's reaction from a message. Returns status "error" if it didn't exist.
+    /// Requires ChannelRemoveReaction on the message's channel.
+    /// </summary>
     /// <param name="code">Reaction code to remove.</param>
     /// <param name="messageId">Message to remove the reaction from.</param>
     [Authorize]
     public async Task<ReactionEndpointOutput> DeleteReaction(
         WebSocketConnector webSocketConnector,
         AppRepos repos,
+        IPermissionResolver resolver,
         string code,
         int messageId,
         ClaimsPrincipal principal)
@@ -398,6 +409,9 @@ public class MessageMutations
                     message = "channel not found"
                 };
             }
+
+            var permissions = await resolver.ForChannel(channel);
+            permissions.Require(Permission.ChannelRemoveReaction);
 
             var deletedAggregate = await MessageMutationQueries.DeleteReactionAsync(
                 repos.Reactions,

@@ -105,6 +105,8 @@ public sealed class MessageMutationsTestContext
                 Permission.ChannelDeleteOwnMessage,
                 Permission.ChannelReadMessage,
                 Permission.ChannelReadChannel,
+                Permission.ChannelAddReaction,
+                Permission.ChannelRemoveReaction,
             ],
         });
 

@@ -54,6 +54,8 @@ public class InstallWizardMutations
         Permission.AttachmentDelete,
         Permission.AttachmentRead,
         Permission.AttachmentUpload,
+        Permission.ChannelAddReaction,
+        Permission.ChannelRemoveReaction,
     ];
 
     public static readonly Permission[] PrivateUserChannelTypePermissions =
@@ -66,10 +68,23 @@ public class InstallWizardMutations
         Permission.ChannelEditOwnMessage,
         Permission.ChannelReadMessage,
         Permission.ChannelReadChannel,
+        Permission.ChannelAddReaction,
+        Permission.ChannelRemoveReaction,
     ];
 
     public static readonly Permission[] UserReadonlyChannelTypePermissions =
     [
+        Permission.ChannelReadMessage,
+        Permission.ChannelReadChannel,
+        Permission.ChannelAddReaction,
+        Permission.ChannelRemoveReaction,
+    ];
+
+    public static readonly Permission[] UserDryTextChannelTypePermissions =
+    [
+        Permission.ChannelCreateMessage,
+        Permission.ChannelDeleteOwnMessage,
+        Permission.ChannelEditOwnMessage,
         Permission.ChannelReadMessage,
         Permission.ChannelReadChannel,
     ];
@@ -155,7 +170,8 @@ public class InstallWizardMutations
             var publicType = await NewChannelType(repos, "Public", "public");
             var privateType = await NewChannelType(repos, "Private", "private");
             var readonlyType = await NewChannelType(repos, "Readonly", "readonly");
-            await repos.ChannelTypes.InsertBulk([publicType, privateType, readonlyType]);
+            var dryTextType = await NewChannelType(repos, "Dry text", "dry-text");
+            await repos.ChannelTypes.InsertBulk([publicType, privateType, readonlyType, dryTextType]);
 
             var public1 = await NewChannel(repos, "Public 1", publicType.Id, workspace.Id);
             var private1 = await NewChannel(repos, "Private 1", privateType.Id, workspace.Id);
@@ -163,7 +179,8 @@ public class InstallWizardMutations
             var public3 = await NewChannel(repos, "Public 3", publicType.Id, workspace.Id);
             var readonlyChannel = await NewChannel(repos, "Readonly", readonlyType.Id, workspace.Id);
             var private2 = await NewChannel(repos, "Private 2", privateType.Id, workspace.Id);
-            await repos.Channels.InsertBulk([public1, private1, public2, public3, readonlyChannel, private2]);
+            var dryText = await NewChannel(repos, "Dry text", dryTextType.Id, workspace.Id);
+            await repos.Channels.InsertBulk([public1, private1, public2, public3, readonlyChannel, private2, dryText]);
 
             await repos.ChannelGroups.InsertBulk(
             [
@@ -187,6 +204,13 @@ public class InstallWizardMutations
                     WorkspaceId = workspace.Id,
                     ChannelIds = [readonlyChannel.Id],
                     Order = 2,
+                },
+                new()
+                {
+                    Name = "Dry text",
+                    WorkspaceId = workspace.Id,
+                    ChannelIds = [dryText.Id],
+                    Order = 3,
                 },
             ]);
 
@@ -224,6 +248,12 @@ public class InstallWizardMutations
                     RoleId = userRole.Id,
                     SecObjId = readonlyType.SecObjId,
                     Permissions = UserReadonlyChannelTypePermissions,
+                },
+                new()
+                {
+                    RoleId = userRole.Id,
+                    SecObjId = dryTextType.SecObjId,
+                    Permissions = UserDryTextChannelTypePermissions,
                 },
                 new()
                 {
