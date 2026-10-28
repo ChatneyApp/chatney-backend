@@ -29,6 +29,7 @@ public static class PermissionGroups
                 Permission.ChannelAddReaction,
                 Permission.ChannelCreateChannel,
                 Permission.ChannelCreateMessage,
+                Permission.ChannelCreateThread,
                 Permission.ChannelDeleteChannel,
                 Permission.ChannelDeleteChannelType,
                 Permission.ChannelDeleteMessage,

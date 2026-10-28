@@ -29,6 +29,10 @@ public enum Permission
     [PgName("channel.createMessage")]
     ChannelCreateMessage,
 
+    /// <summary>Start threads (reply under a message) in a channel. Checked on the channel.</summary>
+    [PgName("channel.createThread")]
+    ChannelCreateThread,
+
     /// <summary>Delete a channel. Checked on the channel.</summary>
     [PgName("channel.deleteChannel")]
     ChannelDeleteChannel,

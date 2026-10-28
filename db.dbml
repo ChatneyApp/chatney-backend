@@ -5,6 +5,7 @@ Enum "permission" {
   "channel.addReaction"
   "channel.createChannel"
   "channel.createMessage"
+  "channel.createThread"
   "channel.deleteChannel"
   "channel.deleteChannelType"
   "channel.deleteMessage"

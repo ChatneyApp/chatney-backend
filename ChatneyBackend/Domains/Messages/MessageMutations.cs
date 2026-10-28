@@ -23,7 +23,8 @@ public class MessageMutations
 
     /// <summary>
     /// Posts a message, optionally as a thread reply (parentId) or a quote-reply (replyTo).
-    /// Requires ChannelCreateMessage on the channel. URL previews are generated from the content.
+    /// Requires ChannelCreateMessage on the channel, plus ChannelCreateThread for thread replies outside DMs.
+    /// URL previews are generated from the content.
     /// </summary>
     [Authorize]
     public async Task<MessageWithUser?> AddMessage(
@@ -45,6 +46,11 @@ public class MessageMutations
 
         var permissions = await resolver.ForChannel(channel);
         permissions.Require(Permission.ChannelCreateMessage);
+
+        if (message.ParentId != null && !channel.IsDm)
+        {
+            permissions.Require(Permission.ChannelCreateThread);
+        }
 
         var parentMessage = message.ParentId != null
             ? await repos.Messages.GetById(message.ParentId.Value)
