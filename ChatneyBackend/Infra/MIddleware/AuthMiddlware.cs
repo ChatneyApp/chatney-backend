@@ -56,7 +56,9 @@ public class AuthMiddleware
     {
         try
         {
-            if (context.Request.Headers.TryGetValue("Authorization", out var authHeader))
+            // Until the system is installed there are no users (tables may not even exist), so a
+            // token left over from a previous install must not break the install request.
+            if (config.AdminUserId != null && context.Request.Headers.TryGetValue("Authorization", out var authHeader))
             {
                 var token = authHeader.ToString().Replace("Bearer ", "");
                 var identityValid = JwtHelpers.ValidateJwtToken(token, config.JwtSecret);

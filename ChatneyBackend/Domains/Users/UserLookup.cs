@@ -1,4 +1,3 @@
-using System.Linq.Expressions;
 using ChatneyBackend.Infra;
 
 namespace ChatneyBackend.Domains.Users;
@@ -32,12 +31,16 @@ public static class UserLookup
         string nickname,
         Guid? excludeUserId = null)
     {
-        Expression<Func<User, bool>> candidateSearch = excludeUserId == null
-            ? u => string.Equals(u.Nickname, nickname, StringComparison.OrdinalIgnoreCase)
-            : u => u.Id != excludeUserId &&
-                   string.Equals(u.Nickname, nickname, StringComparison.OrdinalIgnoreCase);
-
-        return await repos.Users.GetOne(candidateSearch);
+        // Raw SQL: RepoDb can't translate a case-insensitive string.Equals, and silently drops it next to another condition.
+        return await repos.Users.GetOne(
+            """
+            SELECT *
+            FROM users
+            WHERE LOWER(nickname) = LOWER(@Nickname)
+              AND id != @ExcludeUserId
+            LIMIT 1;
+            """,
+            new { Nickname = nickname.Trim(), ExcludeUserId = excludeUserId ?? Guid.Empty });
     }
 
     public static async Task<bool> IsNicknameTaken(

@@ -67,6 +67,26 @@ public class InMemoryPgRepo<T, TKey> : IPgRepo<T, TKey> where T : class, IPgKey<
             throw new NotSupportedException($"Raw GetOne is not supported for {typeof(T).Name}");
         }
 
+        if (sql.Contains("@ExcludeUserId", StringComparison.Ordinal))
+        {
+            var nickname = ReadAnonymousString(param, "Nickname") ?? string.Empty;
+            var excludeUserId = ReadAnonymousGuid(param, "ExcludeUserId");
+
+            lock (_lock)
+            {
+                _readCallCount++;
+                var match = _items
+                    .Cast<User>()
+                    .FirstOrDefault(item =>
+                        item.Id != excludeUserId &&
+                        string.Equals(item.Nickname, nickname, StringComparison.OrdinalIgnoreCase));
+
+                return Task.FromResult(match == null
+                    ? null
+                    : (T)(object)match);
+            }
+        }
+
         var login = ReadAnonymousString(param, "Login") ?? string.Empty;
 
         lock (_lock)

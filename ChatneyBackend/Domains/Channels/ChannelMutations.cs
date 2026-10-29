@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text.Json;
 using ChatneyBackend.Domains.Permissions;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Infra;
@@ -165,7 +166,7 @@ public class ChannelMutations
         return deleted;
     }
 
-    /// <summary>Creates a channel group (sidebar section). Requires ChannelAddChannelGroup on the workspace.</summary>
+    /// <summary>Creates a channel group (sidebar section). Requires WorkspaceCreateChannelGroup on the workspace.</summary>
     [Authorize]
     public async Task<ChannelGroup> AddChannelGroup(
         AppRepos repos,
@@ -179,14 +180,14 @@ public class ChannelMutations
         }
 
         var permissions = await resolver.ForWorkspace(workspace!);
-        permissions.Require(Permission.ChannelAddChannelGroup);
+        permissions.Require(Permission.WorkspaceCreateChannelGroup);
 
         var channelGroup = ChannelGroup.FromDto(channelGroupDto);
         channelGroup.Id = await repos.ChannelGroups.InsertOne(channelGroup);
         return channelGroup;
     }
 
-    /// <summary>Updates a channel group, matched by id. Requires ChannelEditChannelGroup on its workspace.</summary>
+    /// <summary>Updates a channel group, matched by id. Requires WorkspaceUpdateChannelGroup on its workspace.</summary>
     /// <returns>The saved group, or null if it or its workspace doesn't exist.</returns>
     [Authorize]
     public async Task<ChannelGroup?> UpdateChannelGroup(
@@ -201,13 +202,38 @@ public class ChannelMutations
         }
 
         var permissions = await resolver.ForWorkspace(workspace);
-        permissions.Require(Permission.ChannelEditChannelGroup);
+        permissions.Require(Permission.WorkspaceUpdateChannelGroup);
 
         var updated = await repos.ChannelGroups.UpdateOne(channelGroup);
         return updated ? channelGroup : null;
     }
 
-    /// <summary>Deletes a channel group. Requires ChannelDeleteChannelGroup on its workspace.</summary>
+    /// <summary>
+    /// Sets the order of several channel groups in one request. Requires WorkspaceUpdateChannelGroup on each group's
+    /// workspace. Ids that don't exist are ignored.
+    /// </summary>
+    /// <param name="orders">Object keyed by channel group id, valued by its new order, e.g. {"5": 0, "7": 1}.</param>
+    /// <returns>The updated groups.</returns>
+    [Authorize]
+    public async Task<List<ChannelGroup>> UpdateChannelGroupsOrder(
+        AppRepos repos,
+        IPermissionResolver resolver,
+        [GraphQLType<NonNullType<IntMapType>>] Dictionary<int, int> orders)
+    {
+        var ordersJson = JsonSerializer.Serialize(orders);
+
+        var workspaces = await ChannelGroupMutationQueries.GetWorkspacesOfGroupsAsync(repos.Workspaces, ordersJson);
+
+        foreach (var workspace in workspaces)
+        {
+            var permissions = await resolver.ForWorkspace(workspace);
+            permissions.Require(Permission.WorkspaceUpdateChannelGroup);
+        }
+
+        return await ChannelGroupMutationQueries.UpdateOrdersAsync(repos.ChannelGroups, ordersJson);
+    }
+
+    /// <summary>Deletes a channel group. Requires WorkspaceDeleteChannelGroup on its workspace.</summary>
     /// <returns>True if it existed and was deleted.</returns>
     [Authorize]
     public async Task<bool> DeleteChannelGroup(
@@ -228,7 +254,7 @@ public class ChannelMutations
         }
 
         var permissions = await resolver.ForWorkspace(workspace);
-        permissions.Require(Permission.ChannelDeleteChannelGroup);
+        permissions.Require(Permission.WorkspaceDeleteChannelGroup);
 
         return await repos.ChannelGroups.DeleteById(id);
     }

@@ -17,9 +17,9 @@ public enum Permission
     [PgName("attachment.upload")]
     AttachmentUpload,
 
-    /// <summary>Create channel groups in a workspace. Checked on the workspace.</summary>
-    [PgName("channel.addChannelGroup")]
-    ChannelAddChannelGroup,
+    /// <summary>Add your reactions to messages in a channel. Checked on the channel.</summary>
+    [PgName("channel.addReaction")]
+    ChannelAddReaction,
 
     /// <summary>Create channels in a workspace (checked on the workspace); granted globally, also allows creating channel types.</summary>
     [PgName("channel.createChannel")]
@@ -29,13 +29,13 @@ public enum Permission
     [PgName("channel.createMessage")]
     ChannelCreateMessage,
 
+    /// <summary>Start threads (reply under a message) in a channel. Checked on the channel.</summary>
+    [PgName("channel.createThread")]
+    ChannelCreateThread,
+
     /// <summary>Delete a channel. Checked on the channel.</summary>
     [PgName("channel.deleteChannel")]
     ChannelDeleteChannel,
-
-    /// <summary>Delete channel groups in a workspace. Checked on the workspace.</summary>
-    [PgName("channel.deleteChannelGroup")]
-    ChannelDeleteChannelGroup,
 
     /// <summary>Delete a channel type. Checked on the channel type.</summary>
     [PgName("channel.deleteChannelType")]
@@ -53,10 +53,6 @@ public enum Permission
     [PgName("channel.editChannel")]
     ChannelEditChannel,
 
-    /// <summary>Edit channel groups in a workspace. Checked on the workspace.</summary>
-    [PgName("channel.editChannelGroup")]
-    ChannelEditChannelGroup,
-
     /// <summary>Edit anyone's messages in a channel. Checked on the channel.</summary>
     [PgName("channel.editMessage")]
     ChannelEditMessage,
@@ -72,6 +68,10 @@ public enum Permission
     /// <summary>Read messages in a channel. Checked on the channel.</summary>
     [PgName("channel.readMessage")]
     ChannelReadMessage,
+
+    /// <summary>Remove your reactions from messages in a channel. Checked on the channel.</summary>
+    [PgName("channel.removeReaction")]
+    ChannelRemoveReaction,
 
     /// <summary>Read system configuration values. Checked globally.</summary>
     [PgName("config.readValue")]
@@ -93,6 +93,10 @@ public enum Permission
     [PgName("role.editRole")]
     RoleEditRole,
 
+    /// <summary>View roles and the objects role ACLs can target. Checked globally.</summary>
+    [PgName("role.readRole")]
+    RoleReadRole,
+
     /// <summary>Create users as an admin. Checked globally.</summary>
     [PgName("user.createUser")]
     UserCreateUser,
@@ -109,17 +113,33 @@ public enum Permission
     [PgName("user.readUser")]
     UserReadUser,
 
+    /// <summary>Create channel groups in a workspace. Checked on the workspace.</summary>
+    [PgName("workspace.createChannelGroup")]
+    WorkspaceCreateChannelGroup,
+
     /// <summary>Create workspaces. Checked globally.</summary>
     [PgName("workspace.createWorkspace")]
     WorkspaceCreateWorkspace,
+
+    /// <summary>Delete channel groups in a workspace. Checked on the workspace.</summary>
+    [PgName("workspace.deleteChannelGroup")]
+    WorkspaceDeleteChannelGroup,
 
     /// <summary>Delete a workspace. Checked on the workspace.</summary>
     [PgName("workspace.deleteWorkspace")]
     WorkspaceDeleteWorkspace,
 
+    /// <summary>See channel groups of a workspace. Checked on the workspace.</summary>
+    [PgName("workspace.readChannelGroup")]
+    WorkspaceReadChannelGroup,
+
     /// <summary>See a workspace. Checked on the workspace.</summary>
     [PgName("workspace.readWorkspace")]
     WorkspaceReadWorkspace,
+
+    /// <summary>Edit channel groups in a workspace, including their order. Checked on the workspace.</summary>
+    [PgName("workspace.updateChannelGroup")]
+    WorkspaceUpdateChannelGroup,
 
     /// <summary>Edit a workspace. Checked on the workspace.</summary>
     [PgName("workspace.updateWorkspace")]

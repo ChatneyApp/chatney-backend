@@ -15,27 +15,31 @@ public static class PermissionGroups
             ]),
             new PermissionGroup("Workspace permissions",
             [
+                Permission.WorkspaceCreateChannelGroup,
                 Permission.WorkspaceCreateWorkspace,
+                Permission.WorkspaceDeleteChannelGroup,
                 Permission.WorkspaceDeleteWorkspace,
+                Permission.WorkspaceReadChannelGroup,
                 Permission.WorkspaceReadWorkspace,
+                Permission.WorkspaceUpdateChannelGroup,
                 Permission.WorkspaceUpdateWorkspace
             ]),
             new PermissionGroup("Channel permissions",
             [
-                Permission.ChannelAddChannelGroup,
+                Permission.ChannelAddReaction,
                 Permission.ChannelCreateChannel,
                 Permission.ChannelCreateMessage,
+                Permission.ChannelCreateThread,
                 Permission.ChannelDeleteChannel,
-                Permission.ChannelDeleteChannelGroup,
                 Permission.ChannelDeleteChannelType,
                 Permission.ChannelDeleteMessage,
                 Permission.ChannelDeleteOwnMessage,
                 Permission.ChannelEditChannel,
-                Permission.ChannelEditChannelGroup,
                 Permission.ChannelEditMessage,
                 Permission.ChannelEditOwnMessage,
                 Permission.ChannelReadChannel,
-                Permission.ChannelReadMessage
+                Permission.ChannelReadMessage,
+                Permission.ChannelRemoveReaction
             ]),
             new PermissionGroup("User permissions",
             [
@@ -48,7 +52,8 @@ public static class PermissionGroups
             [
                 Permission.RoleCreateRole,
                 Permission.RoleDeleteRole,
-                Permission.RoleEditRole
+                Permission.RoleEditRole,
+                Permission.RoleReadRole
             ]),
             new PermissionGroup("Attachment permissions",
             [

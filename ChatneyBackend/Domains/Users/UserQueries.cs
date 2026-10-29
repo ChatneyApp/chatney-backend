@@ -109,7 +109,7 @@ public class UserQueries
         return user;
     }
 
-    /// <summary>All users matching the filter. Requires UserReadUser.</summary>
+    /// <summary>All users matching the filter. Requires UserReadUser. roleIds is filled only if the caller also has UserEditUser.</summary>
     [Authorize]
     public async Task<List<User>> GetList(
         AppRepos repos,
@@ -119,7 +119,7 @@ public class UserQueries
         var permissions = await resolver.Global();
         permissions.Require(Permission.UserReadUser);
 
-        return await repos.Users.GetList(
+        var users = await repos.Users.GetList(
             """
             SELECT *
             FROM users
@@ -139,6 +139,22 @@ public class UserQueries
                 HasNickname = !string.IsNullOrWhiteSpace(filter.Nickname),
                 Nickname = filter.Nickname?.Trim() ?? string.Empty,
             });
+
+        if (users.Count == 0 || !permissions.Can(Permission.UserEditUser))
+        {
+            return users;
+        }
+
+        var userIds = users.Select(user => user.Id).ToList();
+        var userRoles = await repos.UserRoles.GetList(userRole => userIds.Contains(userRole.UserId));
+        var roleIdsByUser = userRoles.ToLookup(userRole => userRole.UserId, userRole => userRole.RoleId);
+
+        foreach (var user in users)
+        {
+            user.RoleIds = roleIdsByUser[user.Id].ToList();
+        }
+
+        return users;
     }
 
     /// <summary>Nickname autocomplete for starting direct messages: up to 20 active, non-banned users, excluding yourself.</summary>

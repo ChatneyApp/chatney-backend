@@ -29,8 +29,8 @@ This hierarchy exists because workspaces contain channels, and every channel alw
 ### Permissions
 Permissions are values of the Postgres enum `permission`, namespaced by domain, e.g.:
 
-- `workspace.*` — createWorkspace, readWorkspace, updateWorkspace, deleteWorkspace
-- `channel.*` — createChannel, readChannel, editChannel, deleteChannel, createMessage, readMessage, editMessage, deleteMessage, editOwnMessage, deleteOwnMessage, addChannelGroup, editChannelGroup, deleteChannelGroup, deleteChannelType
+- `workspace.*` — createWorkspace, readWorkspace, updateWorkspace, deleteWorkspace, createChannelGroup, readChannelGroup, updateChannelGroup, deleteChannelGroup
+- `channel.*` — createChannel, readChannel, editChannel, deleteChannel, createMessage, createThread, readMessage, editMessage, deleteMessage, editOwnMessage, deleteOwnMessage, deleteChannelType, addReaction, removeReaction
 - `role.*` — createRole, editRole, deleteRole
 - `user.*` — createUser, readUser, editUser, deleteUser
 - `config.*` — readValue, updateValue

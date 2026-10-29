@@ -79,6 +79,10 @@ public class User : IPgKey<User, Guid>, IPgTimestamped
     [GraphQLIgnore]
     public DateTime UpdatedAt { get; set; }
 
+    // Not a users column (RepoDb skips it); filled from user_roles by users.list.
+    /// <summary>Ids of the user's roles. Filled only by users.list for callers with UserEditUser; empty otherwise.</summary>
+    public List<int> RoleIds { get; set; } = [];
+
     public static Expression<Func<User, bool>> MatchByKey(Guid key) => user => user.Id == key;
 
     public static Guid GetKey(User record) => record.Id;

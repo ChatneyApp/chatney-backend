@@ -99,12 +99,15 @@ public sealed class MessageMutationsTestContext
             Permissions = permissions ??
             [
                 Permission.ChannelCreateMessage,
+                Permission.ChannelCreateThread,
                 Permission.ChannelEditMessage,
                 Permission.ChannelDeleteMessage,
                 Permission.ChannelEditOwnMessage,
                 Permission.ChannelDeleteOwnMessage,
                 Permission.ChannelReadMessage,
                 Permission.ChannelReadChannel,
+                Permission.ChannelAddReaction,
+                Permission.ChannelRemoveReaction,
             ],
         });
 

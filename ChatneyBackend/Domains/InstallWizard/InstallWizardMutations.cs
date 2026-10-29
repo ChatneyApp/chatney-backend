@@ -41,15 +41,61 @@ public class InstallWizardMutations
     public static readonly Permission[] UserWorkspacePermissions =
     [
         Permission.WorkspaceReadWorkspace,
-        Permission.ChannelReadChannel,
+        Permission.WorkspaceReadChannelGroup,
+    ];
+
+    public static readonly Permission[] UserPublicChannelTypePermissions =
+    [
         Permission.ChannelReadMessage,
+        Permission.ChannelReadChannel,
         Permission.ChannelCreateMessage,
+        Permission.ChannelCreateThread,
+        Permission.ChannelDeleteOwnMessage,
+        Permission.ChannelEditOwnMessage,
+        Permission.AttachmentDelete,
+        Permission.AttachmentRead,
+        Permission.AttachmentUpload,
+        Permission.ChannelAddReaction,
+        Permission.ChannelRemoveReaction,
+    ];
+
+    public static readonly Permission[] PrivateUserChannelTypePermissions =
+    [
+        Permission.AttachmentDelete,
+        Permission.AttachmentUpload,
+        Permission.AttachmentRead,
+        Permission.ChannelCreateMessage,
+        Permission.ChannelCreateThread,
+        Permission.ChannelDeleteOwnMessage,
+        Permission.ChannelEditOwnMessage,
+        Permission.ChannelReadMessage,
+        Permission.ChannelReadChannel,
+        Permission.ChannelAddReaction,
+        Permission.ChannelRemoveReaction,
+    ];
+
+    public static readonly Permission[] UserReadonlyChannelTypePermissions =
+    [
+        Permission.ChannelReadMessage,
+        Permission.ChannelReadChannel,
+        Permission.ChannelAddReaction,
+        Permission.ChannelRemoveReaction,
+    ];
+
+    public static readonly Permission[] UserDryTextChannelTypePermissions =
+    [
+        Permission.ChannelCreateMessage,
+        Permission.ChannelDeleteOwnMessage,
+        Permission.ChannelEditOwnMessage,
+        Permission.ChannelReadMessage,
+        Permission.ChannelReadChannel,
     ];
 
     /// <summary>
     /// Runs migrations and seeds a fresh system: admin and user roles, a default workspace with
-    /// public/private channels, an admin user, optional test users and default config. Safe to call
-    /// again: returns status "installed" if the system is already installed.
+    /// public/private/readonly channel types, channels and channel groups, an admin user, optional
+    /// test users and default config. Safe to call again: returns status "installed" if the system
+    /// is already installed.
     /// </summary>
     public async Task<InstallSystemResult> InstallSystem(
         InstallSystemInput options,
@@ -107,6 +153,14 @@ public class InstallWizardMutations
             };
             userRole.Id = await repos.Roles.InsertOne(userRole);
 
+            var privateUserRole = new Role
+            {
+                Name = "Private user",
+                CreatedAt = now,
+                UpdatedAt = now,
+            };
+            privateUserRole.Id = await repos.Roles.InsertOne(privateUserRole);
+
             var workspace = new Workspace
             {
                 Name = "Default workspace",
@@ -115,45 +169,52 @@ public class InstallWizardMutations
             };
             workspace.Id = await repos.Workspaces.InsertOne(workspace);
 
-            List<Channels.ChannelType> channelTypes = new List<Channels.ChannelType>
-            {
-                new()
-                {
-                    Name = "Public",
-                    Key = "public",
-                    SecObjId = await SecureObjectHelper.Create(
-                        repos, new SecureObjectDescription { Kind = "channelType", Name = "Public" }),
-                },
-                new()
-                {
-                    Name = "Private",
-                    Key = "private",
-                    SecObjId = await SecureObjectHelper.Create(
-                        repos, new SecureObjectDescription { Kind = "channelType", Name = "Private" }),
-                },
-            };
-            await repos.ChannelTypes.InsertBulk(channelTypes);
+            var publicType = await NewChannelType(repos, "Public", "public");
+            var privateType = await NewChannelType(repos, "Private", "private");
+            var readonlyType = await NewChannelType(repos, "Readonly", "readonly");
+            var dryTextType = await NewChannelType(repos, "Dry text", "dry-text");
+            await repos.ChannelTypes.InsertBulk([publicType, privateType, readonlyType, dryTextType]);
 
-            List<Channels.Channel> channels = new List<Channels.Channel>()
-            {
+            var public1 = await NewChannel(repos, "Public 1", publicType.Id, workspace.Id);
+            var private1 = await NewChannel(repos, "Private 1", privateType.Id, workspace.Id);
+            var public2 = await NewChannel(repos, "Public 2", publicType.Id, workspace.Id);
+            var public3 = await NewChannel(repos, "Public 3", publicType.Id, workspace.Id);
+            var readonlyChannel = await NewChannel(repos, "Readonly", readonlyType.Id, workspace.Id);
+            var private2 = await NewChannel(repos, "Private 2", privateType.Id, workspace.Id);
+            var dryText = await NewChannel(repos, "Dry text", dryTextType.Id, workspace.Id);
+            await repos.Channels.InsertBulk([public1, private1, public2, public3, readonlyChannel, private2, dryText]);
+
+            await repos.ChannelGroups.InsertBulk(
+            [
                 new()
                 {
-                    Name = "Public channel",
-                    ChannelTypeId = channelTypes[0].Id,
+                    Name = "Public space",
                     WorkspaceId = workspace.Id,
-                    SecObjId = await SecureObjectHelper.Create(
-                        repos, new SecureObjectDescription { Kind = "channel", Name = "Public channel" }),
+                    ChannelIds = [public1.Id, public2.Id, public3.Id],
+                    Order = 0,
                 },
                 new()
                 {
-                    Name = "Private channel",
-                    ChannelTypeId = channelTypes[1].Id,
+                    Name = "Private space",
                     WorkspaceId = workspace.Id,
-                    SecObjId = await SecureObjectHelper.Create(
-                        repos, new SecureObjectDescription { Kind = "channel", Name = "Private channel" }),
+                    ChannelIds = [private1.Id, private2.Id],
+                    Order = 1,
                 },
-            };
-            await repos.Channels.InsertBulk(channels);
+                new()
+                {
+                    Name = "Rules",
+                    WorkspaceId = workspace.Id,
+                    ChannelIds = [readonlyChannel.Id],
+                    Order = 2,
+                },
+                new()
+                {
+                    Name = "Dry text",
+                    WorkspaceId = workspace.Id,
+                    ChannelIds = [dryText.Id],
+                    Order = 3,
+                },
+            ]);
 
             // SecureObjectHelper.Create already granted admin the object-scoped permissions on the
             // workspace; widen that row to every permission explicitly.
@@ -176,7 +237,31 @@ public class InstallWizardMutations
                 {
                     RoleId = userRole.Id,
                     SecObjId = workspace.SecObjId,
-                    Permissions = InstallWizardMutations.UserWorkspacePermissions,
+                    Permissions = UserWorkspacePermissions,
+                },
+                new()
+                {
+                    RoleId = userRole.Id,
+                    SecObjId = publicType.SecObjId,
+                    Permissions = UserPublicChannelTypePermissions,
+                },
+                new()
+                {
+                    RoleId = userRole.Id,
+                    SecObjId = readonlyType.SecObjId,
+                    Permissions = UserReadonlyChannelTypePermissions,
+                },
+                new()
+                {
+                    RoleId = userRole.Id,
+                    SecObjId = dryTextType.SecObjId,
+                    Permissions = UserDryTextChannelTypePermissions,
+                },
+                new()
+                {
+                    RoleId = privateUserRole.Id,
+                    SecObjId = privateType.SecObjId,
+                    Permissions = PrivateUserChannelTypePermissions,
                 },
             };
             await repos.RoleAcls.InsertBulk(roleAcls);
@@ -206,6 +291,8 @@ public class InstallWizardMutations
                         FullName = $"Test User {i}",
                         Email = $"test{i}@test.com",
                         Active = true,
+                        Verified = true,
+                        Muted = false,
                         Password = Helpers.GetMd5Hash("123" + appConfig.UserPasswordSalt),
                         CreatedAt = now,
                         UpdatedAt = now,
@@ -219,6 +306,7 @@ public class InstallWizardMutations
             [
                 new() { UserId = adminUser.Id, RoleId = Roles.DomainSettings.AdminRoleId },
                 ..testUsers.Select(user => new Users.UserRole { UserId = user.Id, RoleId = userRole.Id }),
+                ..testUsers.Skip(1).Take(1).Select(user => new Users.UserRole { UserId = user.Id, RoleId = privateUserRole.Id }),
             ];
             await repos.UserRoles.InsertBulk(userRoles);
 
@@ -265,18 +353,6 @@ public class InstallWizardMutations
                     Name = Configs.DomainSettings.SystemInstalled,
                     Value = "true",
                     Type = "bool",
-                },
-                new()
-                {
-                    Name = "messages.sendCooldown",
-                    Value = "600",
-                    Type = "int",
-                },
-                new()
-                {
-                    Name = "events.typesEnabled",
-                    Value = "message.sent,message.edited,message.deleted",
-                    Type = "string[]",
                 },
             };
 
@@ -339,6 +415,29 @@ public class InstallWizardMutations
         return new InstallSystemResult()
         {
             status = "success"
+        };
+    }
+
+    private static async Task<Channels.ChannelType> NewChannelType(AppRepos repos, string name, string key)
+    {
+        return new Channels.ChannelType
+        {
+            Name = name,
+            Key = key,
+            SecObjId = await SecureObjectHelper.Create(
+                repos, new SecureObjectDescription { Kind = "channelType", Name = name }),
+        };
+    }
+
+    private static async Task<Channels.Channel> NewChannel(AppRepos repos, string name, int channelTypeId, int workspaceId)
+    {
+        return new Channels.Channel
+        {
+            Name = name,
+            ChannelTypeId = channelTypeId,
+            WorkspaceId = workspaceId,
+            SecObjId = await SecureObjectHelper.Create(
+                repos, new SecureObjectDescription { Kind = "channel", Name = name }),
         };
     }
 

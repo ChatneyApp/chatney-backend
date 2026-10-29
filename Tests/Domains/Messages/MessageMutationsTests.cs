@@ -324,6 +324,7 @@ public class MessageMutationsTests
     var result = await context.Mutations.AddReaction(
       context.WebSocket,
       context.Repos,
+      context.Resolver,
       "thumbsup",
       404,
       context.Principal);
@@ -341,6 +342,7 @@ public class MessageMutationsTests
     var result = await context.Mutations.AddReaction(
       context.WebSocket,
       context.Repos,
+      context.Resolver,
       "thumbsup",
       message.Id,
       context.Principal);
@@ -360,6 +362,7 @@ public class MessageMutationsTests
     var result = await context.Mutations.DeleteReaction(
       context.WebSocket,
       context.Repos,
+      context.Resolver,
       "thumbsup",
       message.Id,
       context.Principal);
@@ -382,6 +385,7 @@ public class MessageMutationsTests
     var result = await context.Mutations.DeleteReaction(
       context.WebSocket,
       context.Repos,
+      context.Resolver,
       "thumbsup",
       message.Id,
       context.Principal);
