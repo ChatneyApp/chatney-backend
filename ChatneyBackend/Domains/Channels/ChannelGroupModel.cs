@@ -64,3 +64,32 @@ public class ChannelGroupDto
 
     public int Order { get; set; }
 }
+
+public class WebsocketChannelGroupPayload
+{
+    public int Id { get; set; }
+    public required string Name { get; set; }
+    public int WorkspaceId { get; set; }
+    public required int[] ChannelIds { get; set; }
+    public int Order { get; set; }
+
+    public static WebsocketChannelGroupPayload FromChannelGroup(ChannelGroup channelGroup) => new()
+    {
+        Id = channelGroup.Id,
+        Name = channelGroup.Name,
+        WorkspaceId = channelGroup.WorkspaceId,
+        ChannelIds = channelGroup.ChannelIds,
+        Order = channelGroup.Order,
+    };
+}
+
+public class WebsocketChannelGroupsOrderPayload
+{
+    public required List<WebsocketChannelGroupPayload> Groups { get; set; }
+}
+
+public class WebsocketChannelGroupDeletedPayload
+{
+    public int Id { get; set; }
+    public int WorkspaceId { get; set; }
+}

@@ -1,6 +1,7 @@
 using ChatneyBackend.Domains.Permissions;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Infra;
+using ChatneyBackend.Infra.Middleware;
 using HotChocolate.Authorization;
 
 namespace ChatneyBackend.Domains.Configs;
@@ -13,12 +14,17 @@ public class ConfigMutations
     public async Task<Config?> UpdateConfig(
         AppRepos repos,
         IPermissionResolver resolver,
-        Config config)
+        Config config,
+        WebSocketConnector webSocketConnector)
     {
         var permissions = await resolver.Global();
         permissions.Require(Permission.ConfigUpdateValue);
 
         var updated = await repos.Configs.UpdateOne(config);
+        if (updated)
+        {
+            await webSocketConnector.SendUpdatedConfigAsync(WebsocketConfigPayload.FromConfig(config));
+        }
         return updated ? config : null;
     }
 }

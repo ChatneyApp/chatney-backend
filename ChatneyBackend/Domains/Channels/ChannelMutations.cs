@@ -171,7 +171,8 @@ public class ChannelMutations
     public async Task<ChannelGroup> AddChannelGroup(
         AppRepos repos,
         IPermissionResolver resolver,
-        ChannelGroupDto channelGroupDto)
+        ChannelGroupDto channelGroupDto,
+        WebSocketConnector webSocketConnector)
     {
         var workspace = await repos.Workspaces.GetById(channelGroupDto.WorkspaceId);
         if (workspace == null)
@@ -184,6 +185,7 @@ public class ChannelMutations
 
         var channelGroup = ChannelGroup.FromDto(channelGroupDto);
         channelGroup.Id = await repos.ChannelGroups.InsertOne(channelGroup);
+        await webSocketConnector.SendNewChannelGroupAsync(WebsocketChannelGroupPayload.FromChannelGroup(channelGroup));
         return channelGroup;
     }
 
@@ -193,7 +195,8 @@ public class ChannelMutations
     public async Task<ChannelGroup?> UpdateChannelGroup(
         AppRepos repos,
         IPermissionResolver resolver,
-        ChannelGroup channelGroup)
+        ChannelGroup channelGroup,
+        WebSocketConnector webSocketConnector)
     {
         var workspace = await repos.Workspaces.GetById(channelGroup.WorkspaceId);
         if (workspace == null)
@@ -205,6 +208,10 @@ public class ChannelMutations
         permissions.Require(Permission.WorkspaceUpdateChannelGroup);
 
         var updated = await repos.ChannelGroups.UpdateOne(channelGroup);
+        if (updated)
+        {
+            await webSocketConnector.SendUpdatedChannelGroupAsync(WebsocketChannelGroupPayload.FromChannelGroup(channelGroup));
+        }
         return updated ? channelGroup : null;
     }
 
@@ -218,7 +225,8 @@ public class ChannelMutations
     public async Task<List<ChannelGroup>> UpdateChannelGroupsOrder(
         AppRepos repos,
         IPermissionResolver resolver,
-        [GraphQLType<NonNullType<IntMapType>>] Dictionary<int, int> orders)
+        [GraphQLType<NonNullType<IntMapType>>] Dictionary<int, int> orders,
+        WebSocketConnector webSocketConnector)
     {
         var ordersJson = JsonSerializer.Serialize(orders);
 
@@ -230,7 +238,15 @@ public class ChannelMutations
             permissions.Require(Permission.WorkspaceUpdateChannelGroup);
         }
 
-        return await ChannelGroupMutationQueries.UpdateOrdersAsync(repos.ChannelGroups, ordersJson);
+        var channelGroups = await ChannelGroupMutationQueries.UpdateOrdersAsync(repos.ChannelGroups, ordersJson);
+        if (channelGroups.Count > 0)
+        {
+            await webSocketConnector.SendChannelGroupsOrderUpdatedAsync(new WebsocketChannelGroupsOrderPayload
+            {
+                Groups = channelGroups.Select(WebsocketChannelGroupPayload.FromChannelGroup).ToList(),
+            });
+        }
+        return channelGroups;
     }
 
     /// <summary>Deletes a channel group. Requires WorkspaceDeleteChannelGroup on its workspace.</summary>
@@ -239,7 +255,8 @@ public class ChannelMutations
     public async Task<bool> DeleteChannelGroup(
         AppRepos repos,
         IPermissionResolver resolver,
-        int id)
+        int id,
+        WebSocketConnector webSocketConnector)
     {
         var channelGroup = await repos.ChannelGroups.GetById(id);
         if (channelGroup == null)
@@ -256,7 +273,16 @@ public class ChannelMutations
         var permissions = await resolver.ForWorkspace(workspace);
         permissions.Require(Permission.WorkspaceDeleteChannelGroup);
 
-        return await repos.ChannelGroups.DeleteById(id);
+        var deleted = await repos.ChannelGroups.DeleteById(id);
+        if (deleted)
+        {
+            await webSocketConnector.SendDeletedChannelGroupAsync(new WebsocketChannelGroupDeletedPayload
+            {
+                Id = id,
+                WorkspaceId = channelGroup.WorkspaceId,
+            });
+        }
+        return deleted;
     }
 
     /// <summary>

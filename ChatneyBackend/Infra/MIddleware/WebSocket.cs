@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using ChatneyBackend.Domains.Channels;
+using ChatneyBackend.Domains.Configs;
 using ChatneyBackend.Domains.Messages;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Domains.Users;
@@ -44,6 +45,12 @@ public readonly struct WebSocketPayloadType
     public static readonly WebSocketPayloadType NewWorkspace = new("newWorkspace");
     public static readonly WebSocketPayloadType UpdatedWorkspace = new("updatedWorkspace");
     public static readonly WebSocketPayloadType DeletedWorkspace = new("deletedWorkspace");
+    public static readonly WebSocketPayloadType NewChannelGroup = new("newChannelGroup");
+    public static readonly WebSocketPayloadType UpdatedChannelGroup = new("updatedChannelGroup");
+    public static readonly WebSocketPayloadType ChannelGroupsOrderUpdated = new("channelGroupsOrderUpdated");
+    public static readonly WebSocketPayloadType DeletedChannelGroup = new("deletedChannelGroup");
+    public static readonly WebSocketPayloadType UpdatedUserProfile = new("updatedUserProfile");
+    public static readonly WebSocketPayloadType UpdatedConfig = new("updatedConfig");
 
     public override string ToString() => Value;
 
@@ -303,6 +310,42 @@ public class WebSocketConnector
     public virtual Task SendDeletedWorkspaceAsync(WebsocketWorkspaceDeletedPayload workspace)
     {
         return SendToAllAsync(WebSocketPayloadType.DeletedWorkspace, workspace);
+    }
+    #endregion
+
+    #region Channel Groups
+    public virtual Task SendNewChannelGroupAsync(WebsocketChannelGroupPayload channelGroup)
+    {
+        return SendToAllAsync(WebSocketPayloadType.NewChannelGroup, channelGroup);
+    }
+
+    public virtual Task SendUpdatedChannelGroupAsync(WebsocketChannelGroupPayload channelGroup)
+    {
+        return SendToAllAsync(WebSocketPayloadType.UpdatedChannelGroup, channelGroup);
+    }
+
+    public virtual Task SendChannelGroupsOrderUpdatedAsync(WebsocketChannelGroupsOrderPayload payload)
+    {
+        return SendToAllAsync(WebSocketPayloadType.ChannelGroupsOrderUpdated, payload);
+    }
+
+    public virtual Task SendDeletedChannelGroupAsync(WebsocketChannelGroupDeletedPayload channelGroup)
+    {
+        return SendToAllAsync(WebSocketPayloadType.DeletedChannelGroup, channelGroup);
+    }
+    #endregion
+
+    #region User Profiles
+    public virtual Task SendUpdatedUserProfileAsync(WebsocketUserProfilePayload profile)
+    {
+        return SendToAllAsync(WebSocketPayloadType.UpdatedUserProfile, profile);
+    }
+    #endregion
+
+    #region Configs
+    public virtual Task SendUpdatedConfigAsync(WebsocketConfigPayload config)
+    {
+        return SendToAllAsync(WebSocketPayloadType.UpdatedConfig, config);
     }
     #endregion
 

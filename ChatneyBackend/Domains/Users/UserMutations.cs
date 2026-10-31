@@ -150,7 +150,9 @@ public class UserMutations
         await EnsureRolesExist(repos, userDto.RoleIds);
 
         var nickname = NicknameValidator.NormalizeAndValidate(userDto.Nickname);
-        if (nickname != user.Nickname)
+        var nicknameChanged = nickname != user.Nickname;
+
+        if (nicknameChanged)
         {
             await NicknameValidator.EnsureUnique(repos, nickname, user.Id);
         }
@@ -169,6 +171,11 @@ public class UserMutations
         }
 
         await repos.Users.UpdateOne(user);
+
+        if (nicknameChanged)
+        {
+            await webSocketConnector.SendUpdatedUserProfileAsync(WebsocketUserProfilePayload.FromUser(user));
+        }
 
         var existingUserRoles = await repos.UserRoles.GetList(userRole => userRole.UserId == user.Id);
         var existingRoleIds = existingUserRoles.Select(userRole => userRole.RoleId).ToHashSet();
@@ -198,9 +205,12 @@ public class UserMutations
         AppConfig appConfig,
         AppRepos repos,
         ClaimsPrincipal principal,
-        UpdateMyProfileDto profileDto)
+        UpdateMyProfileDto profileDto,
+        WebSocketConnector webSocketConnector)
     {
         var user = await principal.GetRequiredUser(repos);
+        var oldNickname = user.Nickname;
+        var oldAvatarUrl = user.AvatarUrl;
 
         if (!string.IsNullOrWhiteSpace(profileDto.Nickname))
         {
@@ -246,6 +256,12 @@ public class UserMutations
         }
 
         await repos.Users.UpdateOne(user);
+
+        if (user.Nickname != oldNickname || user.AvatarUrl != oldAvatarUrl)
+        {
+            await webSocketConnector.SendUpdatedUserProfileAsync(WebsocketUserProfilePayload.FromUser(user));
+        }
+
         return user;
     }
 
