@@ -17,3 +17,4 @@ gen-schema:
 	dotnet build ChatneyBackend -o ChatneyBackend/bin/schema-export
 	cd ChatneyBackend && dotnet bin/schema-export/ChatneyBackend.dll schema export --output ../../chatney-frontend/graphql/schema.graphql
 	node -e "const fs=require('fs');const f='../chatney-frontend/graphql/schema.graphql';fs.writeFileSync(f,fs.readFileSync(f,'utf8').replace(/\r\n/g,'\n'))"
+	cd ChatneyBackend && dotnet bin/schema-export/ChatneyBackend.dll websocket-schema ../../chatney-frontend/websocket/schema.json
