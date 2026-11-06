@@ -39,17 +39,12 @@ public class MessageWithUserJsonTest
     public void MessageWithUser_WebSocketPayload_DoesNotSerialize_InternalIdFields()
     {
         var message = new MessageWithUserQuery().Message();
-        var options = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            Converters = { new WebSocketPayloadTypeConverter() }
-        };
         var websocketPayload = new
         {
-            Type = WebSocketPayloadType.NewMessage,
+            Type = WebSocketEvents.NewMessage.Name,
             Payload = message
         };
-        var json = JsonSerializer.Serialize(websocketPayload, options);
+        var json = JsonSerializer.Serialize(websocketPayload, WebSocketConnector.SerializerOptions);
 
         Assert.DoesNotContain("\"attachmentIds\"", json);
         Assert.DoesNotContain("\"urlPreviewIds\"", json);

@@ -219,6 +219,20 @@ public class UserLoginResponse
     public required string Token { get; set; }
 }
 
+public class WebsocketUserProfilePayload
+{
+    public Guid Id { get; set; }
+    public required string Nickname { get; set; }
+    public string? AvatarUrl { get; set; }
+
+    public static WebsocketUserProfilePayload FromUser(User user) => new()
+    {
+        Id = user.Id,
+        Nickname = user.Nickname,
+        AvatarUrl = user.AvatarUrl,
+    };
+}
+
 public class WebsocketUserRolePayload
 {
     public Guid UserId { get; set; }

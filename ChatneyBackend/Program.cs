@@ -30,6 +30,13 @@ using FluentMigrator.Runner;
 using Npgsql;
 using PermissionsDomain = ChatneyBackend.Domains.Permissions;
 
+// json schema export
+if (args is ["websocket-schema", var webSocketSchemaPath])
+{
+    await WebSocketSchemaExporter.ExportAsync(webSocketSchemaPath);
+    return;
+}
+
 var builder = WebApplication.CreateBuilder(args);
 
 var postgresConnectionString = builder.Configuration.GetConnectionString("Postgres");

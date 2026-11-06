@@ -40,3 +40,15 @@ public class Config : IPgKey<Config, int>, IPgTimestamped
 
     public static int GetKey(Config record) => record.Id;
 }
+
+public class WebsocketConfigPayload
+{
+    public int Id { get; set; }
+    public required string Name { get; set; }
+
+    public static WebsocketConfigPayload FromConfig(Config config) => new()
+    {
+        Id = config.Id,
+        Name = config.Name,
+    };
+}
