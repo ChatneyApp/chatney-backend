@@ -30,13 +30,21 @@ public class AttachmentMutations
         IAmazonS3 s3Client,
         AppConfig appConfig,
         IFile file,
+        int channelId,
         bool asFile,
         int? width,
         int? height,
         int? duration
     )
     {
-        var permissions = await resolver.Global();
+        var channel = await repos.Channels.GetById(channelId);
+
+        if (channel == null)
+        {
+            throw new Exception("Channel not found.");
+        }
+
+        var permissions = await resolver.ForChannel(channel);
         permissions.Require(Permission.AttachmentUpload);
 
         if (file == null)
