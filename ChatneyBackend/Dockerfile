@@ -18,8 +18,6 @@ WORKDIR /app
 # Copy published app from build image
 COPY --from=build /app/publish ./
 
-RUN ls -lah
-
 # Expose port 8080 (the default for ASP.NET Core 8+)
 EXPOSE 8080
 

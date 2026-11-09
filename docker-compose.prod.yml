@@ -31,5 +31,15 @@ services:
       AWS__ServiceUrl: http://rustfs:9000
       AWS__ForcePathStyle: "true"
       AWS__Bucket: chatney
-#   TODO
-#  frontend:
+  frontend:
+    build:
+      context: ../chatney-frontend
+      # Vite bakes these in at build time; .env is excluded by .dockerignore
+      args:
+        VITE_API_URL: /graphql
+        VITE_WEBSOCKET_URL: ws://localhost:5000/ws
+    restart: on-failure
+    depends_on:
+      - backend
+    ports:
+      - "5000:80"
