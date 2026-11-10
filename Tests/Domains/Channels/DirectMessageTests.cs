@@ -234,7 +234,7 @@ public class DirectMessageTests
         Assert.Equal("hello", message.Content);
 
         var listed = await new MessageQueries().GetListChannelMessages(
-            ctx.Repos, resolver, PrincipalFor(ctx.UserWithRoleA), opened.Channel.Id);
+            ctx.Repos, resolver, PrincipalFor(ctx.UserWithRoleA), opened.Channel.Id, 10);
         Assert.Contains(listed.Messages, item => item.Id == message.Id);
     }
 

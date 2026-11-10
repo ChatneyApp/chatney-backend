@@ -125,6 +125,33 @@ public class InMemoryPgRepo<T, TKey> : IPgRepo<T, TKey> where T : class, IPgKey<
 
     public Task<List<T>> GetList(string sql, object? param = null)
     {
+        if (typeof(T) == typeof(Message) && sql.Contains("FROM messages", StringComparison.Ordinal))
+        {
+            var scopeId = ReadAnonymousInt(param, "ScopeId");
+            var limit = ReadAnonymousInt(param, "Limit");
+            var isThread = sql.Contains("parent_id = @ScopeId", StringComparison.Ordinal);
+            var beforeId = sql.Contains("@BeforeId", StringComparison.Ordinal)
+                ? ReadAnonymousInt(param, "BeforeId")
+                : int.MaxValue;
+
+            lock (_lock)
+            {
+                _readCallCount++;
+                var page = _items
+                    .Cast<Message>()
+                    .Where(message => isThread
+                        ? message.ParentId == scopeId
+                        : message.ChannelId == scopeId && message.ParentId == null)
+                    .Where(message => message.Id < beforeId)
+                    .OrderByDescending(message => message.Id)
+                    .Take(limit)
+                    .Cast<T>()
+                    .ToList();
+
+                return Task.FromResult(page);
+            }
+        }
+
         if (typeof(T) != typeof(User) ||
             !sql.Contains("FROM users", StringComparison.Ordinal))
         {

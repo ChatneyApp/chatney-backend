@@ -6,4 +6,5 @@ public class DomainSettings
     public const string ReactionTableName = "message_reactions";
     public const string UrlPreviewTableName = "url_previews";
     public const string PermissionsPrefix = "message";
+    public const int MaxMessagesPageSize = 100;
 }

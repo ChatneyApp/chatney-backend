@@ -9,13 +9,21 @@ namespace ChatneyBackend.Domains.Messages;
 
 public class MessageQueries
 {
-    /// <summary>Top-level messages of a channel (thread replies excluded). Requires ChannelReadMessage on the channel.</summary>
+    /// <summary>
+    /// A page of top-level messages of a channel (thread replies excluded), newest first.
+    /// An empty messages list means the beginning of the channel history is reached.
+    /// Requires ChannelReadMessage on the channel.
+    /// </summary>
+    /// <param name="limit">Maximum number of messages to return (capped at 100).</param>
+    /// <param name="beforeId">Return only messages older than the message with this id. Omit to get the newest messages.</param>
     [Authorize]
     public async Task<MessagesResult> GetListChannelMessages(
         AppRepos repos,
         IPermissionResolver resolver,
         ClaimsPrincipal principal,
-        int channelId)
+        int channelId,
+        int limit,
+        int? beforeId = null)
     {
         var channel = await repos.Channels.GetById(channelId);
         if (channel is null)
@@ -32,17 +40,25 @@ public class MessageQueries
         var userId = principal.GetUserGuid();
 
         return await GetMessagesHydrated(repos, userId,
-            m => m.ChannelId == channelId && m.ParentId == null);
+            "channel_id = @ScopeId AND parent_id IS NULL", channelId, limit, beforeId);
     }
 
-    /// <summary>Replies in a thread. Requires ChannelReadMessage on the thread's channel.</summary>
+    /// <summary>
+    /// A page of replies in a thread, newest first.
+    /// An empty messages list means the beginning of the thread is reached.
+    /// Requires ChannelReadMessage on the thread's channel.
+    /// </summary>
     /// <param name="threadId">Id of the thread's root message.</param>
+    /// <param name="limit">Maximum number of messages to return (capped at 100).</param>
+    /// <param name="beforeId">Return only messages older than the message with this id. Omit to get the newest messages.</param>
     [Authorize]
     public async Task<MessagesResult> GetListThreadMessages(
         AppRepos repos,
         IPermissionResolver resolver,
         ClaimsPrincipal principal,
-        int threadId)
+        int threadId,
+        int limit,
+        int? beforeId = null)
     {
         var threadMessage = await repos.Messages.GetById(threadId);
         if (threadMessage is null)
@@ -65,15 +81,35 @@ public class MessageQueries
         var userId = principal.GetUserGuid();
 
         return await GetMessagesHydrated(repos, userId,
-            m => m.ParentId == threadId);
+            "parent_id = @ScopeId", threadId, limit, beforeId);
     }
 
     private static async Task<MessagesResult> GetMessagesHydrated(
         AppRepos repos,
         Guid currentUserId,
-        System.Linq.Expressions.Expression<Func<Message, bool>> where)
+        string scopeSql,
+        int scopeId,
+        int limit,
+        int? beforeId)
     {
-        var messages = await repos.Messages.GetList(where);
+        var pageSize = Math.Clamp(limit, 1, DomainSettings.MaxMessagesPageSize);
+        var cursorSql = beforeId == null ? "" : "AND id < @BeforeId";
+
+        object param = beforeId == null
+            ? new { ScopeId = scopeId, Limit = pageSize }
+            : new { ScopeId = scopeId, Limit = pageSize, BeforeId = beforeId.Value };
+
+        var messages = await repos.Messages.GetList(
+            $"""
+            SELECT *
+            FROM {DomainSettings.MessageTableName}
+            WHERE {scopeSql}
+            {cursorSql}
+            ORDER BY id DESC
+            LIMIT @Limit;
+            """,
+            param);
+
         return await MessageHydrator.HydrateAsync(messages, repos, currentUserId);
     }
 }
