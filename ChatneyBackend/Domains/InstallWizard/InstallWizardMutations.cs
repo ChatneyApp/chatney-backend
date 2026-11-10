@@ -282,14 +282,21 @@ public class InstallWizardMutations
 
             if (options.SeedTestData)
             {
-                for (var i = 1; i <= 2; i++)
+                (string Nickname, string FullName)[] seedUsers =
+                [
+                    ("test1", "Test User 1"),
+                    ("test2", "Test User 2"),
+                    ..SeedMessages.NamedUsers,
+                ];
+
+                foreach (var (nickname, fullName) in seedUsers)
                 {
                     testUsers.Add(new Users.User
                     {
                         Id = Guid.NewGuid(),
-                        Nickname = $"test{i}",
-                        FullName = $"Test User {i}",
-                        Email = $"test{i}@test.com",
+                        Nickname = nickname,
+                        FullName = fullName,
+                        Email = $"{nickname}@test.com",
                         Active = true,
                         Verified = true,
                         Muted = false,
@@ -301,6 +308,15 @@ public class InstallWizardMutations
             }
 
             await repos.Users.InsertBulk([adminUser, ..testUsers]);
+
+            if (options.SeedTestData)
+            {
+                await SeedMessages.SeedPublic1(
+                    repos,
+                    public1.Id,
+                    testUsers.Append(adminUser).ToDictionary(user => user.Nickname, user => user.Id),
+                    now);
+            }
 
             List<Users.UserRole> userRoles =
             [
