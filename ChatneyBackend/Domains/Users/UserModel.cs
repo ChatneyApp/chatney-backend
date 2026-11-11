@@ -67,6 +67,10 @@ public class User : IPgKey<User, Guid>, IPgTimestamped
     [Map("avatar_url")]
     public string? AvatarUrl { get; set; }
 
+    /// <summary>Free-form multiline text the user wrote about themselves. Empty if not set.</summary>
+    [Map("bio")]
+    public string Bio { get; set; } = string.Empty;
+
     [Map("password")]
     [GraphQLIgnore]
     public required string Password { get; set; }
@@ -202,6 +206,9 @@ public class UpdateMyProfileDto
 
     /// <summary>Empty string clears it.</summary>
     public string? AvatarUrl { get; set; }
+
+    /// <summary>Multiline text. Empty string clears it.</summary>
+    public string? Bio { get; set; }
 
     /// <summary>Required when changing the password. FORBIDDEN_ACTION if missing or wrong.</summary>
     public string? CurrentPassword { get; set; }

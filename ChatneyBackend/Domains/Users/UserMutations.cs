@@ -238,6 +238,11 @@ public class UserMutations
                 : profileDto.AvatarUrl.Trim();
         }
 
+        if (profileDto.Bio != null)
+        {
+            user.Bio = profileDto.Bio.Trim();
+        }
+
         if (!string.IsNullOrWhiteSpace(profileDto.NewPassword))
         {
             if (string.IsNullOrWhiteSpace(profileDto.CurrentPassword))
