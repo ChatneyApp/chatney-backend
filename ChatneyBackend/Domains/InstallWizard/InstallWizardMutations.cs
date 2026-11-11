@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Amazon.S3;
 using ChatneyBackend.Domains.Permissions;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Domains.Workspaces;
@@ -102,7 +103,8 @@ public class InstallWizardMutations
         AppConfig appConfig,
         AppRepos repos,
         IMigrationRunner migrationRunner,
-        NpgsqlDataSource dataSource
+        NpgsqlDataSource dataSource,
+        IAmazonS3 s3Client
     )
     {
         try
@@ -282,20 +284,21 @@ public class InstallWizardMutations
 
             if (options.SeedTestData)
             {
-                (string Nickname, string FullName)[] seedUsers =
+                (string Nickname, string FullName, string Bio)[] seedUsers =
                 [
-                    ("test1", "Test User 1"),
-                    ("test2", "Test User 2"),
+                    ("test1", "Test User 1", "Test account for trying things out.\nMember of the default role only."),
+                    ("test2", "Test User 2", "Second test account.\nAlso has the private role, so I can see private channels."),
                     ..SeedMessages.NamedUsers,
                 ];
 
-                foreach (var (nickname, fullName) in seedUsers)
+                foreach (var (nickname, fullName, bio) in seedUsers)
                 {
                     testUsers.Add(new Users.User
                     {
                         Id = Guid.NewGuid(),
                         Nickname = nickname,
                         FullName = fullName,
+                        Bio = bio,
                         Email = $"{nickname}@test.com",
                         Active = true,
                         Verified = true,
@@ -304,6 +307,12 @@ public class InstallWizardMutations
                         CreatedAt = now,
                         UpdatedAt = now,
                     });
+                }
+
+                // test2 (like admin) stays without an avatar, so the seed also covers the fallback.
+                foreach (var user in testUsers.Where(user => user.Nickname != "test2"))
+                {
+                    await SeedAvatars.Upload(s3Client, appConfig.S3Bucket, user);
                 }
             }
 

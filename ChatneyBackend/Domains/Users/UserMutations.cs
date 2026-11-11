@@ -1,4 +1,6 @@
 using System.Security.Claims;
+using Amazon.S3;
+using Amazon.S3.Model;
 using ChatneyBackend.Domains.Configs;
 using ChatneyBackend.Domains.Permissions;
 using ChatneyBackend.Domains.Roles;
@@ -238,6 +240,11 @@ public class UserMutations
                 : profileDto.AvatarUrl.Trim();
         }
 
+        if (profileDto.Bio != null)
+        {
+            user.Bio = profileDto.Bio.Trim();
+        }
+
         if (!string.IsNullOrWhiteSpace(profileDto.NewPassword))
         {
             if (string.IsNullOrWhiteSpace(profileDto.CurrentPassword))
@@ -261,6 +268,108 @@ public class UserMutations
         {
             await webSocketConnector.SendUpdatedUserProfileAsync(WebsocketUserProfilePayload.FromUser(user));
         }
+
+        return user;
+    }
+
+    /// <summary>
+    /// Uploads the current user's avatar to storage and sets avatarUrl to its storage path
+    /// ("/avatars/{userId}.{ext}"), replacing any previous avatar. INVALID_AVATAR unless the file is
+    /// a GIF, JPG or PNG of exactly 128x128 pixels and at most 2 MB.
+    /// </summary>
+    /// <param name="file">The image (multipart upload).</param>
+    [Authorize]
+    public async Task<User> UploadAvatar(
+        AppConfig appConfig,
+        AppRepos repos,
+        ClaimsPrincipal principal,
+        IAmazonS3 s3Client,
+        IFile file,
+        WebSocketConnector webSocketConnector)
+    {
+        if (file.Length is null or 0 or > DomainSettings.AvatarMaxFileSize)
+        {
+            ChatneyBackend.Infra.ErrorCodes.ThrowInvalidAvatar();
+        }
+
+        using var content = new MemoryStream();
+
+        await using (var fileStream = file.OpenReadStream())
+        {
+            await fileStream.CopyToAsync(content);
+        }
+
+        var image = AvatarImage.Parse(content.GetBuffer().AsSpan(0, (int)content.Length));
+
+        if (image == null
+            || image.Width != DomainSettings.AvatarSideSize
+            || image.Height != DomainSettings.AvatarSideSize)
+        {
+            ChatneyBackend.Infra.ErrorCodes.ThrowInvalidAvatar();
+        }
+
+        var user = await principal.GetRequiredUser(repos);
+        var s3Key = $"{DomainSettings.AvatarS3Folder}/{user.Id}.{image.Extension}";
+        content.Position = 0;
+
+        await s3Client.PutObjectAsync(new PutObjectRequest
+        {
+            BucketName = appConfig.S3Bucket,
+            Key = s3Key,
+            InputStream = content,
+            ContentType = image.ContentType,
+        });
+
+        // The extension is part of the key, so a previous avatar of another format would be left behind.
+        foreach (var extension in AvatarImage.Extensions.Where(extension => extension != image.Extension))
+        {
+            await s3Client.DeleteObjectAsync(
+                appConfig.S3Bucket,
+                $"{DomainSettings.AvatarS3Folder}/{user.Id}.{extension}");
+        }
+
+        user.AvatarUrl = $"/{s3Key}";
+        await repos.Users.UpdateOne(user);
+        await webSocketConnector.SendUpdatedUserProfileAsync(WebsocketUserProfilePayload.FromUser(user));
+
+        return user;
+    }
+
+    /// <summary>
+    /// Removes the current user's avatar: sets avatarUrl to null and deletes the uploaded file from storage.
+    /// Does nothing if the user has no avatar.
+    /// </summary>
+    [Authorize]
+    public async Task<User> ClearAvatar(
+        AppConfig appConfig,
+        AppRepos repos,
+        ClaimsPrincipal principal,
+        IAmazonS3 s3Client,
+        WebSocketConnector webSocketConnector)
+    {
+        var user = await principal.GetRequiredUser(repos);
+
+        if (user.AvatarUrl == null)
+        {
+            return user;
+        }
+
+        // avatarUrl can also be set freely through updateMyProfile, so only the user's own uploaded file is deleted.
+        if (user.AvatarUrl.StartsWith($"/{DomainSettings.AvatarS3Folder}/{user.Id}."))
+        {
+            try
+            {
+                await s3Client.DeleteObjectAsync(appConfig.S3Bucket, user.AvatarUrl[1..]);
+            }
+            catch (AmazonS3Exception exception) when (exception.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                // The file is already gone.
+            }
+        }
+
+        user.AvatarUrl = null;
+        await repos.Users.UpdateOne(user);
+        await webSocketConnector.SendUpdatedUserProfileAsync(WebsocketUserProfilePayload.FromUser(user));
 
         return user;
     }

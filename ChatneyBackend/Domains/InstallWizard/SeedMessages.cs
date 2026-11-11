@@ -14,14 +14,27 @@ public static class SeedMessages
     private const string Daniel = "daniel_weber";
     private const string Priya = "priya_nair";
 
-    /// <summary>Seed accounts besides admin and test1/test2: nickname and full name.</summary>
-    public static readonly (string Nickname, string FullName)[] NamedUsers =
+    /// <summary>Seed accounts besides admin and test1/test2: nickname, full name and bio.</summary>
+    public static readonly (string Nickname, string FullName, string Bio)[] NamedUsers =
     [
-        (Emma, "Emma Clarke"),
-        (Liam, "Liam Novak"),
-        (Sofia, "Sofia Marino"),
-        (Daniel, "Daniel Weber"),
-        (Priya, "Priya Nair"),
+        (Emma, "Emma Clarke",
+            "Product designer. I care about onboarding flows, empty states and readable error messages.\n\n" +
+            "Usually online 9:00-17:30 UK time. Outside of work: pottery and long walks with my dog Biscuit."),
+        (Liam, "Liam Novak",
+            "Backend developer on the reporting team. Queues, exports and everything that runs at night.\n" +
+            "Ping me about report-export-worker.\n\n" +
+            "Amateur climber, professional coffee drinker ☕"),
+        (Sofia, "Sofia Marino",
+            "QA engineer. If it's broken on staging, I probably found it first.\n\n" +
+            "Bug reports welcome in any form, but steps to reproduce make my day.\n" +
+            "Based in Milan, CET."),
+        (Daniel, "Daniel Weber",
+            "DevOps / infrastructure. Deploys, monitoring, alerts and the occasional 3am page.\n\n" +
+            "For anything urgent on prod, call instead of messaging.\n" +
+            "Berlin. Cyclist, home-lab tinkerer."),
+        (Priya, "Priya Nair",
+            "Engineering manager. Here to unblock people and keep the incident log honest.\n\n" +
+            "1:1 slots are open on Tuesdays and Thursdays, just pick a time in my calendar."),
     ];
 
     /// <param name="Gap">Minutes since the previous message of the same list (for the first thread reply: since the thread root).</param>
