@@ -9,6 +9,7 @@ public class ErrorCodes
     public const string InvalidNickname = "INVALID_NICKNAME";
     public const string NicknameTaken = "NICKNAME_TAKEN";
     public const string RoleNotFound = "ROLE_NOT_FOUND";
+    public const string InvalidAvatar = "INVALID_AVATAR";
 
     public static void ThrowForbidden()
     {
@@ -43,6 +44,15 @@ public class ErrorCodes
             ErrorBuilder.New()
                 .SetMessage(NicknameTaken)
                 .SetCode(NicknameTaken)
+                .Build());
+    }
+
+    public static void ThrowInvalidAvatar()
+    {
+        throw new GraphQLException(
+            ErrorBuilder.New()
+                .SetMessage(InvalidAvatar)
+                .SetCode(InvalidAvatar)
                 .Build());
     }
 
