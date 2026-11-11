@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Amazon.S3;
 using ChatneyBackend.Domains.Permissions;
 using ChatneyBackend.Domains.Roles;
 using ChatneyBackend.Domains.Workspaces;
@@ -102,7 +103,8 @@ public class InstallWizardMutations
         AppConfig appConfig,
         AppRepos repos,
         IMigrationRunner migrationRunner,
-        NpgsqlDataSource dataSource
+        NpgsqlDataSource dataSource,
+        IAmazonS3 s3Client
     )
     {
         try
@@ -305,6 +307,12 @@ public class InstallWizardMutations
                         CreatedAt = now,
                         UpdatedAt = now,
                     });
+                }
+
+                // test2 (like admin) stays without an avatar, so the seed also covers the fallback.
+                foreach (var user in testUsers.Where(user => user.Nickname != "test2"))
+                {
+                    await SeedAvatars.Upload(s3Client, appConfig.S3Bucket, user);
                 }
             }
 
