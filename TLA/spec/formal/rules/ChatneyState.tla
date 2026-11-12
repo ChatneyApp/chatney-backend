@@ -18,7 +18,8 @@ vars == <<setupPhase, userStatus, sessions, userRoles, rolePermissions,
     socketBindings, configuredKeys>>
 
 Statuses == {"absent", "active", "disabled", "banned"}
-SetupPhases == {"uninstalled", "migrating", "seeding", "failed", "installed"}
+SetupPhases == {"uninstalled", "migrating", "seeding", "roleCreated",
+    "failed", "failedPartial", "incomplete", "installed"}
 RecordKinds == {"workspace", "channel", "directMessage", "message", "draft", "attachment", "reaction"}
 
 Init ==
@@ -70,8 +71,17 @@ MigrationsComplete ==
         publishedRecords, resetTokens, resetOwner, usedResetTokens,
         socketBindings, configuredKeys>>
 
-CommitSetup ==
+\* The role is persisted before users/configuration; it is the retry sentinel.
+CreateAdminRole ==
     /\ setupPhase = "seeding"
+    /\ setupPhase' = "roleCreated"
+    /\ UNCHANGED <<userStatus, sessions, userRoles, rolePermissions,
+        userPermissions, records, recordOwner, recordKind, recordParent,
+        publishedRecords, resetTokens, resetOwner, usedResetTokens,
+        socketBindings, configuredKeys>>
+
+CommitSetup ==
+    /\ setupPhase = "roleCreated"
     /\ setupPhase' = "installed"
     /\ userStatus' = [userStatus EXCEPT ![AdminUser] = "active"]
     /\ userRoles' = [userRoles EXCEPT ![AdminUser] = {AdminRole}]
@@ -84,23 +94,25 @@ CommitSetup ==
         socketBindings, configuredKeys>>
 
 FailSetup ==
-    /\ setupPhase \in {"migrating", "seeding"}
-    /\ setupPhase' = "failed"
+    /\ setupPhase \in {"migrating", "seeding", "roleCreated"}
+    /\ setupPhase' = IF setupPhase = "roleCreated" THEN "failedPartial" ELSE "failed"
     /\ UNCHANGED <<userStatus, sessions, userRoles, rolePermissions,
         userPermissions, records, recordOwner, recordKind, recordParent,
         publishedRecords, resetTokens, resetOwner, usedResetTokens,
         socketBindings, configuredKeys>>
 
 RetrySetup ==
-    /\ setupPhase = "failed"
-    /\ setupPhase' = "migrating"
+    /\ setupPhase \in {"failed", "failedPartial"}
+    \* Retry sees the persisted role and returns "installed" without finishing seed.
+    /\ setupPhase' = IF setupPhase = "failedPartial" THEN "incomplete" ELSE "migrating"
     /\ UNCHANGED <<userStatus, sessions, userRoles, rolePermissions,
         userPermissions, records, recordOwner, recordKind, recordParent,
         publishedRecords, resetTokens, resetOwner, usedResetTokens,
         socketBindings, configuredKeys>>
 
-UninstallSystem(actor) ==
-    /\ setupPhase = "installed" /\ IsAdmin(actor)
+UninstallSystem ==
+    \* The current mutation does not authorize the caller.
+    /\ setupPhase # "uninstalled"
     /\ setupPhase' = "uninstalled"
     /\ userStatus' = [u \in Users |-> "absent"]
     /\ sessions' = {}
@@ -229,8 +241,9 @@ RequestPasswordReset(user, token) ==
 
 CompletePasswordReset(user, token) ==
     /\ token \in resetTokens /\ resetOwner[token] = user
-    /\ resetTokens' = resetTokens \ {token}
-    /\ usedResetTokens' = usedResetTokens \cup {token}
+    /\ resetTokens' = {other \in resetTokens : resetOwner[other] # user}
+    /\ usedResetTokens' = usedResetTokens \cup
+        {other \in resetTokens : resetOwner[other] = user}
     /\ UNCHANGED <<setupPhase, userStatus, sessions, userRoles,
         rolePermissions, userPermissions, records, recordOwner, recordKind,
         recordParent, publishedRecords, resetOwner, socketBindings, configuredKeys>>
@@ -260,14 +273,14 @@ WriteConfig(actor, key) ==
         usedResetTokens, socketBindings>>
 
 SetupFlow ==
-    StartSetup \/ MigrationsComplete \/ CommitSetup \/ FailSetup \/ RetrySetup
+    StartSetup \/ MigrationsComplete \/ CreateAdminRole \/ CommitSetup
+    \/ FailSetup \/ RetrySetup \/ UninstallSystem
 
 CommonAccountFlow ==
     (\E u \in Users : RegisterUser(u) \/ Login(u) \/ Logout(u))
 
 AccessFlow ==
-    (\E actor \in Users : UninstallSystem(actor))
-    \/ (\E actor \in Users, u \in Users, status \in {"active", "disabled", "banned"} :
+    (\E actor \in Users, u \in Users, status \in {"active", "disabled", "banned"} :
         ChangeAccountStatus(actor, u, status))
     \/ (\E actor \in Users, u \in Users, role \in Roles : AssignRole(actor, u, role))
     \/ (\E actor \in Users, role \in Roles, permission \in Permissions, grant \in BOOLEAN :
