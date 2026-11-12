@@ -1,9 +1,10 @@
 ---------------- MODULE ChatneyArchitecture ----------------
 CONSTANTS Users, Roles, Permissions, AdminUser, AdminRole, DefaultRole,
-    AdminManage, MessageCreate, ValidLoginUsers, RecordIds, ResetTokens, NoUser, NoRecord
+    AdminManage, MessageCreate, ValidLoginUsers, RecordIds, ResetTokens, NoUser, NoRecord, MessageOperation
 VARIABLES userStatus, sessions, userRoles, rolePermissions, userPermissions,
     socketBindings, configuredKeys, setupPhase, adminReady,
     messages, messageOwner, messageKind, messageParent, publishedMessages,
+    editedMessages, actorAccess, mutation,
     workspaces, workspaceOwner, workspaceKind, workspaceParent, publishedWorkspaces,
     resetTokens, resetOwner, usedResetTokens
 UsersDomain == INSTANCE UsersWorkflow WITH
@@ -19,7 +20,10 @@ MessagesDomain == INSTANCE MessagesWorkflow WITH
     messageOwner <- messageOwner,
     messageKind <- messageKind,
     messageParent <- messageParent,
-    publishedMessages <- publishedMessages
+    publishedMessages <- publishedMessages,
+    editedMessages <- editedMessages,
+    actorAccess <- actorAccess,
+    mutation <- mutation
 WorkspacesDomain == INSTANCE WorkspacesWorkflow WITH
     workspaces <- workspaces,
     workspaceOwner <- workspaceOwner,
@@ -57,4 +61,5 @@ Next ==
 Safety == UsersDomain!Safety /\ MessagesDomain!Safety /\ WorkspacesDomain!Safety
     /\ SetupDomain!Safety /\ RecoveryDomain!Safety
 Spec == Init /\ [][Next]_vars
+PermissionsRespected == MessagesDomain!PermissionsRespected
 ============================================================

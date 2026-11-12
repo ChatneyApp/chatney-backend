@@ -29,12 +29,18 @@ done < <(find "$SPEC_ROOT" -type f -name '*.tla' -print | sort)
 for CONFIG in "$CONFIG_DIR"/*Workflow.cfg; do
     CONFIG_NAME="$(basename "$CONFIG" .cfg)"
 
-    if [[ -n "$WORKFLOW" && "$CONFIG_NAME" != "${WORKFLOW}Workflow" ]]; then
+    MODULE_NAME="$CONFIG_NAME"
+
+    if [[ "$CONFIG_NAME" == Messages*Workflow ]]; then
+        MODULE_NAME="MessagesWorkflow"
+    fi
+
+    if [[ -n "$WORKFLOW" && "$MODULE_NAME" != "${WORKFLOW}Workflow" ]]; then
         continue
     fi
 
     echo "Checking $CONFIG_NAME"
     java -DTLA-Library="$SPEC_ROOT/workflows:$SPEC_ROOT/rules" \
         -cp "$JAR" tlc2.TLC -cleanup -metadir "$WORK/meta-$CONFIG_NAME" \
-        -noGenerateSpecTE -config "$CONFIG" "$CONFIG_NAME"
+        -noGenerateSpecTE -config "$CONFIG" "$MODULE_NAME"
 done
