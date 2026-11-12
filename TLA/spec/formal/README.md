@@ -1,54 +1,54 @@
-# Chatney business workflow model
+# Chatney business workflows
 
-This is a high-level bounded architecture model for the backend's main business workflows. It deliberately abstracts database rows, GraphQL fields, object payloads, and infrastructure APIs into a small set of lifecycle, identity, permission, record, and publication state.
+The model is split by business functionality. Each state module owns its domain variables, transitions, and safety properties. Each workflow has an independent TLC entry point and configuration.
 
-## Reading order
+| Domain | State module | Workflow / TLC configuration | Coverage |
+| --- | --- | --- | --- |
+| Users | `rules/UsersState.tla` | `UsersWorkflow` | Registration, login/logout, account status, roles, permissions, socket binding, privileged settings |
+| Messages | `rules/MessagesState.tla` | `MessagesWorkflow` | Messages, DMs, drafts, attachments, reactions, ownership, publication, deletion |
+| Workspaces | `rules/WorkspacesState.tla` | `WorkspacesWorkflow` | Workspace/channel creation, hierarchy, ownership, publication, deletion |
+| Setup | `rules/SetupState.tla` | `SetupWorkflow` | Migration, admin-role sentinel, seed completion, partial failure, retry, uninstall |
+| Recovery | `rules/RecoveryState.tla` | `RecoveryWorkflow` | Reset requests, replacement, consumption, invalidation, account status changes |
 
-1. `rules/ChatneyState.tla` defines the state and domain operations.
-2. `workflows/ChatneyArchitecture.tla` composes the rules and defines shared safety properties.
-3. `workflows/ChatneyMain.tla` is the TLC entry module.
-4. `../../test/formal/config/ChatneyMain.cfg` defines the finite exploration bound.
+Configurations are in `TLA/test/formal/config/`. `workflows/ChatneyArchitecture.tla` shows composition through named instances with explicit state bindings and exposes `Init`, `Next`, `Spec`, and `Safety`. It is parsed by SANY; the runner checks the five domain workflows separately, not their full product.
 
-Run SANY and TLC from the backend repository root. The runner parses every module, then checks four separate state graphs:
+## Running checks
+
+From the backend repository root:
 
 ```sh
 TLA/test/formal/install-tlc.sh
 TLA/test/formal/sanity.sh
+# Check one workflow after parsing all modules:
+TLA/test/formal/sanity.sh Messages
+TLA/test/formal/sanity.sh Users
+TLA/test/formal/sanity.sh Workspaces
 ```
 
-Or set `TLA2TOOLS_JAR` to a verified TLA+ Tools 1.8.0 jar. Java 11 or newer is required.
+`Setup` and `Recovery` are also accepted. Or set `TLA2TOOLS_JAR` to a verified TLA+ Tools 1.8.0 jar. Java 11 or newer is required. The installer pins the jar checksum. Deadlock checking is enabled in every configuration.
 
-## Flow coverage
+## Bounds and environment assumptions
 
-- **Setup:** start, migrate, persist the admin-role sentinel, finish seeding, fail/retry, uninstall.
-- **Identity and access:** registration, login/logout, account status, role assignment, role/user permissions.
-- **Collaboration records:** workspace/channel/DM/message/draft/attachment/reaction creation as typed records, update ownership, publication, deletion, parent relationships.
-- **Account recovery:** issue, replace, consume, and invalidate reset tokens.
-- **Realtime and settings:** authenticated socket binding and privileged configuration writes.
+- Users and recovery use two users, two roles, and two permissions. Users start with a seeded active admin and no sessions; other accounts can register. Recovery adds two reset tokens and composes only registration, session, and account-status transitions with token state.
+- Messages and workspaces each use two actors and two record IDs. Their state is separate: a message ID never denotes a workspace in the same domain. Symmetry permutes IDs and reset tokens only.
+- Messages assume an installed system, existing external scopes, and authenticated actors authorized to create records. Workspaces assume an installed system with fixed administrative creation capability. Changes to accounts and permissions are checked in the users workflow, without multiplying the message/workspace graphs. These assumptions do not establish cross-domain authorization correctness.
+- Setup abstracts seed completion as `adminReady`; it does not explore every seeded account, ACL, channel, or configuration value. Uninstall resets lifecycle state and allows recovery from partial installations.
+- Payload edits and profile changes are abstract stuttering steps: content, timestamps, avatars, and bio are outside the state. Message-related kinds share a high-level lifecycle. Workspace kinds distinguish root workspaces from their channels.
 
-The model checks type correctness, valid record ownership and parent links, draft uniqueness per owner and scope, setup/admin consistency, active sessions, socket/session binding, and single-use reset tokens.
+## Properties and limits
 
-## Abstraction notes
+The checks cover types, active sessions, socket/session binding, admin preservation, record ownership and valid parents, workspace hierarchy, draft uniqueness per owner/scope, setup readiness after completed seeding, token ownership, and disjoint live/used tokens. The two-ID bound explores a parent and child; deeper message trees are not verified.
 
-- This is a proposed safety contract, not proof that the current C# implementation satisfies it. Uninstall is modeled without authorization, matching the current mutation. Authenticated socket ownership and active-only sessions remain proposed requirements; the backend does not enforce them consistently (including login through `UserLookup`).
-- Each TLC run explores two users, two roles, two generic record IDs, and two reset tokens. That is enough to explore competing operations, duplicate IDs, retries, and single-use behavior in a finite state space.
-- TLC symmetry reduction permutes the record IDs and reset tokens because those values have no special meaning in the model.
-- `ChatneySetup.cfg` checks install, failure, retry, and commit transitions.
-- `ChatneyMain.cfg` checks account/access transitions, with setup and common account prerequisites.
-- `ChatneyCollaboration.cfg` checks generic collaboration records, publication, and ownership, with setup/account prerequisites.
-- `ChatneyRecovery.cfg` checks reset-token recovery, with setup/account prerequisites.
-- Every graph uses the same safety invariants and finite bounds. Setup is isolated to prevent its state history multiplying unrelated workflows.
-- Deadlock checking is enabled for all four graphs. Uninstall allows setup recovery from complete and partial installations.
-- Record kinds collapse several concrete domains into generic create, publish, and delete transitions. Per-object ACL inheritance, channel membership, groups, message counts, reaction deduplication, attachment storage, email delivery, timestamp expiry, transaction isolation, and GraphQL selection behavior are intentionally excluded.
-- Setup steps are separate transitions so competing installers and failure/retry states remain visible. The concrete DB writes within a step are abstracted.
-- TLC verifies this bounded model only; it does not prove implementation conformance or unbounded correctness. No runtime instrumentation or trace replay is included.
+This is a bounded architecture contract, not proof of C# implementation conformance or unbounded correctness. Active-only sessions, socket ownership, admin preservation, record ownership/publication, cascade deletion, and draft uniqueness include proposed requirements or abstractions. Per-object ACL inheritance, membership, groups, message counts, reaction deduplication, storage, email delivery, expiry, and transaction isolation remain excluded. No runtime instrumentation or trace replay is included.
 
-## Implementation mapping and limits
+## Implementation mapping
 
-Reviewed against the PR base `main` at `3082f79`, including the configurable installer, installation-status query, SMTP configuration lookup, and profile/avatar changes. The PR remains limited to `TLA/`.
+Reviewed against the PR base `main` at `3082f79`. The PR changes only `TLA/`.
 
-- `ChatneyBackend/Domains/InstallWizard/InstallWizardMutations.cs`: `StartSetup`/`MigrationsComplete` abstract migrations and type reload. `CreateAdminRole` separates the persisted retry sentinel from `CommitSetup`, which abstracts the remaining seed writes. A failure after that sentinel followed by retry reaches `incomplete`: the API returns `installed`, but an admin account/configuration may still be missing. On `main`, that retry also calls `MarkInstalled`, so `InstallWizardQueries.IsInstalled` can return true for this incomplete state. Model phase `installed` means seed completion, not that API status string or configuration marker. Repeated successful installs are abstracted as stuttering. Valid installer input is an environment assumption; rejected options have no modeled effect.
-- `UninstallSystem` abstracts migration rollback and clearing process configuration. Rollback failures, concurrent installers, and failures between individual remaining seed writes are excluded; `failedPartial` represents the early failure window before users/configuration are persisted. No transaction or automatic rollback of seed writes is assumed. `SetupStateConsistent` applies only to fully completed seeding; it does not claim that an `installed` API response proves readiness.
-- `ChatneyBackend/Domains/Users/UserMutations.cs`: registration assigns the configured default role. `RequestPasswordReset` replaces earlier requests; `CompletePasswordReset` consumes the code and invalidates all other requests belonging to that user. These are successful sequential outcomes: concurrent reset requests, token-consumption/password-write failures, and email delivery are excluded. The token ownership and single-use invariants describe the bounded contract, not proof of atomic backend transactions.
-- `ChatneyBackend/Domains/Users/PasswordResetEmailSender.cs`: SMTP now reads persisted settings with fallback options. Configuration selection and delivery have no modeled state; delivery failure does not undo the persisted reset request and is abstracted as stuttering.
-- Setup inputs, seeded channel variants, profile fields, avatars, and seed-user counts do not affect this model's guarantees and remain abstract. No model of mandatory first-login password rotation is included because the current backend does not enforce it.
+- `Domains/Users/UserMutations.cs` and `UserLookup.cs`: the users workflow models default-role registration and credential-based login at the lifecycle level. Active-only login, session revocation, and admin-account protection are proposed requirements; the backend does not enforce all of them. Role and permission changes remain independently explorable.
+- `Domains/Messages/MessageMutations.cs`, direct-message, draft, and attachment mutations: create, publish, and delete model lifecycle boundaries and ownership. Object-specific permission resolution, payload updates, and individual transport/storage operations are abstracted.
+- `Domains/Workspaces/WorkspaceMutations.cs` and channel mutations: workspace/channel lifecycles are separate from message state. A channel must have a workspace parent; deleting a workspace abstracts deletion of its channels. This is a contract abstraction, not proof of database cascade behavior. Publication abstracts notification after persistence.
+- `Domains/InstallWizard/InstallWizardMutations.cs`: migrations precede the persisted admin-role sentinel. A failure after that sentinel can cause retry to report `installed` without finishing seed. The setup graph preserves `failedPartial` and `incomplete` for this early failure window. On `main`, retry also calls `MarkInstalled`, so `InstallWizardQueries.IsInstalled` can be true for incomplete setup. Model phase `installed` means completed seed, not that API response or flag. Valid installer options are assumed; rejected options have no modeled effect. Repeated successful calls stutter.
+- Uninstall has no authorization guard in the current mutation. The model reflects that. Rollback failures, concurrent installers, and failures between remaining seed writes are excluded; no automatic rollback of seed writes is assumed. `SetupStateConsistent` does not claim a reported installation flag proves readiness.
+- `Domains/Users/UserMutations.cs`: reset requests replace earlier requests. Completion consumes a code and invalidates the user's remaining requests. These are successful sequential outcomes; concurrent requests and token-consumption/password-write failure windows are excluded.
+- `Domains/Users/PasswordResetEmailSender.cs`: persisted SMTP settings and fallback options are outside the state. Delivery failure does not undo the persisted request. Mandatory first-login password rotation is not modeled because the backend does not enforce it.
